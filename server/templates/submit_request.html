@@ -81,6 +81,15 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="{{ form.required_languages.id_for_label }}">Required languages</label>
+                                <small class="text-muted d-block mb-2">Select multiple languages with Ctrl/Cmd</small>
+                                {{ form.required_languages }}
+                                {% if form.required_languages.errors %}
+                                    <div class="text-danger small">{{ form.required_languages.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
                                 <label for="{{ form.target_experience.id_for_label }}">Target experience level</label>
                                 {{ form.target_experience }}
                                 {% if form.target_experience.errors %}

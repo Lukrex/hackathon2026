@@ -237,13 +237,29 @@ def expert_directory(request):
         experts = experts.filter(
             Q(user__first_name__icontains=search_term) |
             Q(user__last_name__icontains=search_term) |
-            Q(expertise__icontains=search_term)
+            Q(skills__name__icontains=search_term) |
+            Q(languages__name__icontains=search_term) |
+            Q(work_experience__icontains=search_term)
         )
 
     return render(request, 'expert_directory.html', {
         'experts': experts,
         'search_term': search_term or '',
         'availability_filter': availability_filter or '',
+    })
+
+
+@login_required
+def user_profile(request, expert_id):
+    """Public profile page for an expert"""
+    expert = get_object_or_404(Expert.objects.select_related('user'), id=expert_id)
+    open_requests_helped = expert.assigned_requests.filter(
+        status__in=['open', 'in_review', 'waiting_expert', 'in_progress']
+    ).order_by('due_date', '-created_at')[:10]
+
+    return render(request, 'expert_profile.html', {
+        'expert': expert,
+        'open_requests_helped': open_requests_helped,
     })
 
 

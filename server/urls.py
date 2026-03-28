@@ -23,6 +23,7 @@ urlpatterns = [
 
     # Expert directory
     path('experts/', views.expert_directory, name='expert_directory'),
+    path('experts/<int:expert_id>/', views.user_profile, name='user_profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
 
     # Admin

@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from server.models import Category, Skill, Expert, Request, ExpertMatch
+from server.models import Category, Skill, Language, Expert, Request, ExpertMatch
 from datetime import datetime, timedelta
 import random
 
@@ -79,6 +79,23 @@ class Command(BaseCommand):
             skill, _ = Skill.objects.get_or_create(name=skill_name)
             skills[skill_name] = skill
 
+        language_names = [
+            'English', 'Slovak', 'Czech', 'German', 'French', 'Spanish', 'Italian', 'Portuguese',
+            'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Icelandic',
+            'Polish', 'Hungarian', 'Romanian', 'Bulgarian', 'Croatian', 'Serbian', 'Slovenian',
+            'Ukrainian', 'Russian', 'Lithuanian', 'Latvian', 'Estonian',
+            'Greek', 'Turkish', 'Arabic', 'Hebrew', 'Persian',
+            'Hindi', 'Urdu', 'Bengali', 'Punjabi', 'Tamil', 'Telugu', 'Malayalam',
+            'Chinese (Mandarin)', 'Chinese (Cantonese)', 'Japanese', 'Korean',
+            'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Tagalog',
+            'Swahili', 'Afrikaans', 'Amharic', 'Yoruba', 'Zulu',
+            'Georgian', 'Armenian', 'Kazakh'
+        ]
+        languages = {}
+        for language_name in language_names:
+            language, _ = Language.objects.get_or_create(name=language_name)
+            languages[language_name] = language
+
         # Create demo experts
         experts_data = [
             {
@@ -87,7 +104,8 @@ class Command(BaseCommand):
                 'last_name': 'Nováková',
                 'email': 'anna.novak@example.com',
                 'bio': '10+ rokov skúseností v startupoch, specialista na GTM a scaling',
-                'expertise': 'React, Node.js, GTM, Scaling, Product Management',
+                'skills': 'React, Node.js, Scaling, Product Management',
+                'languages': ['English', 'Slovak'],
                 'availability': 'high',
             },
             {
@@ -96,7 +114,8 @@ class Command(BaseCommand):
                 'last_name': 'Síšo',
                 'email': 'peter.sisko@example.com',
                 'bio': 'VC investor a mentor, pomáham startupom s fundraisingom',
-                'expertise': 'Fundraising, Investor relations, VC, Business Strategy',
+                'skills': 'Fundraising, Investor Relations, Business Strategy',
+                'languages': ['English', 'Slovak', 'German'],
                 'availability': 'medium',
             },
             {
@@ -105,7 +124,8 @@ class Command(BaseCommand):
                 'last_name': 'Reháková',
                 'email': 'maria.rehakova@example.com',
                 'bio': 'Marketing guru s fokusom na digitálny marketing a branding',
-                'expertise': 'Digital Marketing, Branding, Copywriting, Social Media',
+                'skills': 'Digital Marketing, Branding, Copywriting',
+                'languages': ['English', 'Slovak', 'Czech'],
                 'availability': 'medium',
             },
             {
@@ -114,7 +134,8 @@ class Command(BaseCommand):
                 'last_name': 'Kovál',
                 'email': 'jozef.koval@example.com',
                 'bio': 'HR expert a talent scout, pomáham startupom budovať tímy',
-                'expertise': 'Recruiting, HR, Team Building, Culture',
+                'skills': 'Recruiting, HR, Team Building',
+                'languages': ['English', 'Slovak'],
                 'availability': 'high',
             },
             {
@@ -123,7 +144,8 @@ class Command(BaseCommand):
                 'last_name': 'Sloboda',
                 'email': 'lucia.svoboda@example.com',
                 'bio': 'Sales expert s 15+ rokmi v B2B, školiteľka a konsultantka',
-                'expertise': 'Sales, B2B, Account Management, Sales Training',
+                'skills': 'Sales, B2B Sales, Account Management',
+                'languages': ['English', 'Slovak', 'Spanish'],
                 'availability': 'low',
             },
         ]
@@ -146,20 +168,26 @@ class Command(BaseCommand):
                 user=user,
                 defaults={
                     'bio': exp_data['bio'],
-                    'expertise': exp_data['expertise'],
                     'availability': exp_data['availability'],
                     'help_provided': random.randint(2, 12),
                 }
             )
 
-            # Assign skill objects based on expertise tags
+            # Assign skill objects based on seed tags
             skill_set = []
-            for part in exp_data['expertise'].split(','):
+            for part in exp_data['skills'].split(','):
                 key = part.strip()
                 if key in skills:
                     skill_set.append(skills[key])
             if skill_set:
                 expert.skills.set(skill_set)
+
+            language_set = []
+            for language_name in exp_data.get('languages', []):
+                if language_name in languages:
+                    language_set.append(languages[language_name])
+            if language_set:
+                expert.languages.set(language_set)
 
             experts[exp_data['username']] = expert
 
@@ -180,6 +208,7 @@ class Command(BaseCommand):
                 'due_date': datetime.now().date() + timedelta(days=21),
                 'target_experience': 'senior',
                 'target_skills': [skills['React'], skills['Node.js']],
+                'required_languages': [languages['English']],
                 'category': categories['hiring'],
                 'priority': 'high',
                 'value_score': 9,
@@ -259,6 +288,10 @@ class Command(BaseCommand):
                 target_skills = req_data.get('target_skills', [])
                 if target_skills:
                     req.target_skills.set(target_skills)
+
+                required_languages = req_data.get('required_languages', [])
+                if required_languages:
+                    req.required_languages.set(required_languages)
 
                 # Assign random experts
                 num_experts = random.randint(1, 3)

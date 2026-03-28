@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Profile - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <h1>👤 Expert Profile</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>{{ expert.user.get_full_name|default:expert.user.username }}</h2>
+                <p class="text-muted">{{ expert.get_availability_display }}</p>
+            </div>
+            <div class="card-body">
+                {% if expert.bio %}
+                <h4>Bio</h4>
+                <p>{{ expert.bio }}</p>
+                {% endif %}
+
+                {% if expert.work_experience %}
+                <h4>Work Experience</h4>
+                <p>{{ expert.work_experience }}</p>
+                {% endif %}
+
+                {% if expert.skills.all %}
+                <h4>Skills</h4>
+                <div class="tags mb-3">
+                    {% for skill in expert.skills.all %}
+                        <span class="badge badge-primary">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if expert.languages.all %}
+                <h4>Languages</h4>
+                <div class="tags mb-3">
+                    {% for language in expert.languages.all %}
+                        <span class="badge badge-success">{{ language.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="profile-stats">
+                    <div><strong>Rating:</strong> {% if expert.rating_count > 0 %}{{ expert.average_rating }} / 5{% else %}Not rated yet{% endif %}</div>
+                    <div><strong>Reviews:</strong> {{ expert.rating_count }}</div>
+                    <div><strong>Help Contributions:</strong> {{ expert.help_provided }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Requests This Expert Is Helping With</h3>
+            </div>
+            <div class="card-body">
+                {% if open_requests_helped %}
+                    <div class="requests-list">
+                        {% for req in open_requests_helped %}
+                        <div class="request-item">
+                            <div class="request-header">
+                                <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
+                                <span class="request-status status-{{ req.status }}">{{ req.get_status_display }}</span>
+                            </div>
+                            <div class="text-muted">{{ req.description|truncatechars:140 }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">This expert has no active requests right now.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.profile-stats {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.request-item {
+    border: 1px solid var(--gray);
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.request-status {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-open { background: #dbeafe; color: #1e40af; }
+.status-in_review { background: #fef3c7; color: #92400e; }
+.status-waiting_expert { background: #e0e7ff; color: #3730a3; }
+.status-in_progress { background: #fed7aa; color: #9a3412; }
+.status-resolved { background: #d1fae5; color: #065f46; }
+.status-rejected { background: #fee2e2; color: #dc2626; }
+</style>
+{% endblock %}

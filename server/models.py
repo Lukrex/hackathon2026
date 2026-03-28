@@ -38,6 +38,18 @@ class Skill(models.Model):
         return self.name
 
 
+class Language(models.Model):
+    """Language tag for expert profiles and request requirements"""
+    name = models.CharField(max_length=80, unique=True)
+
+    class Meta:
+        verbose_name = 'Language'
+        verbose_name_plural = 'Languages'
+
+    def __str__(self):
+        return self.name
+
+
 class Expert(models.Model):
     """Community expert/helper (user profile)"""
     AVAILABILITY_CHOICES = [
@@ -49,6 +61,7 @@ class Expert(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(blank=True)
     skills = models.ManyToManyField(Skill, blank=True, related_name='experts')
+    languages = models.ManyToManyField(Language, blank=True, related_name='experts')
     work_experience = models.TextField(blank=True, help_text='Work experience highlights')
     rating = models.FloatField(default=0.0, help_text='Average user rating (0-5)')
     rating_count = models.IntegerField(default=0, help_text='Number of ratings')
@@ -69,6 +82,9 @@ class Expert(models.Model):
 
     def get_skill_list(self):
         return [skill.name for skill in self.skills.all()]
+
+    def get_language_list(self):
+        return [language.name for language in self.languages.all()]
 
 
 class Request(models.Model):
@@ -113,6 +129,7 @@ class Request(models.Model):
     company_email = models.EmailField(blank=True)
     due_date = models.DateField(null=True, blank=True)
     target_skills = models.ManyToManyField(Skill, blank=True, related_name='target_requests')
+    required_languages = models.ManyToManyField(Language, blank=True, related_name='required_by_requests')
     target_experience = models.CharField(max_length=20, choices=EXPERIENCE_LEVEL_CHOICES, blank=True)
 
     # requester profile/reference
