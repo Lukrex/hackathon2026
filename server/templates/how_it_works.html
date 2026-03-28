@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <h1 style="text-align: center;">Ako funguje Community Help System</h1>
+        <p class="text-center text-muted" style="font-size: 1.1rem; margin-bottom: 3rem;">
+            6-krokový proces od žiadosti po vyriešenie
+        </p>
+    </section>
+
+    <section class="section">
+        <div style="max-width: 900px; margin: 0 auto;">
+            {% for step in steps %}
+            <div style="display: flex; gap: 2rem; margin: 2rem 0; {% if forloop.counter|add:1 <= steps|length %}padding-bottom: 2rem; border-bottom: 1px solid var(--gray);{% endif %}">
+                <div>
+                    <div class="step-number">{{ step.number }}</div>
+                </div>
+                <div style="flex: 1;">
+                    <h3>{{ step.title }}</h3>
+                    <p style="color: var(--text-light); line-height: 1.8;">
+                        {{ step.description }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Detailný popis každého kroku</h2>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 1: Zadaj svoju žiadosť 📝</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Člen komunity (startup, študent, investor) pojde na verejný formulár a zadá svoju požiadavku:
+                    </p>
+                    <ul class="feature-list">
+                        <li>Názov toho, čo potrebuješ</li>
+                        <li>Detailný popis problému</li>
+                        <li>Kategória (7 typov)</li>
+                        <li>Email a telefón</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Príklad:</p>
+                    <p style="margin-top: 0.5rem;">
+                        <strong>Názov:</strong> Potrebujem React vývojára<br>
+                        <strong>Kategória:</strong> Hľadanie zamestnanca<br>
+                        <strong>Popis:</strong> Hľadám senior React vývojára s 5+ rokmi skúseností pre náš startupových tým. Full-time, remote.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 2: Preverenie od správcu 🔍</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Admin tím dostane žiadosť a môže ju preskúmať v admin paneli:
+                    </p>
+                    <ul class="feature-list">
+                        <li>Čita úplné detaily žiadosti</li>
+                        <li>Kontroluje korektnosť údajov</li>
+                        <li>Nastavuje prioritu (kritická/vysoká/stredná/nízka)</li>
+                        <li>Hodnota vplyvu (1-10)</li>
+                        <li>Pridáva review poznámky</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Admin nastaví:</p>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Priorita: <span class="badge badge-danger">Vysoká</span></li>
+                        <li>Kategória: <span class="badge badge-primary">Hiring</span></li>
+                        <li>Vplyv: <strong>9/10</strong></li>
+                        <li>Status: <span class="badge badge-primary">V preverovaní</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 3: Algoritmus nájde expertov 🧠</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Keď admin označí žiadosť za "V preverovaní", systém automaticky vypočítava expertné zhodnosti:
+                    </p>
+                    <ul class="feature-list">
+                        <li><strong>Expertise Match:</strong> Skúsenosť (0-40 bodov)</li>
+                        <li><strong>Category Fit:</strong> Kategória (0-30 bodov)</li>
+                        <li><strong>Availability:</strong> Dostupnosť (0-20 bodov)</li>
+                        <li><strong>Workload:</strong> Pracovné zaťaženie (0-10 bodov)</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Zhodnosti pre "React vývojár":</p>
+                    <div style="margin-top: 1rem;">
+                        <p style="margin-bottom: 0.5rem;"><strong>Anna Nováková</strong></p>
+                        <div style="background: white; height: 6px; border-radius: 3px; margin-top: 0.25rem;">
+                            <div style="background: var(--primary); height: 100%; width: 87%; border-radius: 3px;"></div>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-light);">87% match</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 4: Admin priraďuje experta 📧</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Admin vidí návrhy zhodností a vyberá, koho chce priradiť:
+                    </p>
+                    <ul class="feature-list">
+                        <li>Vidí top expertov s koeficientom zhody</li>
+                        <li>Čita info o expertovi (bio, skúsenosti)</li>
+                        <li>Klikne na "Priradiť experta"</li>
+                        <li>Expert dostane notifikáciu e-mailom</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Expert dostane e-mail:</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        Ahoj Anna,<br><br>
+                        Máme pre teba novú príležitosť! Startup hľadá senior React vývojára.<br><br>
+                        Zaujímavé? Kontaktuj žiadateľa…
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 5: Expert pomaha 🤝</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Expert a žiadateľ sa spájajú mimo systému. Expert:
+                    </p>
+                    <ul class="feature-list">
+                        <li>Kontaktuje žiadateľa (e-mail)</li>
+                        <li>Diskutuje o podrobnostiach</li>
+                        <li>Poskytuje know-how a pomoc</li>
+                        <li>Pomáha riešiť problém</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Výsledok:</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                        Expert pomôže so:
+                        <ul style="margin-top: 0.5rem;">
+                            <li>Výberom správneho kandidáta</li>
+                            <li>Vyjednaním podmienok</li>
+                            <li>Onboardingom</li>
+                            <li>Technical poradenstvo</li>
+                        </ul>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h3 style="color: var(--primary);">Krok 6: Tracking a výsledky 📊</h3>
+            <div class="grid grid-2">
+                <div>
+                    <p>
+                        Keď je problém vyriešený, admin označí žiadosť ako "Vyriešená":
+                    </p>
+                    <ul class="feature-list">
+                        <li>Zaznamená výsledok</li>
+                        <li>Pridáva potrebné poznámky</li>
+                        <li>Nameraní sa uchová v systéme</li>
+                        <li>Expert dostane kredit za pomoc</li>
+                    </ul>
+                </div>
+                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
+                    <p style="font-weight: 600; color: var(--primary);">Výsledok v systéme:</p>
+                    <div style="margin-top: 1rem;">
+                        <p><strong>Status:</strong> <span class="badge" style="background: #d1fae5; color: #059669;">Vyriešená</span></p>
+                        <p><strong>Riešenie:</strong> Najatý senior React vývojár</p>
+                        <p><strong>Vplyv:</strong> ⭐⭐⭐⭐⭐ (5/5)</p>
+                        <p><strong>Expert:</strong> Anna Nováková</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="background: var(--primary-light); border-radius: 8px; padding: 3rem 2rem;">
+        <h2 style="text-align: center; color: var(--primary);">Súhrn procesu</h2>
+        <p style="text-align: center; margin-bottom: 2rem;">
+            Celý proces trvá od niekoľkých hodín do dní, v závislosti od komplexnosti požiadavky.
+        </p>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">📝</div>
+                <p><strong>Zadaj</strong></p>
+            </div>
+            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">🔍</div>
+                <p><strong>Prever</strong></p>
+            </div>
+            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">🧠</div>
+                <p><strong>Match</strong></p>
+            </div>
+            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">📧</div>
+                <p><strong>Priraď</strong></p>
+            </div>
+            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">🤝</div>
+                <p><strong>Pomáhaj</strong></p>
+            </div>
+            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
+            <div style="text-align: center; margin: 1rem;">
+                <div style="font-size: 2rem;">📊</div>
+                <p><strong>Track</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="text-align: center;">
+        <h2>Pripravený začať?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Skús to! Pošli svoju prvú žiadosť.</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Poslať žiadosť teraz</a>
+    </section>
+</div>
+{% endblock %}

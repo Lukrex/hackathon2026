@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Features - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <h1 text-center>✨ Funkcie Community Help System</h1>
+        <p class="text-center text-muted" style="margin-bottom: 3rem; font-size: 1.1rem;">
+            Všetko, čo potrebuješ na efektívne riadenie komunálnej pomoci
+        </p>
+
+        <div class="grid grid-2" style="margin: 3rem 0;">
+            {% for feature in features %}
+            <div class="card fade-in">
+                <div class="card-icon">{{ feature.icon }}</div>
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Detailný popis funkcií</h2>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">1️⃣ Žiadosť o pomoc</h3>
+            <p>
+                Komunita môže jednoducho zadávať svoje potreby prostredníctvom verejného formulára bez potreby prihlasovacieho účtu.
+                Systém automaticky posiela potvrdenie e-mailom a zaznamenáva všetky podrobnosti.
+            </p>
+            <ul class="feature-list">
+                <li>Názov a popis problému</li>
+                <li>Kategória problému (7 typov)</li>
+                <li>Kontaktné informácie (email, telefón)</li>
+                <li>Automatické potvrdenie</li>
+            </ul>
+        </div>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">2️⃣ Admin Dashboard</h3>
+            <p>
+                Veľmocní admin panel s jasnými vizuálnymi indikátormi a filtrovacími možnosťami. Všetko v jednom mieste.
+            </p>
+            <ul class="feature-list">
+                <li>Preverovanie žiadostí (manual review)</li>
+                <li>Nastavenie priority (kritická, vysoká, stredná, nízka)</li>
+                <li>Filtrovanie podľa statusu a kategórie</li>
+                <li>Hromadné akcie (bulk actions)</li>
+                <li>Priraďovanie expertov s jedným klikom</li>
+            </ul>
+        </div>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">3️⃣ Inteligentný Expert Matching</h3>
+            <p>
+                Systém využíva pokročilý algoritmus na nájdenie najvhodnejších expertov pre každú požiadavku.
+            </p>
+            <ul class="feature-list">
+                <li>Analýza prekryvu skúsenosti (0-40 bodov)</li>
+                <li>Kategóriová zhoda (0-30 bodov)</li>
+                <li>Dostupnosť (0-20 bodov)</li>
+                <li>Vyváženie pracovného zaťaženia (0-10 bodov)</li>
+                <li>Celkové skóre zhody 0-100%</li>
+            </ul>
+        </div>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">4️⃣ Email Notifikácie</h3>
+            <p>
+                Profesionálne HTML e-mailové správy pre všetky účastníkov. Potvrdzí, zhoduje, aktualizuje status.
+            </p>
+            <ul class="feature-list">
+                <li>Potvrdenie prijatia žiadosti</li>
+                <li>Notifikácia pre experta o zhodě</li>
+                <li>Aktualizácia statusu žiadosti</li>
+                <li>Profesionálne HTML formátovanie</li>
+                <li>Konfigurácia SMTP pre produkciu</li>
+            </ul>
+        </div>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">5️⃣ REST API</h3>
+            <p>
+                Kompletné REST API pre integrácie a custom rozšírenia. JSON responses so filtovaním a triedením.
+            </p>
+            <ul class="feature-list">
+                <li>POST /api/requests/ - Vytvor žiadosť</li>
+                <li>GET /api/requests/ - Vylistuj žiadosti</li>
+                <li>GET /api/experts/ - Adresár expertov</li>
+                <li>GET /api/matches/ - Zhodnosti</li>
+                <li>Filtrovanie, triedenie a pagination</li>
+            </ul>
+        </div>
+
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
+            <h3 style="color: var(--primary);">6️⃣ Notion Integrácia</h3>
+            <p>
+                Bezproblémový export a synchronizácia s tvojim Notion workspace. Drž svoj tím v tooku.
+            </p>
+            <ul class="feature-list">
+                <li>Export žiadostí do CSV/JSON</li>
+                <li>Notion databázový template</li>
+                <li>Bi-directional sync (API)</li>
+                <li>Automatizácia workflowu</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Kategórie žiadostí</h2>
+        <p>Systém podporuje 7 typov žiadostí o pomoc:</p>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>🔍 Hľadanie zamestnanca</h3>
+                <p>Pomoc pri hľadaní talentov do tímu. Programátori, marketerink, obchodní zástupcovia a ďalší.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Hľadanie investora</h3>
+                <p>Podpora pri získavaní investičného kapitálu. Fundraising, investor relations, pitch coaching.</p>
+            </div>
+            <div class="card">
+                <h3>📊 Konzultácia</h3>
+                <p>Odborné rady na stratégiu, GTM, business model, škálovanie a ďalšie.</p>
+            </div>
+            <div class="card">
+                <h3>📢 Marketing pomoc</h3>
+                <p>Copywriting, branding, content stratégia, social media, reklama a growth.</p>
+            </div>
+            <div class="card">
+                <h3>🎤 Speaking príležitosť</h3>
+                <p>Pozvánky na podujatia, konferencie, webináre a rôzne prednášky.</p>
+            </div>
+            <div class="card">
+                <h3>🤝 Networking</h3>
+                <p>Spojenie s ľuďmi z komunity pre partnerstvá, spoluprácu alebo mentoring.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Bezpečnosť a Súkromie</h2>
+        <p>Systém je navrhnutý s bezpečnosťou na prvom mieste:</p>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>🔐 Ochrana údajov</h3>
+                <ul class="feature-list">
+                    <li>CSRF protection</li>
+                    <li>SQL injection prevention</li>
+                    <li>XSS protection</li>
+                    <li>Password hashing</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🛡️ Autentifikácia</h3>
+                <ul class="feature-list">
+                    <li>Admin login vyžadovaný</li>
+                    <li>Email validácia</li>
+                    <li>Session management</li>
+                    <li>CORS configured</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="text-align: center;">
+        <h2>Pripravený na start?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Skús systém a posiela svoju prvú žiadosť</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Poslať žiadosť</a>
+        <a href="{% url 'how_it_works' %}" class="btn btn-secondary btn-lg" style="margin-left: 1rem;">Ako to funguje</a>
+    </section>
+</div>
+{% endblock %}

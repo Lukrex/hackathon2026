@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}About - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <h1>O Community Help System</h1>
+        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 2rem;">Systém navrhnutý pre HalovaMake Hackathon 2026</p>
+
+        <div style="margin: 3rem 0;">
+            <h2>Čo je to?</h2>
+            <p>
+                Community Help System je digitálny systém na organizáciu a správu žiadostí o pomoc v rámci komunít
+                (startupov, univerzít, VC ekosystémov). Rieši problém, že pomoc si často vyžaduje <strong>manuálne hľadanie</strong>
+                a koordináciu, čím sa stávajú procesy chaosom v e-mailoch a správach.
+            </p>
+        </div>
+
+        <div style="background: var(--primary-light); padding: 2rem; border-radius: 8px; margin: 2rem 0;">
+            <h3 style="color: var(--primary);">Problém, ktorý riešime</h3>
+            <ul class="feature-list">
+                <li>Komunita nevie, kto potrebuje čo a kto môže pomôcť</li>
+                <li>Pomoc sa deje náhodne alebo iba manuálne</li>
+                <li>Nie je jasné, ktorá požiadavka má najvyššiu prioritu</li>
+                <li>Chýba prehľadnosť a koordinácia medzi členom tímu</li>
+                <li>Nemožné merať vplyv a výsledky pomoci</li>
+            </ul>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h2>Naše riešenie</h2>
+            <p>
+                Vytvárame elegantný, webový systém, ktorý umožňuje:
+            </p>
+            <ul class="feature-list">
+                <li><strong>Egynoduché podávanie:</strong> Komunita zadáva žiadosti verejným formulárom</li>
+                <li><strong>Manuálne preverovanie:</strong> Admin tím skúma a kategorizuje požiadavky</li>
+                <li><strong>Inteligentný matching:</strong> Systém automaticky navrhuje najvhodnejších expertov</li>
+                <li><strong>Email notifikácie:</strong> Všetci sú informovaní prostredníctvom e-mailu</li>
+                <li><strong>Tracking dopadom:</strong> Meríme výsledky a lepšujeme proces</li>
+                <li><strong>Notion integrácia:</strong> Spojenie s existujúcimi nástrojmi tímu</li>
+            </ul>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h2>Technologické pozadie</h2>
+            <div class="grid grid-2">
+                <div>
+                    <h3>Backend</h3>
+                    <ul class="feature-list">
+                        <li><strong>Django</strong> - Web framework</li>
+                        <li><strong>Django REST Framework</strong> - REST API</li>
+                        <li><strong>SQLite/PostgreSQL</strong> - Database</li>
+                        <li><strong>Celery</strong> - Task queue (optional)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Frontend</h3>
+                    <ul class="feature-list">
+                        <li><strong>Django Templates</strong> - HTML rendering</li>
+                        <li><strong>React</strong> - Optional components</li>
+                        <li><strong>Pure CSS</strong> - Styling</li>
+                        <li><strong>Responsive Design</strong> - Mobile ready</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: var(--gray-light); padding: 2rem; border-radius: 8px; margin: 2rem 0;">
+            <h3>Štatistika projektu</h3>
+            <div class="grid grid-3">
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">2500+</div>
+                    <div class="text-muted">Lines of Code</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">2000+</div>
+                    <div class="text-muted">Lines of Documentation</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">20+</div>
+                    <div class="text-muted">API Endpoints</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h2>Tím a Viac Info</h2>
+            <p>
+                Projekt vytvorený pre <strong>HalovaMake Hackathon 2026</strong>.
+                Zameraný na zlepšovanie komunít prostredníctvom efektívnejšej koordinácie a zdieľania know-how.
+            </p>
+            <p style="margin-top: 1rem;">
+                <strong>Made with ❤️ using Claude AI</strong>
+            </p>
+        </div>
+
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Začni s vlastnou žiadosťou</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

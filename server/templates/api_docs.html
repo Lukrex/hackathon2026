@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}API Documentation - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <h1>📚 API Documentation</h1>
+        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 3rem;">
+            Kompletný REST API pre Community Help System. JSON responses, filtrovanie, triedenie, pagination.
+        </p>
+
+        <div style="background: var(--primary-light); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <h3 style="color: var(--primary); margin-top: 0;">🌍 API Base URL</h3>
+            <div class="code-block">http://localhost:8000/api/</div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Súčasť Endpoints</h2>
+
+        <h3 style="margin-top: 2rem;">📝 Requests API</h3>
+        <p>Správa žiadostí o pomoc</p>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">List all requests</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/requests/</code></p>
+            <p>Vylistuj všetkých žiadosti s možnosťou filtrovania, triedenia a paginovania.</p>
+            <p style="font-weight: 600; margin-top: 1rem;">Query parameters:</p>
+            <div class="code-block">
+?status=open&priority=high&search=React&ordering=-created_at&page=1
+            </div>
+            <p style="font-weight: 600; margin: 1rem 0 0.5rem;">Príklad response:</p>
+            <div class="code-block">
+{
+  "count": 5,
+  "results": [
+    {
+      "id": 1,
+      "title": "Need React Developer",
+      "priority_display": "🔴 Vysoká",
+      "status_display": "🟡 V preverovaní",
+      "created_at": "2026-03-28T10:30:00Z"
+    }
+  ]
+}
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">Get request details</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/requests/{id}/</code></p>
+            <p>获取detaily o jednej konkrétnej žiadosti.</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">Create request</h4>
+                <span class="badge" style="background: #dbeafe; color: #0c3d99;">POST</span>
+            </div>
+            <p class="text-muted"><code>/api/requests/</code></p>
+            <p>Vytvor novú žiadosť o pomoc.</p>
+            <p style="font-weight: 600; margin-top: 1rem;">Request body:</p>
+            <div class="code-block">
+{
+  "title": "Need senior frontend developer",
+  "description": "Details about the requirement",
+  "requester_name": "John Doe",
+  "requester_email": "john@example.com",
+  "requester_phone": "+421123456789",
+  "category": 1
+}
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">Assign expert</h4>
+                <span class="badge" style="background: #dbeafe; color: #0c3d99;">POST</span>
+            </div>
+            <p class="text-muted"><code>/api/requests/{id}/assign_expert/</code></p>
+            <p>Priraď experta k žiadosti.</p>
+            <div class="code-block">
+{
+  "expert_id": 1
+}
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">Mark as resolved</h4>
+                <span class="badge" style="background: #dbeafe; color: #0c3d99;">POST</span>
+            </div>
+            <p class="text-muted"><code>/api/requests/{id}/mark_resolved/</code></p>
+            <p>Označ žiadosť ako vyriešenú.</p>
+            <div class="code-block">
+{
+  "notes": "Successfully hired developer John Smith"
+}
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2rem;">👥 Experts API</h3>
+        <p>Správa a prehliadanie expertov</p>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">List experts</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/experts/</code></p>
+            <p>Adresár všetkých expertov s filtovaním a vyhľadávaním.</p>
+            <p style="font-weight: 600; margin-top: 1rem;">Query parameters:</p>
+            <div class="code-block">
+?availability=high&search=React&ordering=-help_provided
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">Get expert profile</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/experts/{id}/</code></p>
+            <p>Detaily o jednom expertovi.</p>
+        </div>
+
+        <h3 style="margin-top: 2rem;">🧠 Matches API</h3>
+        <p>Expert-request zhodnosti a scoring</p>
+
+        <div class="card" style="margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">List matches</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/matches/</code></p>
+            <p>Vylistuj všetky zhodnosti.</p>
+            <div class="code-block">
+?request=1&ordering=-match_score
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2rem;">🏷️ Categories API</h3>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="margin: 0;">List categories</h4>
+                <span class="badge" style="background: #d1f5e8; color: #059669;">GET</span>
+            </div>
+            <p class="text-muted"><code>/api/categories/</code></p>
+            <p>Všetky dostupné kategórie žiadostí.</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Status Codes</h2>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3 style="color: #10b981;">200 OK</h3>
+                <p>Successful GET request</p>
+            </div>
+            <div class="card">
+                <h3 style="color: #10b981;">201 Created</h3>
+                <p>Successful POST request (resource created)</p>
+            </div>
+            <div class="card">
+                <h3 style="color: #f59e0b;">400 Bad Request</h3>
+                <p>Invalid request data</p>
+            </div>
+            <div class="card">
+                <h3 style="color: #ef4444;">404 Not Found</h3>
+                <p>Resource doesn't exist</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Response Format</h2>
+        <p>Všetky responses sú v JSON formáte.</p>
+
+        <h3 style="margin-top: 2rem;">Successful Response (200/201)</h3>
+        <div class="code-block">
+{
+  "id": 1,
+  "title": "Request title",
+  "description": "Description",
+  "status": "open",
+  "priority": "high",
+  ...
+}
+        </div>
+
+        <h3 style="margin-top: 2rem;">Error Response (4xx/5xx)</h3>
+        <div class="code-block">
+{
+  "error": "Error message",
+  "detail": "More detailed error information",
+  "field_errors": {
+    "email": ["Invalid email format"]
+  }
+}
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Filtrovanie a Triedenie</h2>
+
+        <h3 style="margin-top: 1rem;">Requests filtrovanie:</h3>
+        <div class="grid grid-2">
+            <div class="card">
+                <p><code>status=open</code></p>
+                <p class="text-muted">Filter by status (open, in_review, in_progress, resolved, rejected)</p>
+            </div>
+            <div class="card">
+                <p><code>priority=high</code></p>
+                <p class="text-muted">Filter by priority (critical, high, medium, low)</p>
+            </div>
+            <div class="card">
+                <p><code>category=1</code></p>
+                <p class="text-muted">Filter by category ID</p>
+            </div>
+            <div class="card">
+                <p><code>search=React</code></p>
+                <p class="text-muted">Full-text search</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2rem;">Triedenie:</h3>
+        <div class="code-block">
+/api/requests/?ordering=-created_at        # Najnovšie prvé
+/api/requests/?ordering=priority            # Podľa priority
+/api/experts/?ordering=-help_provided       # Podľa počtu pomôcí (klesajúco)
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Príklady použitia (cURL)</h2>
+
+        <h3 style="margin-top: 1rem;">GET all requests</h3>
+        <div class="code-block">
+curl http://localhost:8000/api/requests/
+        </div>
+
+        <h3 style="margin-top: 2rem;">POST create request</h3>
+        <div class="code-block">
+curl -X POST http://localhost:8000/api/requests/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Need DevOps engineer",
+    "description": "Looking for experience with AWS and Kubernetes",
+    "requester_name": "Jane Doe",
+    "requester_email": "jane@example.com",
+    "category": 1
+  }'
+        </div>
+
+        <h3 style="margin-top: 2rem;">GET expert matches</h3>
+        <div class="code-block">
+curl http://localhost:8000/api/requests/1/suggested_experts/
+        </div>
+
+        <h3 style="margin-top: 2rem;">POST assign expert</h3>
+        <div class="code-block">
+curl -X POST http://localhost:8000/api/requests/1/assign_expert/ \
+  -H "Content-Type: application/json" \
+  -d '{"expert_id": 2}'
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Autentifikácia</h2>
+        <p>
+            API je momentálne verejný (no login required pre čítanie).<br>
+            V produkcii môžeš pridať Token-based authentication.
+        </p>
+    </section>
+
+    <section class="section" style="background: var(--primary-light); border-radius: 8px; padding: 2rem;">
+        <h2 style="color: var(--primary); margin-top: 0;">💡 Tipy</h2>
+        <ul class="feature-list">
+            <li>API vracia JSON. Nastav <code>Accept: application/json</code> header</li>
+            <li>POST/PUT requesty vyžadujú <code>Content-Type: application/json</code></li>
+            <li>Pagination vracia <code>count</code>, <code>next</code>, <code>previous</code>, <code>results</code></li>
+            <li>Use <code>ordering=field</code> pre ASC a <code>ordering=-field</code> pre DESC</li>
+            <li>Kombinuj filtre: <code>?status=open&priority=high&search=React</code></li>
+        </ul>
+    </section>
+
+    <section class="section" style="text-align: center;">
+        <h2>Potrebuješ viac info?</h2>
+        <p style="margin-bottom: 2rem;">Pozri si <a href="{% url 'index' %}" style="color: var(--primary);">Domov</a> alebo <a href="{% url 'about' %}" style="color: var(--primary);">Viac info</a></p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Skús API vytvorením žiadosti</a>
+    </section>
+</div>
+{% endblock %}
