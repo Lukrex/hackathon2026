@@ -1,0 +1,24 @@
+{
+  "name": "community-help-system",
+  "version": "1.0.0",
+  "description": "Digital system for managing community help requests",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "node server/index.js",
+    "client:dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "nodemailer": "^6.9.1",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}
