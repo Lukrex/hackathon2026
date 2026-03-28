@@ -15,12 +15,12 @@
 
         <div class="stats mb-4">
             <div class="stat-item stat-item-danger">
-                <div class="stat-number">{{ stats.unassigned_corporate_count }}</div>
-                <div class="stat-label">Non-Assigned Company Tasks</div>
+                <div class="stat-number">{{ stats.unassigned_requests_count }}</div>
+                <div class="stat-label">Unassigned Active Requests</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number">{{ stats.assigned_corporate_count }}</div>
-                <div class="stat-label">Assigned Company Tasks</div>
+                <div class="stat-number">{{ stats.assigned_requests_count }}</div>
+                <div class="stat-label">Assigned Active Requests</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">{{ stats.free_experts_count }}</div>
@@ -34,12 +34,12 @@
 
         <div class="card mb-4" id="non-assigned">
             <div class="card-header">
-                <h3>🚨 Non-Assigned Company Requests</h3>
+                <h3>🚨 Unassigned Active Requests</h3>
             </div>
             <div class="card-body">
-                {% if unassigned_corporate_requests %}
+                {% if unassigned_requests %}
                 <div class="requests-list">
-                    {% for req in unassigned_corporate_requests %}
+                    {% for req in unassigned_requests %}
                     <div class="request-item request-item-critical">
                         <div class="request-header">
                             <div class="request-title">
@@ -55,6 +55,9 @@
                             <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
                             {% if req.due_date %}
                             <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
+                            {% endif %}
+                            {% if req.offered_experts.count %}
+                            <span class="badge badge-warning">{{ req.offered_experts.count }} offer{{ req.offered_experts.count|pluralize }}</span>
                             {% endif %}
                         </div>
                         <div class="request-actions">
@@ -76,19 +79,19 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No non-assigned company requests. Great job.</p>
+                <p class="text-muted">No unassigned active requests.</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="card">
             <div class="card-header">
-                <h3>📦 Already Assigned Company Requests</h3>
+                <h3>📦 Assigned Active Requests</h3>
             </div>
             <div class="card-body">
-                {% if assigned_corporate_requests %}
+                {% if assigned_requests %}
                 <div class="requests-list">
-                    {% for req in assigned_corporate_requests %}
+                    {% for req in assigned_requests %}
                     <div class="request-item">
                         <div class="request-header">
                             <div class="request-title">
@@ -98,6 +101,9 @@
                         </div>
                         <div class="request-meta">
                             <span class="requester">{{ req.requester_name }}</span>
+                            {% if req.offered_experts.count %}
+                            <span class="badge badge-warning">{{ req.offered_experts.count }} offer{{ req.offered_experts.count|pluralize }}</span>
+                            {% endif %}
                         </div>
                         <div class="request-actions">
                             <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-outline">View</a>
@@ -114,7 +120,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted">No assigned company requests yet.</p>
+                <p class="text-muted">No assigned active requests yet.</p>
                 {% endif %}
             </div>
         </div>

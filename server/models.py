@@ -185,6 +185,12 @@ class Request(models.Model):
         blank=True,
         related_name='assigned_requests'
     )
+    offered_experts = models.ManyToManyField(
+        Expert,
+        blank=True,
+        related_name='offered_requests',
+        help_text='Experts who offered to help but are not assigned yet'
+    )
 
     # Tracking
     created_at = models.DateTimeField(auto_now_add=True)

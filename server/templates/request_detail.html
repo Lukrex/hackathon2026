@@ -22,13 +22,15 @@
                             </span>
                         </div>
                     </div>
-                    {% if can_offer_help and not has_offered_help %}
+                    {% if is_assigned_here %}
+                    <span class="badge badge-success">✓ Assigned to this request</span>
+                    {% elif can_offer_help and not has_offered_help %}
                     <form method="post" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-success">🤝 Offer Help</button>
+                        <button type="submit" class="btn btn-outline" name="offer_help" value="1">Offer help</button>
                     </form>
                     {% elif has_offered_help %}
-                    <span class="badge badge-success">✅ You offered help</span>
+                    <span class="badge badge-warning">Offer sent to admin</span>
                     {% endif %}
                 </div>
             </div>
@@ -130,6 +132,22 @@
                             </div>
                         </div>
                         {% endif %}
+
+                        {% if is_admin and request.offered_experts.all %}
+                        <div class="mt-4">
+                            <h4>Offers To Help</h4>
+                            <div class="assigned-experts">
+                                {% for expert in request.offered_experts.all %}
+                                <div class="expert-item">
+                                    <div class="expert-name">
+                                        <a href="{% url 'user_profile' expert.id %}">{{ expert.user.get_full_name|default:expert.user.username }}</a>
+                                    </div>
+                                    <div class="expert-rating">Interested, not assigned</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- RIGHT: recommended experts with per-card assign -->
@@ -164,7 +182,7 @@
                                         <span class="badge badge-light">{{ skill.name }}</span>
                                         {% endfor %}
                                     </div>
-                                    {% if is_admin and request.is_corporate and request.status not in 'resolved,rejected' %}
+                                    {% if is_admin and request.status not in 'resolved,rejected' %}
                                     <div class="rec-assign-row">
                                         {% if rec.is_assigned_here %}
                                         <span class="assigned-label">✓ Assigned</span>
