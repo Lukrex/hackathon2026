@@ -805,7 +805,7 @@ def request_chat(request, request_id):
     else:
         form = RequestChatMessageForm()
 
-    chat_messages = req.chat_messages.select_related('sender').all()
+    chat_messages = req.chat_messages.select_related('sender').order_by('-created_at')
 
     return render(request, 'request_chat.html', {
         'request_obj': req,
@@ -831,7 +831,7 @@ def admin_chat(request):
     else:
         form = AdminChatMessageForm()
 
-    chat_messages = AdminChatMessage.objects.select_related('sender').all()
+    chat_messages = AdminChatMessage.objects.select_related('sender').order_by('-created_at')
 
     return render(request, 'admin_chat.html', {
         'chat_messages': chat_messages,
