@@ -8,7 +8,7 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect
-from .models import Request, Expert, Category
+from .models import Request, Expert, Category, RequestChatMessage, AdminChatMessage
 from .forms import (
     RequestSubmissionForm,
     RequestFilterForm,
@@ -16,6 +16,8 @@ from .forms import (
     ExpertProfileForm,
     RegisterForm,
     UsernameEmailAuthenticationForm,
+    RequestChatMessageForm,
+    AdminChatMessageForm,
 )
 from .tasks import calculate_expert_matches
 
@@ -38,6 +40,19 @@ class RememberMeLoginView(LoginView):
 
 def is_admin_user(user):
     return user.is_staff or user.is_superuser
+
+
+def is_request_chat_participant(user, req):
+    """Requester and currently assigned experts can send request chat messages."""
+    if req.submitted_by_id == user.id:
+        return True
+
+    try:
+        expert = user.expert
+    except Expert.DoesNotExist:
+        return False
+
+    return req.assigned_experts.filter(id=expert.id).exists()
 
 
 def update_expert_busy_status(expert):
@@ -756,6 +771,71 @@ def request_detail(request, request_id):
         'has_offered_help': has_offered_help,
         'is_assigned_here': is_assigned_here,
         'is_admin': admin_view,
+        'can_access_request_chat': admin_view or is_request_chat_participant(request.user, req),
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def request_chat(request, request_id):
+    """Conversation for one request between requester and assigned experts."""
+    req = get_object_or_404(
+        Request.objects.select_related('submitted_by').prefetch_related('assigned_experts__user'),
+        id=request_id
+    )
+
+    is_admin = is_admin_user(request.user)
+    can_send = is_request_chat_participant(request.user, req)
+    if not (is_admin or can_send):
+        messages.error(request, 'You do not have access to this request chat.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        if not can_send:
+            messages.error(request, 'Only requester and assigned experts can send messages in this chat.')
+            return redirect('request_chat', request_id=req.id)
+
+        form = RequestChatMessageForm(request.POST)
+        if form.is_valid():
+            chat_message = form.save(commit=False)
+            chat_message.request = req
+            chat_message.sender = request.user
+            chat_message.save()
+            return redirect('request_chat', request_id=req.id)
+    else:
+        form = RequestChatMessageForm()
+
+    chat_messages = req.chat_messages.select_related('sender').all()
+
+    return render(request, 'request_chat.html', {
+        'request_obj': req,
+        'chat_messages': chat_messages,
+        'form': form,
+        'can_send': can_send,
+        'is_admin': is_admin,
+    })
+
+
+@login_required
+@user_passes_test(is_admin_user)
+@require_http_methods(["GET", "POST"])
+def admin_chat(request):
+    """Shared chat room for admins."""
+    if request.method == 'POST':
+        form = AdminChatMessageForm(request.POST)
+        if form.is_valid():
+            chat_message = form.save(commit=False)
+            chat_message.sender = request.user
+            chat_message.save()
+            return redirect('admin_chat')
+    else:
+        form = AdminChatMessageForm()
+
+    chat_messages = AdminChatMessage.objects.select_related('sender').all()
+
+    return render(request, 'admin_chat.html', {
+        'chat_messages': chat_messages,
+        'form': form,
     })
 
 

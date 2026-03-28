@@ -2,7 +2,17 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Q
-from .models import Category, Skill, Language, Expert, Request, ExpertMatch, Notification
+from .models import (
+    Category,
+    Skill,
+    Language,
+    Expert,
+    Request,
+    ExpertMatch,
+    Notification,
+    RequestChatMessage,
+    AdminChatMessage,
+)
 
 
 @admin.register(Category)
@@ -236,3 +246,25 @@ class NotificationAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         """Allow deletion for cleanup"""
         return True
+
+
+@admin.register(RequestChatMessage)
+class RequestChatMessageAdmin(admin.ModelAdmin):
+    list_display = ['request', 'sender', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['request__title', 'sender__username', 'sender__email', 'message']
+    readonly_fields = ['request', 'sender', 'message', 'created_at']
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(AdminChatMessage)
+class AdminChatMessageAdmin(admin.ModelAdmin):
+    list_display = ['sender', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['sender__username', 'sender__email', 'message']
+    readonly_fields = ['sender', 'message', 'created_at']
+
+    def has_add_permission(self, request):
+        return False

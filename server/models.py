@@ -255,6 +255,33 @@ class ExpertMatch(models.Model):
         return f"{self.request.title} → {self.expert} ({self.match_score}%)"
 
 
+class RequestChatMessage(models.Model):
+    """Message exchanged between request creator and assigned experts."""
+    request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='chat_messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_request_chat_messages')
+    message = models.TextField(max_length=4000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Request #{self.request_id} chat by {self.sender.username}"
+
+
+class AdminChatMessage(models.Model):
+    """Internal chat room for admins."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_admin_chat_messages')
+    message = models.TextField(max_length=4000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Admin chat by {self.sender.username}"
+
+
 class Notification(models.Model):
     """Email notifications tracking"""
     REQUEST_NOTIFICATION_TYPES = [

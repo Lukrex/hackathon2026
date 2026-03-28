@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Request Chat - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <div>
+                <h1>Request Chat</h1>
+                <p class="text-muted">{{ request_obj.title }}</p>
+            </div>
+            <div class="d-flex align-center" style="gap:0.5rem;">
+                <a href="{% url 'request_detail' request_obj.id %}" class="btn btn-outline">Request details</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Dashboard</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Conversation</h3>
+                <p class="text-muted" style="margin-top:0.25rem;">
+                    Participants: request creator and assigned experts
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="chat-box" id="chat-box">
+                    {% for msg in chat_messages %}
+                    <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
+                        <div class="chat-author">
+                            {{ msg.sender.get_full_name|default:msg.sender.username }}
+                            {% if msg.sender_id == request_obj.submitted_by_id %}
+                            <span class="badge badge-primary">Requester</span>
+                            {% endif %}
+                            {% if msg.sender.is_staff or msg.sender.is_superuser %}
+                            <span class="badge badge-warning">Admin</span>
+                            {% endif %}
+                        </div>
+                        <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No messages yet. Start the conversation.</p>
+                    {% endfor %}
+                </div>
+
+                {% if can_send %}
+                <form method="post" class="chat-form">
+                    {% csrf_token %}
+                    {{ form.message }}
+                    {% if form.message.errors %}
+                    <div class="form-errors">{{ form.message.errors }}</div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Send message</button>
+                </form>
+                {% else %}
+                <p class="text-muted" style="margin-top:1rem;">Admins can view this thread but cannot post messages.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.chat-box {
+    border: 1px solid var(--gray);
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chat-message {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+}
+
+.chat-message.mine {
+    background: #ecfeff;
+    border-color: #99f6e4;
+}
+
+.chat-author {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.chat-text {
+    color: var(--text);
+}
+
+.chat-time {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.chat-form {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.chat-form textarea {
+    width: 100%;
+}
+
+.form-errors {
+    color: #dc2626;
+    font-size: 0.86rem;
+}
+</style>
+
+<script>
+(function () {
+    const chatBox = document.getElementById('chat-box');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+})();
+</script>
+{% endblock %}

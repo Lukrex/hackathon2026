@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from .models import Request, Category, Expert
+from .models import Request, Category, Expert, RequestChatMessage, AdminChatMessage
 
 
 class RequestSubmissionForm(forms.ModelForm):
@@ -282,3 +282,41 @@ class UsernameEmailAuthenticationForm(AuthenticationForm):
             self.confirm_login_allowed(self.user_cache)
 
         return self.cleaned_data
+
+
+class RequestChatMessageForm(forms.ModelForm):
+    class Meta:
+        model = RequestChatMessage
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Write a message to coordinate this request...'
+            }),
+        }
+
+    def clean_message(self):
+        message = (self.cleaned_data.get('message') or '').strip()
+        if not message:
+            raise forms.ValidationError('Message cannot be empty.')
+        return message
+
+
+class AdminChatMessageForm(forms.ModelForm):
+    class Meta:
+        model = AdminChatMessage
+        fields = ['message']
+        widgets = {
+            'message': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Write an internal message for admins...'
+            }),
+        }
+
+    def clean_message(self):
+        message = (self.cleaned_data.get('message') or '').strip()
+        if not message:
+            raise forms.ValidationError('Message cannot be empty.')
+        return message

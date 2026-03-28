@@ -7,7 +7,12 @@
     <section class="section">
         <div class="d-flex justify-between align-center mb-4">
             <h1>📋 Request Details</h1>
-            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+            <div class="d-flex align-center" style="gap: 0.5rem;">
+                {% if can_access_request_chat %}
+                <a href="{% url 'request_chat' request.id %}" class="btn btn-outline">Open chat</a>
+                {% endif %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+            </div>
         </div>
 
         <div class="card">

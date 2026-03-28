@@ -7,7 +7,8 @@
     <section class="section">
         <div class="d-flex justify-between align-center mb-4">
             <h1>🛠️ Admin Assignment Dashboard</h1>
-            <div>
+            <div class="d-flex align-center" style="gap: 0.5rem;">
+                <a href="{% url 'admin_chat' %}" class="btn btn-sm btn-outline">Admin room</a>
                 <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
             </div>
