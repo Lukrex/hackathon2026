@@ -11,7 +11,7 @@ class RequestSubmissionForm(forms.ModelForm):
             'is_corporate', 'company_name', 'company_email', 'due_date',
             'title', 'description', 'requester_name', 'requester_email',
             'requester_phone', 'requester_type', 'category',
-            'target_skills', 'target_experience'
+            'target_skills', 'required_languages', 'target_experience'
         ]
         widgets = {
             'is_corporate': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -51,9 +51,15 @@ class RequestSubmissionForm(forms.ModelForm):
             }),
             'requester_type': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'target_skills': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'target_skills': forms.SelectMultiple(attrs={'class': 'form-control', 'size': 8}),
+            'required_languages': forms.SelectMultiple(attrs={'class': 'form-control', 'size': 8}),
             'target_experience': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['target_skills'].queryset = self.fields['target_skills'].queryset.order_by('name')
+        self.fields['required_languages'].queryset = self.fields['required_languages'].queryset.order_by('name')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -125,7 +131,7 @@ class ExpertProfileForm(forms.ModelForm):
     class Meta:
         model = Expert
         fields = [
-            'bio', 'skills', 'work_experience', 'availability'
+            'bio', 'skills', 'languages', 'work_experience', 'availability'
         ]
         widgets = {
             'bio': forms.Textarea(attrs={
@@ -137,6 +143,10 @@ class ExpertProfileForm(forms.ModelForm):
                 'class': 'form-control',
                 'size': 8
             }),
+            'languages': forms.SelectMultiple(attrs={
+                'class': 'form-control',
+                'size': 6
+            }),
             'work_experience': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Describe your relevant work experience and achievements...',
@@ -144,6 +154,12 @@ class ExpertProfileForm(forms.ModelForm):
             }),
             'availability': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['skills'].queryset = self.fields['skills'].queryset.order_by('name')
+        self.fields['languages'].queryset = self.fields['languages'].queryset.order_by('name')
+
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         required=False,

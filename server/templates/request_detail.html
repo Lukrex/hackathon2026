@@ -48,6 +48,15 @@
                         </div>
                         {% endif %}
 
+                        {% if request.required_languages.all %}
+                        <h4>Required Languages</h4>
+                        <div class="skill-tags mb-4">
+                            {% for language in request.required_languages.all %}
+                                <span class="badge badge-success">{{ language.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
                         {% if request.target_experience %}
                         <h4>Target Experience Level</h4>
                         <p class="mb-4">{{ request.get_target_experience_display }}</p>
@@ -100,7 +109,9 @@
                     <div class="assigned-experts">
                         {% for expert in request.assigned_experts.all %}
                         <div class="expert-item">
-                            <div class="expert-name">{{ expert.user.get_full_name|default:expert.user.username }}</div>
+                            <div class="expert-name">
+                                <a href="{% url 'user_profile' expert.id %}">{{ expert.user.get_full_name|default:expert.user.username }}</a>
+                            </div>
                             <div class="expert-rating">
                                 {% if expert.rating_count > 0 %}
                                     ⭐ {{ expert.average_rating }} ({{ expert.rating_count }} reviews)
@@ -121,7 +132,7 @@
                         {% for match in suggested_matches %}
                         <div class="match-item">
                             <div class="match-expert">
-                                <strong>{{ match.expert.user.get_full_name|default:match.expert.user.username }}</strong>
+                                <strong><a href="{% url 'user_profile' match.expert.id %}">{{ match.expert.user.get_full_name|default:match.expert.user.username }}</a></strong>
                                 <span class="match-score">{{ match.match_score }}% match</span>
                             </div>
                             {% if match.reasoning %}

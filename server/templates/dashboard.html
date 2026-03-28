@@ -10,76 +10,76 @@
             <div>
                 <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
-                <div class="stats mb-4">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ stats.total_requests }}</div>
-                        <div class="stat-label">Total Requests</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ stats.open_requests }}</div>
-                        <div class="stat-label">Open Requests</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ stats.in_progress }}</div>
-                        <div class="stat-label">In Progress</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ stats.resolved }}</div>
-                        <div class="stat-label">Resolved</div>
-                    </div>
-                </div>
+            </div>
+        </div>
 
-                <!-- Requests List -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>📋 All Community Requests</h3>
-                    </div>
-                    <div class="card-body">
-                        {% if requests %}
-                        <div class="requests-list">
-                            {% for req in requests %}
-                            <div class="request-item">
-                                <div class="request-header">
-                                    <div class="request-title">
-                                        <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
-                                    </div>
-                                    <div class="request-status status-{{ req.status }}">
-                                        {{ req.get_status_display }}
-                                    </div>
-                                </div>
-                                <div class="request-meta">
-                                    <span class="category">{{ req.get_category_display }}</span>
-                                    <span class="requester">{{ req.requester_name }}</span>
-                                    <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
-                                    {% if req.due_date %}
-                                    <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
-                                    {% endif %}
-                                </div>
-                                <div class="request-description">
-                                    {{ req.description|truncatechars:150 }}
-                                </div>
-                                <div class="request-actions">
-                                    <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">View
-                                        details</a>
-                                    {% if req.status == 'open' %}
-                                    <form method="post" action="{% url 'request_detail' req.id %}" class="inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline" name="offer_help"
-                                            value="1">Offer help</button>
-                                    </form>
-                                    {% endif %}
-                                </div>
+        <div class="stats mb-4">
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.total_requests }}</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.open_requests }}</div>
+                <div class="stat-label">Open Requests</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.in_progress }}</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.resolved }}</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 All Community Requests</h3>
+            </div>
+            <div class="card-body">
+                {% if requests %}
+                <div class="requests-list">
+                    {% for req in requests %}
+                    <div class="request-item">
+                        <div class="request-header">
+                            <div class="request-title">
+                                <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
                             </div>
-                            {% endfor %}
+                            <div class="request-status status-{{ req.status }}">
+                                {{ req.get_status_display }}
+                            </div>
                         </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No requests available at the moment.</p>
-                            <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
+                        <div class="request-meta">
+                            <span class="category">{{ req.get_category_display }}</span>
+                            <span class="requester">{{ req.requester_name }}</span>
+                            <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
+                            {% if req.due_date %}
+                            <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
+                            {% endif %}
                         </div>
-                        {% endif %}
+                        <div class="request-description">
+                            {{ req.description|truncatechars:150 }}
+                        </div>
+                        <div class="request-actions">
+                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">View details</a>
+                            {% if req.status == 'open' %}
+                            <form method="post" action="{% url 'request_detail' req.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline" name="offer_help" value="1">Offer help</button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No requests available at the moment.</p>
+                    <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </section>
 </div>
 

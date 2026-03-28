@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Q
-from .models import Category, Skill, Expert, Request, ExpertMatch, Notification
+from .models import Category, Skill, Language, Expert, Request, ExpertMatch, Notification
 
 
 @admin.register(Category)
@@ -17,16 +17,22 @@ class SkillAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(Language)
+class LanguageAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+
+
 @admin.register(Expert)
 class ExpertAdmin(admin.ModelAdmin):
-    list_display = ['name', 'expertise_display', 'availability', 'rating', 'help_provided', 'created_at']
+    list_display = ['name', 'skills_display', 'availability', 'rating', 'help_provided', 'created_at']
     list_filter = ['availability', 'created_at']
-    search_fields = ['user__first_name', 'user__last_name', 'user__email', 'expertise', 'skills__name']
+    search_fields = ['user__first_name', 'user__last_name', 'user__email', 'skills__name', 'languages__name']
     readonly_fields = ['created_at', 'help_provided']
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'availability')
+            'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'languages', 'availability')
         }),
         ('Ratings', {
             'fields': ('rating', 'rating_count', 'help_provided', 'created_at'),
@@ -36,15 +42,15 @@ class ExpertAdmin(admin.ModelAdmin):
         return obj.user.get_full_name() or obj.user.username
     name.short_description = 'Meno'
 
-    def expertise_display(self, obj):
-        """Display expertise as nice tags"""
-        tags = obj.get_expertise_list()
+    def skills_display(self, obj):
+        """Display skills as nice tags"""
+        tags = obj.get_skill_list()
         html = ' '.join([
             f'<span style="background: #667eea30; padding: 2px 8px; border-radius: 4px; margin: 2px;">{tag}</span>'
             for tag in tags
         ])
         return format_html(html)
-    expertise_display.short_description = 'Odbornosti'
+    skills_display.short_description = 'Skills'
 
 
 @admin.register(Request)
@@ -67,7 +73,7 @@ class RequestAdmin(admin.ModelAdmin):
                 'title', 'description', 'category', 'priority', 'value_score',
                 'requester_type', 'requester_name', 'requester_email', 'requester_phone',
                 'is_corporate', 'company_name', 'company_email', 'due_date',
-                'target_skills', 'target_experience'
+                'target_skills', 'required_languages', 'target_experience'
             )
         }),
         ('Status', {
@@ -84,7 +90,7 @@ class RequestAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = ['created_at', 'updated_at', 'reviewed_by']
-    filter_horizontal = ['assigned_experts']
+    filter_horizontal = ['assigned_experts', 'target_skills', 'required_languages']
     actions = ['mark_in_review', 'mark_in_progress', 'mark_resolved', 'mark_rejected']
 
     def request_title(self, obj):

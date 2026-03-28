@@ -41,6 +41,17 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="{{ form.languages.id_for_label }}">Known Languages</label>
+                        <small class="text-muted d-block mb-2">Select all languages you can communicate in</small>
+                        {{ form.languages }}
+                        {% if form.languages.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.languages.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
                         <label for="{{ form.work_experience.id_for_label }}">Work Experience</label>
                         {{ form.work_experience }}
                         {% if form.work_experience.errors %}
@@ -77,6 +88,21 @@
                 <div class="skill-tags">
                     {% for skill in expert.skills.all %}
                         <span class="badge badge-primary">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if expert.languages.all %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3>Your Known Languages</h3>
+            </div>
+            <div class="card-body">
+                <div class="skill-tags">
+                    {% for language in expert.languages.all %}
+                        <span class="badge badge-success">{{ language.name }}</span>
                     {% endfor %}
                 </div>
             </div>
