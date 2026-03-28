@@ -22,6 +22,7 @@ The **Internal Coordination** feature allows request creators to track and mark 
 ### 3. **Tracking Fields**
 
 The Request model tracks:
+
 - `is_resolved_by_creator` (Boolean): Whether the creator marked the request as done
 - `creator_resolved_at` (DateTime): Timestamp when the creator marked it done
 
@@ -61,6 +62,7 @@ curl -X POST http://localhost:8000/api/requests/123/mark_done_by_creator/
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -71,6 +73,7 @@ curl -X POST http://localhost:8000/api/requests/123/mark_done_by_creator/
 ```
 
 **Permissions:**
+
 - Only the request creator (user who submitted it) can call this endpoint
 - Returns 403 Forbidden if unauthorized
 
@@ -138,6 +141,7 @@ Resolution Status: ✅ Hotovo (Done)
 ## Admin View
 
 In the admin panel, you can see:
+
 - All requests with their creator resolution status
 - Filter by `is_resolved_by_creator` to see completed vs pending requests
 - View the `creator_resolved_at` timestamp for completed requests
