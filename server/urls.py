@@ -20,6 +20,9 @@ urlpatterns = [
     path('request/<int:request_id>/submitted/', views.request_submitted, name='request_submitted'),
     path('request/<int:request_id>/', views.request_detail, name='request_detail'),
     path('request/<int:request_id>/mark-done/', views.mark_request_done, name='mark_request_done'),
+    path('request/<int:request_id>/assign-expert/', views.admin_assign_expert, name='admin_assign_expert'),
+    path('request/<int:request_id>/unassign-expert/', views.admin_unassign_expert, name='admin_unassign_expert'),
+    path('request/<int:request_id>/leave/', views.leave_assigned_request, name='leave_assigned_request'),
     path('request/<int:request_id>/review/', views.review_request, name='review_request'),
 
     # Expert directory

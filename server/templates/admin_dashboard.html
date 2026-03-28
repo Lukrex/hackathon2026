@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <h1>🛠️ Admin Assignment Dashboard</h1>
+            <div>
+                <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
+            </div>
+        </div>
+
+        <div class="stats mb-4">
+            <div class="stat-item stat-item-danger">
+                <div class="stat-number">{{ stats.unassigned_corporate_count }}</div>
+                <div class="stat-label">Non-Assigned Company Tasks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.assigned_corporate_count }}</div>
+                <div class="stat-label">Assigned Company Tasks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.free_experts_count }}</div>
+                <div class="stat-label">Free Experts</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.busy_experts_count }}</div>
+                <div class="stat-label">Busy Experts</div>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="non-assigned">
+            <div class="card-header">
+                <h3>🚨 Non-Assigned Company Requests</h3>
+            </div>
+            <div class="card-body">
+                {% if unassigned_corporate_requests %}
+                <div class="requests-list">
+                    {% for req in unassigned_corporate_requests %}
+                    <div class="request-item request-item-critical">
+                        <div class="request-header">
+                            <div class="request-title">
+                                <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
+                            </div>
+                            <div class="request-status status-{{ req.status }}">
+                                {{ req.get_status_display }}
+                            </div>
+                        </div>
+                        <div class="request-meta">
+                            <span class="category">{{ req.get_category_display }}</span>
+                            <span class="requester">{{ req.requester_name }}</span>
+                            <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
+                            {% if req.due_date %}
+                            <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="request-actions">
+                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">Open task</a>
+                            <form method="post" action="{% url 'admin_assign_expert' req.id %}" class="inline assign-form">
+                                {% csrf_token %}
+                                <select name="expert_id" class="assign-select" required>
+                                    <option value="">Assign free expert...</option>
+                                    {% for expert in free_experts %}
+                                    <option value="{{ expert.id }}">
+                                        {{ expert.user.get_full_name|default:expert.user.username }} (Karma {{ expert.karma_points }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-success">Assign</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No non-assigned company requests. Great job.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>📦 Already Assigned Company Requests</h3>
+            </div>
+            <div class="card-body">
+                {% if assigned_corporate_requests %}
+                <div class="requests-list">
+                    {% for req in assigned_corporate_requests %}
+                    <div class="request-item">
+                        <div class="request-header">
+                            <div class="request-title">
+                                <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
+                            </div>
+                            <div class="request-status status-{{ req.status }}">{{ req.get_status_display }}</div>
+                        </div>
+                        <div class="request-meta">
+                            <span class="requester">{{ req.requester_name }}</span>
+                        </div>
+                        <div class="request-actions">
+                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-outline">View</a>
+                            {% for expert in req.assigned_experts.all %}
+                            <span class="expert-assigned">{{ expert.user.get_full_name|default:expert.user.username }}</span>
+                            <form method="post" action="{% url 'admin_unassign_expert' req.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="expert_id" value="{{ expert.id }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Unassign {{ expert.user.get_full_name|default:expert.user.username }}?')">✕ Unassign</button>
+                            </form>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No assigned company requests yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-item {
+        background: var(--gray-light);
+        border: 1px solid var(--gray);
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+    }
+
+    .stat-item-danger {
+        border-color: #fca5a5;
+        background: #fef2f2;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .requests-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .request-item {
+        border: 1px solid var(--gray);
+        border-radius: 10px;
+        padding: 1rem;
+        background: white;
+    }
+
+    .request-item-critical {
+        border-left: 4px solid #ef4444;
+    }
+
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .request-title a {
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .request-title a:hover {
+        color: var(--primary);
+    }
+
+    .request-meta {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .request-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .assign-form {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .assign-select {
+        min-width: 250px;
+        border: 1px solid var(--gray);
+        border-radius: 6px;
+        padding: 0.4rem 0.55rem;
+        font-size: 0.9rem;
+    }
+
+    .status-open { background: #dbeafe; color: #1e40af; }
+    .status-in_review { background: #fef3c7; color: #92400e; }
+    .status-waiting_expert { background: #e0e7ff; color: #3730a3; }
+    .status-in_progress { background: #fed7aa; color: #9a3412; }
+    .status-resolved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #dc2626; }
+
+    .request-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .expert-assigned {
+        color: #065f46;
+        font-weight: 600;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        color: white;
+    }
+</style>
+{% endblock %}
