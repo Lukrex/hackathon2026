@@ -8,6 +8,83 @@ from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, 
 from .tasks import calculate_expert_matches
 
 
+def compute_expert_recommendations(req, limit=6):
+    """Compute live expert recommendations for a request based on relevance scoring."""
+    # First try pre-computed AI matches
+    ai_matches = req.expert_matches.select_related('expert__user').prefetch_related(
+        'expert__skills', 'expert__languages'
+    ).order_by('-match_score')[:limit]
+    if ai_matches.count() >= 3:
+        # Return AI matches enriched with expert data
+        return [{
+            'expert': m.expert,
+            'score': round(m.match_score),
+            'reasoning': m.reasoning,
+            'source': 'ai',
+        } for m in ai_matches]
+
+    # Fallback: compute live relevance scores
+    request_skill_ids = set(req.target_skills.values_list('id', flat=True))
+    request_lang_ids = set(req.required_languages.values_list('id', flat=True))
+    req_words = set((req.title + ' ' + req.description).lower().split())
+
+    availability_weight = {'high': 1.0, 'medium': 0.7, 'low': 0.3}
+
+    experts = Expert.objects.select_related('user').prefetch_related('skills', 'languages').all()
+    scored = []
+    for expert in experts:
+        score = 0.0
+
+        # Skill overlap (40 pts)
+        expert_skill_ids = set(expert.skills.values_list('id', flat=True))
+        if request_skill_ids:
+            overlap = len(request_skill_ids & expert_skill_ids)
+            score += (overlap / len(request_skill_ids)) * 40
+        elif expert_skill_ids:
+            # No specific skills required — any expert with skills gets a small boost
+            score += 10
+
+        # Language overlap (20 pts)
+        expert_lang_ids = set(expert.languages.values_list('id', flat=True))
+        if request_lang_ids:
+            lang_overlap = len(request_lang_ids & expert_lang_ids)
+            score += (lang_overlap / len(request_lang_ids)) * 20
+
+        # Keyword match in bio / work experience (20 pts)
+        expert_text_words = set((expert.bio + ' ' + expert.work_experience).lower().split())
+        kw_overlap = len(req_words & expert_text_words)
+        score += min(kw_overlap * 2, 20)
+
+        # Rating (10 pts)
+        if expert.rating_count > 0:
+            score += (expert.rating / 5.0) * 10
+
+        # Availability (10 pts)
+        score += availability_weight.get(expert.availability, 0.5) * 10
+
+        if score > 0:
+            skill_names = [s.name for s in expert.skills.all()]
+            lang_names = [l.name for l in expert.languages.all()]
+            reasons = []
+            if request_skill_ids and expert_skill_ids & request_skill_ids:
+                matched = [s.name for s in expert.skills.all() if s.id in request_skill_ids]
+                reasons.append(f"Skills: {', '.join(matched)}")
+            if request_lang_ids and expert_lang_ids & request_lang_ids:
+                matched_langs = [l.name for l in expert.languages.all() if l.id in request_lang_ids]
+                reasons.append(f"Languages: {', '.join(matched_langs)}")
+            if expert.rating_count > 0:
+                reasons.append(f"Rating: {expert.average_rating()}/5")
+            scored.append({
+                'expert': expert,
+                'score': round(min(score, 100)),
+                'reasoning': ' | '.join(reasons) if reasons else 'General match',
+                'source': 'live',
+            })
+
+    scored.sort(key=lambda x: x['score'], reverse=True)
+    return scored[:limit]
+
+
 def index(request):
     """Landing page / home page"""
     stats = {
@@ -124,6 +201,8 @@ def submit_request(request):
             try:
                 new_request = form.save(commit=False)
                 new_request.status = 'open'
+                if request.user.is_authenticated:
+                    new_request.submitted_by = request.user
                 new_request.save()
                 form.save_m2m()
 
@@ -167,12 +246,14 @@ def request_submitted(request, request_id):
 def dashboard(request):
     """User dashboard showing all requests sorted by due date"""
     # Show all requests sorted by due date (closest first), then by created date
-    requests = Request.objects.all().order_by('due_date', '-created_at')
-
-    # Filter out requests without due dates or put them at the end
-    requests_with_due = requests.exclude(due_date__isnull=True)
-    requests_without_due = requests.filter(due_date__isnull=True)
+    all_qs = Request.objects.all().order_by('due_date', '-created_at')
+    requests_with_due = all_qs.exclude(due_date__isnull=True)
+    requests_without_due = all_qs.filter(due_date__isnull=True)
     requests = list(requests_with_due) + list(requests_without_due)
+
+    # My requests: submitted by this user (via the submitted_by FK)
+    my_requests_qs = Request.objects.filter(submitted_by=request.user).order_by('-created_at')
+    my_requests = list(my_requests_qs)
 
     dashboard_type = 'all'
     stats = {
@@ -181,10 +262,12 @@ def dashboard(request):
         'in_progress': Request.objects.filter(status='in_progress').count(),
         'resolved': Request.objects.filter(status='resolved').count(),
         'total_experts': Expert.objects.count(),
+        'my_requests_count': my_requests_qs.count(),
     }
 
     return render(request, 'dashboard.html', {
         'requests': requests,
+        'my_requests': my_requests,
         'dashboard_type': dashboard_type,
         'stats': stats,
     })
@@ -267,7 +350,6 @@ def user_profile(request, expert_id):
 def request_detail(request, request_id):
     """Detailed view of a single request"""
     req = get_object_or_404(Request, id=request_id)
-    suggested_matches = req.expert_matches.all().order_by('-match_score')[:10]
 
     # Check if current user is an expert and can offer help
     can_offer_help = False
@@ -286,15 +368,17 @@ def request_detail(request, request_id):
             req.assigned_experts.add(expert)
             messages.success(request, f'You have successfully offered help for "{req.title}"!')
             has_offered_help = True
-            # If coming from dashboard, redirect back
             if 'offer_help' in request.POST:
                 return redirect('dashboard')
         except Exception as e:
             messages.error(request, f'Error offering help: {str(e)}')
 
+    # Compute expert recommendations (AI matches or live scoring)
+    recommended_experts = compute_expert_recommendations(req, limit=6)
+
     return render(request, 'request_detail.html', {
         'request': req,
-        'suggested_matches': suggested_matches,
+        'recommended_experts': recommended_experts,
         'can_offer_help': can_offer_help,
         'has_offered_help': has_offered_help,
     })
