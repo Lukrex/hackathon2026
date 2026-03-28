@@ -877,7 +877,20 @@ def edit_profile(request):
     else:
         form = ExpertProfileForm(instance=expert)
 
+    skill_groups = _group_skills_by_theme(form.fields['skills'].queryset)
+    known_languages = list(form.fields['languages'].queryset)
+    selected_skills = set(request.POST.getlist('skills')) if request.method == 'POST' else set(
+        str(skill_id) for skill_id in expert.skills.values_list('id', flat=True)
+    )
+    selected_languages = set(request.POST.getlist('languages')) if request.method == 'POST' else set(
+        str(language_id) for language_id in expert.languages.values_list('id', flat=True)
+    )
+
     return render(request, 'edit_profile.html', {
         'form': form,
         'expert': expert,
+        'skill_groups': skill_groups,
+        'known_languages': known_languages,
+        'selected_skills': selected_skills,
+        'selected_languages': selected_languages,
     })
