@@ -23,6 +23,10 @@ urlpatterns = [
     path('how-it-works/', views.how_it_works, name='how_it_works'),
     path('api-docs/', views.api_docs, name='api_docs'),
 
+    # Authentication
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('register/', views.register, name='register'),
+
     # Request management
     path('submit/', views.submit_request, name='submit_request'),
     path('request/<int:request_id>/submitted/', views.request_submitted, name='request_submitted'),

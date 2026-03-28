@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
-from server.models import Category, Expert, Request, ExpertMatch
+from server.models import Category, Skill, Expert, Request, ExpertMatch
 from datetime import datetime, timedelta
 import random
 
@@ -30,7 +30,18 @@ class Command(BaseCommand):
             )
             categories[code] = cat
             if created:
-                self.stdout.write(f"✅ Vytvorená kategória: {name}")
+                self.stdout.write(f"✅ Category created: {name}")
+
+        skill_names = [
+            'React', 'Node.js', 'GTM', 'Product Management',
+            'Fundraising', 'Investor Relations', 'Business Strategy',
+            'Digital Marketing', 'Branding', 'Copywriting', 'Sales',
+            'Recruiting', 'HR', 'Team Building', 'Scaling', 'AI/ML', 'Web3'
+        ]
+        skills = {}
+        for skill_name in skill_names:
+            skill, _ = Skill.objects.get_or_create(name=skill_name)
+            skills[skill_name] = skill
 
         # Create demo experts
         experts_data = [
@@ -91,6 +102,9 @@ class Command(BaseCommand):
                     'email': exp_data['email'],
                 }
             )
+            if created:
+                user.set_password('demo123')
+                user.save()
 
             expert, expert_created = Expert.objects.get_or_create(
                 user=user,
@@ -102,6 +116,15 @@ class Command(BaseCommand):
                 }
             )
 
+            # Assign skill objects based on expertise tags
+            skill_set = []
+            for part in exp_data['expertise'].split(','):
+                key = part.strip()
+                if key in skills:
+                    skill_set.append(skills[key])
+            if skill_set:
+                expert.skills.set(skill_set)
+
             experts[exp_data['username']] = expert
 
             if expert_created:
@@ -110,12 +133,17 @@ class Command(BaseCommand):
         # Create demo requests
         requests_data = [
             {
-                'title': 'Hľadáme senior React vývojára',
-                'description': 'Náš startup hľadá skúseného React vývojára, ktorý by sa pripojil k nášemu tímu. '
-                              'Potrebujeme niekoho s minimálne 5 rokmi skúseností s Reactom a Node.js. '
-                              'Práca je remote, plná pracovná doba.',
-                'requester_name': 'Martin Gál',
-                'requester_email': 'martin@startup.sk',
+                'title': 'Looking for senior React developer',
+                'description': 'Our startup is looking for a senior React developer to join the team. '
+                              'Minimum 5 years experience in React + Node.js. Remote full-time.',
+                'requester_name': 'Martin Gal',
+                'requester_email': 'martin@startup.com',
+                'is_corporate': True,
+                'company_name': 'TechLaunch Inc.',
+                'company_email': 'hr@techlaunch.com',
+                'due_date': datetime.now().date() + timedelta(days=21),
+                'target_experience': 'senior',
+                'target_skills': [skills['React'], skills['Node.js']],
                 'category': categories['hiring'],
                 'priority': 'high',
                 'value_score': 9,
@@ -170,20 +198,31 @@ class Command(BaseCommand):
             req, created = Request.objects.get_or_create(
                 title=req_data['title'],
                 defaults={
-                    'description': req_data['description'],
-                    'requester_name': req_data['requester_name'],
-                    'requester_email': req_data['requester_email'],
-                    'category': req_data['category'],
-                    'priority': req_data['priority'],
-                    'value_score': req_data['value_score'],
+                    'description': req_data.get('description', ''),
+                    'requester_name': req_data.get('requester_name', ''),
+                    'requester_email': req_data.get('requester_email', ''),
+                    'category': req_data.get('category'),
+                    'priority': req_data.get('priority', 'medium'),
+                    'value_score': req_data.get('value_score', 5),
                     'status': random.choice(['open', 'in_review', 'in_progress']),
-                    'created_at': datetime.now() - timedelta(days=random.randint(1, 10))
+                    'created_at': datetime.now() - timedelta(days=random.randint(1, 10)),
+                    'is_corporate': req_data.get('is_corporate', False),
+                    'company_name': req_data.get('company_name', ''),
+                    'company_email': req_data.get('company_email', ''),
+                    'due_date': req_data.get('due_date'),
+                    'requester_type': req_data.get('requester_type', 'community_member'),
+                    'target_experience': req_data.get('target_experience', ''),
                 }
             )
 
             if created:
                 self.stdout.write(f"✅ Vytvorená žiadosť: {req_data['title']}")
                 requests_created.append(req)
+
+                # Assign target skills for corporate needs
+                target_skills = req_data.get('target_skills', [])
+                if target_skills:
+                    req.target_skills.set(target_skills)
 
                 # Assign random experts
                 num_experts = random.randint(1, 3)

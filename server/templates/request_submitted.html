@@ -1,47 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Žiadosť prijatá - Community Help System{% endblock %}
+{% block title %}Request Submitted - Community Help System{% endblock %}
 
 {% block content %}
 <div class="container">
     <section class="section">
         <div class="text-center">
             <div class="success-icon">✅</div>
-            <h1>Žiadosť prijatá!</h1>
-            <p class="text-muted">Tvoja žiadosť bola úspešne prijatá a bude spracovaná.</p>
+            <h1>Request submitted!</h1>
+            <p class="text-muted">Your request has been received and is now being processed.</p>
         </div>
 
         <div class="row justify-center">
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <h3>Detaily žiadosti</h3>
+                        <h3>Request details</h3>
                         <div class="request-details">
                             <div class="detail-row">
-                                <strong>Názov:</strong> {{ request.title }}
+                                <strong>Title:</strong> {{ request.title }}
                             </div>
                             <div class="detail-row">
-                                <strong>Kategória:</strong> {{ request.get_category_display }}
+                                <strong>Category:</strong> {{ request.get_category_display }}
                             </div>
                             <div class="detail-row">
-                                <strong>Typ žiadateľa:</strong> {{ request.get_requester_type_display }}
+                                <strong>Requester type:</strong> {{ request.get_requester_type_display }}
                             </div>
                             <div class="detail-row">
-                                <strong>Meno:</strong> {{ request.requester_name }}
+                                <strong>Name:</strong> {{ request.requester_name }}
                             </div>
                             <div class="detail-row">
                                 <strong>Email:</strong> {{ request.requester_email }}
                             </div>
                             {% if request.requester_phone %}
                             <div class="detail-row">
-                                <strong>Telefón:</strong> {{ request.requester_phone }}
+                                <strong>Phone:</strong> {{ request.requester_phone }}
+                            </div>
+                            {% endif %}
+                            {% if request.company_name %}
+                            <div class="detail-row">
+                                <strong>Company:</strong> {{ request.company_name }}
+                            </div>
+                            {% endif %}
+                            {% if request.company_email %}
+                            <div class="detail-row">
+                                <strong>Company email:</strong> {{ request.company_email }}
                             </div>
                             {% endif %}
                             <div class="detail-row">
                                 <strong>Status:</strong> {{ request.get_status_display }}
                             </div>
                             <div class="detail-row">
-                                <strong>Dátum podania:</strong> {{ request.created_at|date:"d.m.Y H:i" }}
+                                <strong>Submitted at:</strong> {{ request.created_at|date:"Y-m-d H:i" }}
                             </div>
                         </div>
                     </div>
@@ -49,7 +59,7 @@
 
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h4>Čo sa stane ďalej?</h4>
+                        <h4>What happens next?</h4>
                         <div class="steps">
                             {% for step in next_steps %}
                             <div class="step">
@@ -62,8 +72,8 @@
                 </div>
 
                 <div class="text-center mt-4">
-                    <a href="{% url 'index' %}" class="btn btn-primary">Späť na hlavnú stránku</a>
-                    <a href="{% url 'submit_request' %}" class="btn btn-outline">Poslať ďalšiu žiadosť</a>
+                    <a href="{% url 'index' %}" class="btn btn-primary">Back to homepage</a>
+                    <a href="{% url 'submit_request' %}" class="btn btn-outline">Submit another request</a>
                 </div>
             </div>
         </div>
