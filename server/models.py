@@ -75,11 +75,23 @@ class Request(models.Model):
         ('critical', '🔴🔴 Kritická'),
     ]
 
+    REQUESTER_TYPE_CHOICES = [
+        ('startup', '🚀 Startup'),
+        ('investor', '💰 Investor'),
+        ('service_provider', '🛠️ Poskytovateľ služieb'),
+        ('community_member', '👥 Člen komunity'),
+    ]
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     requester_name = models.CharField(max_length=200)
     requester_email = models.EmailField()
     requester_phone = models.CharField(max_length=20, blank=True)
+    requester_type = models.CharField(
+        max_length=20,
+        choices=REQUESTER_TYPE_CHOICES,
+        default='community_member'
+    )
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     priority = models.CharField(
         max_length=20,

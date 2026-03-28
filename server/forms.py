@@ -9,7 +9,7 @@ class RequestSubmissionForm(forms.ModelForm):
         model = Request
         fields = [
             'title', 'description', 'requester_name',
-            'requester_email', 'requester_phone', 'category'
+            'requester_email', 'requester_phone', 'requester_type', 'category'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -34,6 +34,9 @@ class RequestSubmissionForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': '+421 123 456 789 (voliteľné)'
             }),
+            'requester_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
             'category': forms.Select(attrs={
                 'class': 'form-control'
             }),
@@ -47,8 +50,8 @@ class RequestSubmissionForm(forms.ModelForm):
 
     def clean_description(self):
         description = self.cleaned_data.get('description')
-        if len(description) < 20:
-            raise forms.ValidationError('Popis musí byť aspoň 20 znakov dlhý.')
+        if len(description) < 10:
+            raise forms.ValidationError('Popis musí byť aspoň 10 znakov dlhý.')
         return description
 
 
