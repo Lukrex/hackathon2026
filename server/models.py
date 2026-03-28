@@ -70,6 +70,7 @@ class Expert(models.Model):
         choices=AVAILABILITY_CHOICES,
         default='medium'
     )
+    karma_points = models.IntegerField(default=0, help_text='Karma points earned for completed help')
     help_provided = models.IntegerField(default=0, help_text='Number of help contributions')
     profile_image = models.ImageField(upload_to='experts/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -187,6 +188,23 @@ class Request(models.Model):
     # Tracking
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_resolved_by_creator = models.BooleanField(
+        default=False,
+        help_text='Whether the request creator has marked this as resolved/done'
+    )
+    creator_resolved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Timestamp when creator marked the request as done'
+    )
+    completed_by_expert = models.ForeignKey(
+        Expert,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='completed_requests',
+        help_text='Expert selected by creator as the one who completed this request'
+    )
     resolved_at = models.DateTimeField(null=True, blank=True)
     resolution_notes = models.TextField(blank=True)
 

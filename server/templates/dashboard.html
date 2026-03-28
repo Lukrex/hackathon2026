@@ -40,7 +40,14 @@
         <div class="card mb-4" id="my-requests">
             <div class="card-header d-flex justify-between align-center">
                 <h3>🙋 My Requests</h3>
-                <span class="badge badge-primary">{{ my_requests|length }}</span>
+                <div class="coordination-summary">
+                    <span class="badge badge-success">Done: {{ stats.my_done_count }}</span>
+                    <span class="badge badge-warning">Pending: {{ stats.my_pending_count }}</span>
+                    <span class="badge badge-primary">Total: {{ my_requests|length }}</span>
+                </div>
+            </div>
+            <div class="card-subheader">
+                <strong>Internal Coordination of Requests</strong> - We track whether your requests have been resolved.
             </div>
             <div class="card-body">
                 <div class="requests-list">
@@ -58,6 +65,14 @@
                         <div class="request-meta">
                             <span class="category">{{ req.get_category_display }}</span>
                             <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
+                            {% if req.is_resolved_by_creator %}
+                            <span class="creator-done">Creator done ✓</span>
+                            {% if req.completed_by_expert %}
+                            <span class="expert-completed">Completed by {{ req.completed_by_expert.user.get_full_name|default:req.completed_by_expert.user.username }}</span>
+                            {% endif %}
+                            {% else %}
+                            <span class="creator-pending">Creator pending</span>
+                            {% endif %}
                             {% if req.due_date %}
                             <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
                             {% endif %}
@@ -70,6 +85,20 @@
                         </div>
                         <div class="request-actions">
                             <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">View details</a>
+                            {% if not req.is_resolved_by_creator %}
+                            <form method="post" action="{% url 'mark_request_done' req.id %}" class="inline">
+                                {% csrf_token %}
+                                <select name="completed_expert_id" class="completion-select" required>
+                                    <option value="">Select completing expert</option>
+                                    {% for expert in req.assigned_experts.all %}
+                                    <option value="{{ expert.id }}">{{ expert.user.get_full_name|default:expert.user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-success">Mark as done</button>
+                            </form>
+                            {% else %}
+                            <span class="done-at-label">Marked done {{ req.creator_resolved_at|date:"d.m.Y H:i" }}</span>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -175,6 +204,58 @@
     .expert-count {
         color: #065f46;
         font-weight: 500;
+    }
+
+    .coordination-summary {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .card-subheader {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--gray);
+        border-bottom: 1px solid var(--gray);
+        background: #f8fafc;
+        color: #334155;
+        font-size: 0.92rem;
+    }
+
+    .creator-done {
+        color: #065f46;
+        font-weight: 600;
+    }
+
+    .creator-pending {
+        color: #92400e;
+        font-weight: 600;
+    }
+
+    .done-at-label {
+        font-size: 0.82rem;
+        color: #6b7280;
+        align-self: center;
+    }
+
+    .expert-completed {
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+
+    .completion-select {
+        min-width: 210px;
+        border: 1px solid var(--gray);
+        border-radius: 6px;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.85rem;
+        background: #fff;
+    }
+
+    .badge-warning {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 0.5rem;
+        border-radius: 4px;
     }
 
     .requests-list {

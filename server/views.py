@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q, Count
+from django.db import transaction
+from django.utils import timezone
+from django.http import HttpResponseRedirect
 from .models import Request, Expert, Category
 from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, ExpertProfileForm
 from .tasks import calculate_expert_matches
@@ -252,8 +255,10 @@ def dashboard(request):
     requests = list(requests_with_due) + list(requests_without_due)
 
     # My requests: submitted by this user (via the submitted_by FK)
-    my_requests_qs = Request.objects.filter(submitted_by=request.user).order_by('-created_at')
+    my_requests_qs = Request.objects.filter(submitted_by=request.user).prefetch_related('assigned_experts').order_by('-created_at')
     my_requests = list(my_requests_qs)
+    my_pending_count = my_requests_qs.filter(is_resolved_by_creator=False).count()
+    my_done_count = my_requests_qs.filter(is_resolved_by_creator=True).count()
 
     dashboard_type = 'all'
     stats = {
@@ -263,6 +268,8 @@ def dashboard(request):
         'resolved': Request.objects.filter(status='resolved').count(),
         'total_experts': Expert.objects.count(),
         'my_requests_count': my_requests_qs.count(),
+        'my_pending_count': my_pending_count,
+        'my_done_count': my_done_count,
     }
 
     return render(request, 'dashboard.html', {
@@ -271,6 +278,67 @@ def dashboard(request):
         'dashboard_type': dashboard_type,
         'stats': stats,
     })
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_request_done(request, request_id):
+    """Allow a request creator to mark their own request as done/resolved."""
+    req = get_object_or_404(Request, id=request_id)
+
+    if req.submitted_by_id != request.user.id:
+        messages.error(request, 'You can only mark your own requests as done.')
+        return redirect('dashboard')
+
+    if req.is_resolved_by_creator:
+        messages.info(request, f'Request "{req.title}" is already marked as done.')
+        return HttpResponseRedirect('/dashboard/#my-requests')
+
+    selected_expert_id = request.POST.get('completed_expert_id')
+    if not selected_expert_id:
+        messages.error(request, 'Please select the expert who completed this request.')
+        return HttpResponseRedirect('/dashboard/#my-requests')
+
+    try:
+        selected_expert_id = int(selected_expert_id)
+    except (TypeError, ValueError):
+        messages.error(request, 'Invalid expert selection.')
+        return HttpResponseRedirect('/dashboard/#my-requests')
+
+    selected_expert = req.assigned_experts.filter(id=selected_expert_id).first()
+    if not selected_expert:
+        messages.error(request, 'Selected expert must be assigned to this request.')
+        return HttpResponseRedirect('/dashboard/#my-requests')
+
+    now = timezone.now()
+    with transaction.atomic():
+        req.is_resolved_by_creator = True
+        req.creator_resolved_at = now
+        req.completed_by_expert = selected_expert
+
+        if req.status != 'resolved':
+            req.status = 'resolved'
+            if not req.resolved_at:
+                req.resolved_at = now
+
+        req.save(update_fields=[
+            'is_resolved_by_creator',
+            'creator_resolved_at',
+            'completed_by_expert',
+            'status',
+            'resolved_at',
+            'updated_at',
+        ])
+
+        selected_expert.karma_points += 1
+        selected_expert.help_provided += 1
+        selected_expert.save(update_fields=['karma_points', 'help_provided'])
+
+    messages.success(
+        request,
+        f'Request "{req.title}" has been marked as done. {selected_expert} received +1 karma point.'
+    )
+    return HttpResponseRedirect('/dashboard/#my-requests')
 
 
 @login_required
