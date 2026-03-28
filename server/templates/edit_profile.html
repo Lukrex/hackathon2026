@@ -52,16 +52,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.work_experience.id_for_label }}">Work Experience</label>
-                        {{ form.work_experience }}
-                        {% if form.work_experience.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.work_experience.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
                         <label for="{{ form.availability.id_for_label }}">Availability</label>
                         {{ form.availability }}
                         {% if form.availability.errors %}
@@ -121,5 +111,20 @@
 .skill-tags .badge {
     margin: 0;
 }
+
+.card-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 </style>
 {% endblock %}
