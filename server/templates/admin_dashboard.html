@@ -61,7 +61,7 @@
                             <span class="badge badge-warning">{{ req.offered_experts.count }} offer{{ req.offered_experts.count|pluralize }}</span>
                             {% endif %}
                         </div>
-                        <div class="request-actions">
+                        <div class="request-actions request-actions-inline">
                             <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">Open task</a>
                             <form method="post" action="{% url 'admin_assign_expert' req.id %}" class="inline assign-form">
                                 {% csrf_token %}
@@ -73,7 +73,7 @@
                                     </option>
                                     {% endfor %}
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-success">Assign</button>
+                                <button type="submit" class="btn btn-sm btn-outline">Assign</button>
                             </form>
                         </div>
                     </div>
@@ -208,19 +208,42 @@
         align-items: center;
     }
 
+    .request-actions-inline {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
     .assign-form {
         display: flex;
         gap: 0.5rem;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
+        margin: 0;
     }
 
     .assign-select {
-        min-width: 250px;
-        border: 1px solid var(--gray);
+        min-width: 180px;
+        width: 220px;
+        max-width: 220px;
+        border: 1px solid #d6d9e5;
         border-radius: 6px;
-        padding: 0.4rem 0.55rem;
-        font-size: 0.9rem;
+        background: #f8fafc;
+        color: #4b5563;
+        padding: 0.32rem 0.5rem;
+        font-size: 0.85rem;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 860px) {
+        .request-actions-inline,
+        .assign-form {
+            flex-wrap: wrap;
+        }
+
+        .assign-select {
+            width: 100%;
+            max-width: none;
+        }
     }
 
     .status-open { background: #dbeafe; color: #1e40af; }
