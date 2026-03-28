@@ -193,10 +193,17 @@
                         <div class="request-actions">
                             <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">View details</a>
                             {% if req.status == 'open' %}
+                            {% if expert_profile and expert_profile in req.assigned_experts.all %}
+                            <span class="badge badge-success">Assigned</span>
+                            {% elif expert_profile and expert_profile in req.offered_experts.all %}
+                            <span class="badge badge-warning">Offer sent</span>
+                            {% else %}
                             <form method="post" action="{% url 'request_detail' req.id %}" class="inline">
                                 {% csrf_token %}
+                                <input type="hidden" name="offer_help_source" value="dashboard">
                                 <button type="submit" class="btn btn-sm btn-outline" name="offer_help" value="1">Offer help</button>
                             </form>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>

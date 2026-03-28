@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import Request, Category, Expert
 
 
@@ -215,3 +217,91 @@ class RequestReviewForm(forms.ModelForm):
                 'class': 'form-control'
             }),
         }
+
+
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+        fields = ('username', 'email', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Username',
+            'autocomplete': 'username',
+        })
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Email address',
+            'autocomplete': 'email',
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Password',
+            'autocomplete': 'new-password',
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirm password',
+            'autocomplete': 'new-password',
+        })
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        User = get_user_model()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('This email is already used by another account.')
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
+
+
+class UsernameEmailAuthenticationForm(AuthenticationForm):
+    username = forms.CharField(
+        label='Username/email',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Username/email',
+            'autocomplete': 'username',
+        }),
+    )
+
+    def __init__(self, request=None, *args, **kwargs):
+        super().__init__(request=request, *args, **kwargs)
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Password',
+            'autocomplete': 'current-password',
+        })
+
+    def clean(self):
+        identifier = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if identifier is not None and password:
+            user_identifier = identifier
+            if '@' in identifier:
+                User = get_user_model()
+                matched_user = User.objects.filter(email__iexact=identifier).first()
+                if matched_user:
+                    user_identifier = matched_user.get_username()
+
+            self.user_cache = authenticate(
+                self.request,
+                username=user_identifier,
+                password=password,
+            )
+
+            if self.user_cache is None:
+                raise self.get_invalid_login_error()
+            self.confirm_login_allowed(self.user_cache)
+
+        return self.cleaned_data

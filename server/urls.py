@@ -12,6 +12,11 @@ urlpatterns = [
     path('how-it-works/', views.how_it_works, name='how_it_works'),
 
     # Authentication
+    path(
+        'accounts/login/',
+        views.RememberMeLoginView.as_view(),
+        name='login',
+    ),
     path('accounts/', include('django.contrib.auth.urls')),
     path('register/', views.register, name='register'),
 
