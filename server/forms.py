@@ -138,7 +138,7 @@ class ExpertProfileForm(forms.ModelForm):
         widgets = {
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': 'Tell us about yourself, your background, and what you can help with...',
+                'placeholder': 'Tell us about yourself, your background, work experience, and what you can help with...',
                 'rows': 4
             }),
             'skills': forms.SelectMultiple(attrs={
