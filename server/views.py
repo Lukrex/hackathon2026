@@ -197,49 +197,33 @@ def request_submitted(request, request_id):
 
 @login_required
 def dashboard(request):
-    """Admin dashboard for request management"""
-    filter_form = RequestFilterForm(request.GET)
-
-    # Get requests with optional filters
-    queryset = Request.objects.all()
-
-    if request.GET.get('status'):
-        queryset = queryset.filter(status=request.GET['status'])
-
-    if request.GET.get('priority'):
-        queryset = queryset.filter(priority=request.GET['priority'])
-
-    if request.GET.get('category'):
-        queryset = queryset.filter(category=request.GET['category'])
-
-    if request.GET.get('search'):
-        search_term = request.GET['search']
-        queryset = queryset.filter(
-            Q(title__icontains=search_term) |
-            Q(description__icontains=search_term) |
-            Q(requester_name__icontains=search_term)
-        )
-
-    # Statistics
-    stats = {
-        'total_requests': Request.objects.count(),
-        'open_requests': Request.objects.filter(status='open').count(),
-        'in_progress': Request.objects.filter(status='in_progress').count(),
-        'resolved': Request.objects.filter(status='resolved').count(),
-        'total_experts': Expert.objects.count(),
-        'high_priority': Request.objects.filter(priority__in=['high', 'critical']).count(),
-    }
-
-    # Category distribution
-    category_stats = Request.objects.values('category__name').annotate(
-        count=Count('id')
-    ).order_by('-count')
+    """User dashboard showing requests relevant to them"""
+    try:
+        expert = request.user.expert
+        # User is an expert, show assigned requests
+        requests = expert.assigned_requests.all().order_by('-created_at')
+        dashboard_type = 'expert'
+        stats = {
+            'assigned_requests': requests.count(),
+            'open_requests': requests.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
+            'in_progress': requests.filter(status='in_progress').count(),
+            'resolved': requests.filter(status='resolved').count(),
+        }
+    except Expert.DoesNotExist:
+        # User is not an expert, show general stats or their submitted requests
+        # For now, show all open requests they could help with
+        requests = Request.objects.filter(status__in=['open', 'in_review']).order_by('-created_at')[:10]
+        dashboard_type = 'user'
+        stats = {
+            'available_requests': requests.count(),
+            'total_requests': Request.objects.count(),
+            'total_experts': Expert.objects.count(),
+        }
 
     return render(request, 'dashboard.html', {
-        'requests': queryset.order_by('-created_at'),
-        'filter_form': filter_form,
+        'requests': requests,
+        'dashboard_type': dashboard_type,
         'stats': stats,
-        'category_stats': category_stats,
     })
 
 
@@ -309,4 +293,25 @@ def request_detail(request, request_id):
     return render(request, 'request_detail.html', {
         'request': req,
         'suggested_matches': suggested_matches,
+    })
+
+
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+
+
+def register(request):
+    """User registration"""
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Víta vás {user.username}!')
+            return redirect('dashboard')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'registration/register.html', {
+        'form': form,
     })

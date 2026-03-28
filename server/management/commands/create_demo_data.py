@@ -91,6 +91,9 @@ class Command(BaseCommand):
                     'email': exp_data['email'],
                 }
             )
+            if created:
+                user.set_password('demo123')
+                user.save()
 
             expert, expert_created = Expert.objects.get_or_create(
                 user=user,

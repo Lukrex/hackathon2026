@@ -629,10 +629,11 @@
             <div class="nav-buttons">
                 {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" class="btn btn-sm">Dashboard</a>
-                    <a href="{% url 'admin:logout' %}" class="btn btn-sm btn-outline">Logout</a>
+                    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Odhlásiť sa</a>
                 {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline">Prihlásiť sa</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm">Registrovať sa</a>
                     <a href="{% url 'submit_request' %}" class="btn btn-sm">Poslať žiadosť</a>
-                    <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline">Admin</a>
                 {% endif %}
             </div>
         </nav>
