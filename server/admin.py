@@ -25,17 +25,17 @@ class LanguageAdmin(admin.ModelAdmin):
 
 @admin.register(Expert)
 class ExpertAdmin(admin.ModelAdmin):
-    list_display = ['name', 'skills_display', 'availability', 'rating', 'help_provided', 'created_at']
+    list_display = ['name', 'skills_display', 'availability', 'rating', 'karma_points', 'help_provided', 'created_at']
     list_filter = ['availability', 'created_at']
     search_fields = ['user__first_name', 'user__last_name', 'user__email', 'skills__name', 'languages__name']
-    readonly_fields = ['created_at', 'help_provided']
+    readonly_fields = ['created_at', 'help_provided', 'karma_points']
 
     fieldsets = (
         ('Basic Information', {
             'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'languages', 'availability')
         }),
         ('Ratings', {
-            'fields': ('rating', 'rating_count', 'help_provided', 'created_at'),
+            'fields': ('rating', 'rating_count', 'karma_points', 'help_provided', 'created_at'),
         }),
     )
     def name(self, obj):
