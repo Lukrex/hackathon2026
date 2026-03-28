@@ -11,6 +11,36 @@ from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, 
 from .tasks import calculate_expert_matches
 
 
+def compute_request_priority_score(req, today_date=None):
+    """Compute request priority score (0-100) using deadline, age, and user karma."""
+    if today_date is None:
+        today_date = timezone.now().date()
+
+    # Time factor: min(1 / D, 1), where D is days to deadline.
+    if req.due_date:
+        days_to_deadline = (req.due_date - today_date).days
+        time_factor = 1.0 if days_to_deadline <= 0 else min(1.0 / days_to_deadline, 1.0)
+    else:
+        time_factor = 0.0
+
+    # Age factor: V / (V + 10), where V is task age in days.
+    task_age_days = max((today_date - req.created_at.date()).days, 0)
+    age_factor = task_age_days / (task_age_days + 10) if task_age_days > 0 else 0.0
+
+    # Karma factor: K / 36, capped to [0, 36].
+    karma_points = 0
+    if req.submitted_by_id:
+        try:
+            karma_points = req.submitted_by.expert.karma_points
+        except Expert.DoesNotExist:
+            karma_points = 0
+
+    karma_factor = max(0.0, min(float(karma_points), 36.0)) / 36.0
+
+    score = 100.0 * ((0.6 * time_factor) + (0.25 * age_factor) + (0.15 * karma_factor))
+    return max(0.0, min(score, 100.0))
+
+
 def compute_expert_recommendations(req, limit=6):
     """Compute live expert recommendations for a request based on relevance scoring."""
     # First try pre-computed AI matches
@@ -247,12 +277,20 @@ def request_submitted(request, request_id):
 
 @login_required
 def dashboard(request):
-    """User dashboard showing all requests sorted by due date"""
-    # Show all requests sorted by due date (closest first), then by created date
-    all_qs = Request.objects.all().order_by('due_date', '-created_at')
-    requests_with_due = all_qs.exclude(due_date__isnull=True)
-    requests_without_due = all_qs.filter(due_date__isnull=True)
-    requests = list(requests_with_due) + list(requests_without_due)
+    """User dashboard showing all requests sorted by computed priority score."""
+    all_requests = list(
+        Request.objects.select_related('submitted_by').all()
+    )
+
+    today_date = timezone.now().date()
+    for req in all_requests:
+        req.algorithm_priority_score = compute_request_priority_score(req, today_date=today_date)
+
+    requests = sorted(
+        all_requests,
+        key=lambda req: (req.algorithm_priority_score, req.created_at.timestamp()),
+        reverse=True,
+    )
 
     # My requests: submitted by this user (via the submitted_by FK)
     my_requests_qs = Request.objects.filter(submitted_by=request.user).prefetch_related('assigned_experts').order_by('-created_at')
@@ -404,9 +442,16 @@ def expert_directory(request):
 def user_profile(request, expert_id):
     """Public profile page for an expert"""
     expert = get_object_or_404(Expert.objects.select_related('user'), id=expert_id)
-    open_requests_helped = expert.assigned_requests.filter(
+    open_requests_helped_qs = expert.assigned_requests.select_related('submitted_by').filter(
         status__in=['open', 'in_review', 'waiting_expert', 'in_progress']
-    ).order_by('due_date', '-created_at')[:10]
+    )
+
+    today_date = timezone.now().date()
+    open_requests_helped = sorted(
+        list(open_requests_helped_qs),
+        key=lambda req: (compute_request_priority_score(req, today_date=today_date), req.created_at.timestamp()),
+        reverse=True,
+    )[:10]
 
     return render(request, 'expert_profile.html', {
         'expert': expert,
