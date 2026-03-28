@@ -805,7 +805,7 @@ def request_chat(request, request_id):
     else:
         form = RequestChatMessageForm()
 
-    chat_messages = req.chat_messages.select_related('sender').all()
+    chat_messages = req.chat_messages.select_related('sender').order_by('-created_at')
 
     return render(request, 'request_chat.html', {
         'request_obj': req,
@@ -831,7 +831,7 @@ def admin_chat(request):
     else:
         form = AdminChatMessageForm()
 
-    chat_messages = AdminChatMessage.objects.select_related('sender').all()
+    chat_messages = AdminChatMessage.objects.select_related('sender').order_by('-created_at')
 
     return render(request, 'admin_chat.html', {
         'chat_messages': chat_messages,
@@ -877,7 +877,20 @@ def edit_profile(request):
     else:
         form = ExpertProfileForm(instance=expert)
 
+    skill_groups = _group_skills_by_theme(form.fields['skills'].queryset)
+    known_languages = list(form.fields['languages'].queryset)
+    selected_skills = set(request.POST.getlist('skills')) if request.method == 'POST' else set(
+        str(skill_id) for skill_id in expert.skills.values_list('id', flat=True)
+    )
+    selected_languages = set(request.POST.getlist('languages')) if request.method == 'POST' else set(
+        str(language_id) for language_id in expert.languages.values_list('id', flat=True)
+    )
+
     return render(request, 'edit_profile.html', {
         'form': form,
         'expert': expert,
+        'skill_groups': skill_groups,
+        'known_languages': known_languages,
+        'selected_skills': selected_skills,
+        'selected_languages': selected_languages,
     })
