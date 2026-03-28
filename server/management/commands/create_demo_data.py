@@ -33,10 +33,46 @@ class Command(BaseCommand):
                 self.stdout.write(f"✅ Category created: {name}")
 
         skill_names = [
-            'React', 'Node.js', 'GTM', 'Product Management',
-            'Fundraising', 'Investor Relations', 'Business Strategy',
-            'Digital Marketing', 'Branding', 'Copywriting', 'Sales',
-            'Recruiting', 'HR', 'Team Building', 'Scaling', 'AI/ML', 'Web3'
+            # Technical Skills
+            'React', 'Node.js', 'Python', 'JavaScript', 'TypeScript', 'Java', 'C++', 'C#', 'Go', 'Rust',
+            'HTML/CSS', 'PHP', 'Ruby', 'Swift', 'Kotlin', 'Dart', 'SQL', 'NoSQL', 'MongoDB', 'PostgreSQL',
+            'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Git', 'Linux', 'DevOps', 'AI/ML',
+            'Data Science', 'Machine Learning', 'Deep Learning', 'Computer Vision', 'NLP', 'Blockchain', 'Web3',
+            
+            # Business & Management
+            'Product Management', 'Project Management', 'Agile', 'Scrum', 'Kanban', 'Business Strategy',
+            'Business Development', 'Operations', 'Process Optimization', 'Change Management', 'Leadership',
+            'Team Management', 'People Management', 'Coaching', 'Mentoring', 'Conflict Resolution',
+            
+            # Marketing & Sales
+            'Digital Marketing', 'Content Marketing', 'SEO', 'SEM', 'Social Media Marketing', 'Email Marketing',
+            'Branding', 'Copywriting', 'Public Relations', 'Event Marketing', 'Sales', 'B2B Sales', 'B2C Sales',
+            'Account Management', 'Customer Success', 'CRM', 'Lead Generation', 'Sales Funnels',
+            
+            # Finance & Investment
+            'Fundraising', 'Investor Relations', 'Venture Capital', 'Angel Investing', 'Financial Modeling',
+            'Budgeting', 'Financial Planning', 'Accounting', 'Tax Planning', 'Due Diligence', 'Valuation',
+            
+            # HR & Recruiting
+            'Recruiting', 'Talent Acquisition', 'HR', 'People Operations', 'Team Building', 'Culture Building',
+            'Employee Engagement', 'Performance Management', 'Compensation', 'Benefits', 'Diversity & Inclusion',
+            
+            # Design & Creative
+            'UI/UX Design', 'Graphic Design', 'Product Design', 'Visual Design', 'Design Systems', 'Prototyping',
+            'Wireframing', 'User Research', 'Usability Testing', 'Creative Direction', 'Photography', 'Video Editing',
+            
+            # Communication & Soft Skills
+            'Public Speaking', 'Presentation Skills', 'Communication', 'Negotiation', 'Networking', 'Relationship Building',
+            'Emotional Intelligence', 'Problem Solving', 'Critical Thinking', 'Decision Making', 'Time Management',
+            'Organization', 'Adaptability', 'Resilience', 'Creativity', 'Innovation', 'Strategic Thinking',
+            
+            # Industry Specific
+            'Healthcare', 'Education', 'E-commerce', 'SaaS', 'Fintech', 'Healthtech', 'Edtech', 'Proptech', 'Agritech',
+            'Legal', 'Compliance', 'Regulatory Affairs', 'Supply Chain', 'Logistics', 'Manufacturing', 'Retail',
+            
+            # Other General Skills
+            'Writing', 'Editing', 'Research', 'Analysis', 'Data Analysis', 'Reporting', 'Consulting', 'Advisory',
+            'Training', 'Teaching', 'Facilitation', 'Event Planning', 'Community Building', 'Partnerships', 'Scaling'
         ]
         skills = {}
         for skill_name in skill_names:

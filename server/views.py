@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q, Count
 from .models import Request, Expert, Category
-from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm
+from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, ExpertProfileForm
 from .tasks import calculate_expert_matches
 
 
@@ -197,28 +197,23 @@ def request_submitted(request, request_id):
 
 @login_required
 def dashboard(request):
-    """User dashboard showing requests relevant to them"""
-    try:
-        expert = request.user.expert
-        # User is an expert, show assigned requests
-        requests = expert.assigned_requests.all().order_by('-created_at')
-        dashboard_type = 'expert'
-        stats = {
-            'assigned_requests': requests.count(),
-            'open_requests': requests.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
-            'in_progress': requests.filter(status='in_progress').count(),
-            'resolved': requests.filter(status='resolved').count(),
-        }
-    except Expert.DoesNotExist:
-        # User is not an expert, show general stats or their submitted requests
-        # For now, show all open requests they could help with
-        requests = Request.objects.filter(status__in=['open', 'in_review']).order_by('-created_at')[:10]
-        dashboard_type = 'user'
-        stats = {
-            'available_requests': requests.count(),
-            'total_requests': Request.objects.count(),
-            'total_experts': Expert.objects.count(),
-        }
+    """User dashboard showing all requests sorted by due date"""
+    # Show all requests sorted by due date (closest first), then by created date
+    requests = Request.objects.all().order_by('due_date', '-created_at')
+
+    # Filter out requests without due dates or put them at the end
+    requests_with_due = requests.exclude(due_date__isnull=True)
+    requests_without_due = requests.filter(due_date__isnull=True)
+    requests = list(requests_with_due) + list(requests_without_due)
+
+    dashboard_type = 'all'
+    stats = {
+        'total_requests': Request.objects.count(),
+        'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
+        'in_progress': Request.objects.filter(status='in_progress').count(),
+        'resolved': Request.objects.filter(status='resolved').count(),
+        'total_experts': Expert.objects.count(),
+    }
 
     return render(request, 'dashboard.html', {
         'requests': requests,
@@ -290,9 +285,34 @@ def request_detail(request, request_id):
     req = get_object_or_404(Request, id=request_id)
     suggested_matches = req.expert_matches.all().order_by('-match_score')[:10]
 
+    # Check if current user is an expert and can offer help
+    can_offer_help = False
+    has_offered_help = False
+    try:
+        expert = request.user.expert
+        can_offer_help = True
+        has_offered_help = req.assigned_experts.filter(id=expert.id).exists()
+    except Expert.DoesNotExist:
+        pass
+
+    if request.method == 'POST' and can_offer_help and not has_offered_help:
+        # Expert is offering help
+        try:
+            expert = request.user.expert
+            req.assigned_experts.add(expert)
+            messages.success(request, f'You have successfully offered help for "{req.title}"!')
+            has_offered_help = True
+            # If coming from dashboard, redirect back
+            if 'offer_help' in request.POST:
+                return redirect('dashboard')
+        except Exception as e:
+            messages.error(request, f'Error offering help: {str(e)}')
+
     return render(request, 'request_detail.html', {
         'request': req,
         'suggested_matches': suggested_matches,
+        'can_offer_help': can_offer_help,
+        'has_offered_help': has_offered_help,
     })
 
 
@@ -314,4 +334,28 @@ def register(request):
 
     return render(request, 'registration/register.html', {
         'form': form,
+    })
+
+
+@login_required
+def edit_profile(request):
+    """Edit user profile"""
+    try:
+        expert = request.user.expert
+    except Expert.DoesNotExist:
+        # Create expert profile if it doesn't exist
+        expert = Expert.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        form = ExpertProfileForm(request.POST, instance=expert)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('dashboard')
+    else:
+        form = ExpertProfileForm(instance=expert)
+
+    return render(request, 'edit_profile.html', {
+        'form': form,
+        'expert': expert,
     })
