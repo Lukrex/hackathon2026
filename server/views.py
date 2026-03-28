@@ -294,33 +294,31 @@ def request_submitted(request, request_id):
 def dashboard(request):
     """Role-based dashboard: admins manage assignments, users track requests/tasks."""
     if is_admin_user(request.user):
-        unassigned_corporate_qs = Request.objects.filter(
-            is_corporate=True,
+        unassigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=True,
-        ).select_related('category', 'submitted_by').distinct().order_by('-created_at')
+        ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
 
-        assigned_corporate_qs = Request.objects.filter(
-            is_corporate=True,
+        assigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=False,
-        ).prefetch_related('assigned_experts__user').select_related('category').distinct().order_by('-created_at')
+        ).prefetch_related('assigned_experts__user', 'offered_experts__user').select_related('category').distinct().order_by('-created_at')
 
         free_experts = Expert.objects.select_related('user').exclude(
             assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
         ).order_by('-karma_points', '-help_provided').distinct()
 
         stats = {
-            'unassigned_corporate_count': unassigned_corporate_qs.count(),
-            'assigned_corporate_count': assigned_corporate_qs.count(),
+            'unassigned_requests_count': unassigned_requests_qs.count(),
+            'assigned_requests_count': assigned_requests_qs.count(),
             'free_experts_count': free_experts.count(),
             'busy_experts_count': Expert.objects.filter(assigned_requests__status__in=ACTIVE_REQUEST_STATUSES).distinct().count(),
         }
 
         return render(request, 'admin_dashboard.html', {
             'stats': stats,
-            'unassigned_corporate_requests': unassigned_corporate_qs,
-            'assigned_corporate_requests': assigned_corporate_qs,
+            'unassigned_requests': unassigned_requests_qs,
+            'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
         })
 
@@ -377,12 +375,8 @@ def dashboard(request):
 @user_passes_test(is_admin_user)
 @require_http_methods(["POST"])
 def admin_assign_expert(request, request_id):
-    """Admin assigns a free expert to a corporate request."""
+    """Admin assigns a free expert to a request."""
     req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
-
-    if not req.is_corporate:
-        messages.error(request, 'Only corporate requests are assigned from admin dashboard.')
-        return redirect('request_detail', request_id=request_id)
 
     if req.status in ['resolved', 'rejected']:
         messages.error(request, 'Cannot assign expert to completed/rejected request.')
@@ -631,29 +625,46 @@ def user_profile(request, expert_id):
 def request_detail(request, request_id):
     """Detailed view of a single request"""
     req = get_object_or_404(Request, id=request_id)
+    admin_view = request.user.is_authenticated and is_admin_user(request.user)
 
     # Check if current user is an expert and can offer help
-    # Corporate requests are assigned manually by admins.
     can_offer_help = False
     has_offered_help = False
-    try:
-        expert = request.user.expert
-        can_offer_help = not req.is_corporate
-        has_offered_help = req.assigned_experts.filter(id=expert.id).exists()
-    except Expert.DoesNotExist:
-        pass
-
-    if request.method == 'POST' and can_offer_help and not has_offered_help:
-        # Expert is offering help
+    is_assigned_here = False
+    if not admin_view:
         try:
             expert = request.user.expert
-            req.assigned_experts.add(expert)
-            messages.success(request, f'You have successfully offered help for "{req.title}"!')
-            has_offered_help = True
-            if 'offer_help' in request.POST:
-                return redirect('dashboard')
-        except Exception as e:
-            messages.error(request, f'Error offering help: {str(e)}')
+            can_offer_help = req.status in ACTIVE_REQUEST_STATUSES
+            has_offered_help = req.offered_experts.filter(id=expert.id).exists()
+            is_assigned_here = req.assigned_experts.filter(id=expert.id).exists()
+        except Expert.DoesNotExist:
+            pass
+
+    if request.method == 'POST' and 'offer_help' in request.POST:
+        try:
+            expert = request.user.expert
+        except Expert.DoesNotExist:
+            messages.error(request, 'Only experts can offer help.')
+            return redirect('request_detail', request_id=request_id)
+
+        if req.status not in ACTIVE_REQUEST_STATUSES:
+            messages.info(request, 'This request is no longer accepting offers.')
+            return redirect('request_detail', request_id=request_id)
+
+        if req.assigned_experts.filter(id=expert.id).exists():
+            messages.info(request, 'You are already assigned to this request.')
+            return redirect('request_detail', request_id=request_id)
+
+        if req.offered_experts.filter(id=expert.id).exists():
+            messages.info(request, 'Your offer is already visible to admins.')
+            return redirect('request_detail', request_id=request_id)
+
+        req.offered_experts.add(expert)
+        messages.success(request, 'Your offer to help is now visible to admins.')
+
+        if request.POST.get('offer_help_source') == 'dashboard':
+            return redirect('dashboard')
+        return redirect('request_detail', request_id=request_id)
 
     # Compute expert recommendations (AI matches or live scoring)
     recommended_experts = compute_expert_recommendations(req, limit=6)
@@ -671,13 +682,12 @@ def request_detail(request, request_id):
         rec['is_assigned_here'] = rec['expert'].id in already_assigned_ids
         rec['is_busy'] = rec['expert'].id in busy_elsewhere_ids
 
-    admin_view = request.user.is_authenticated and is_admin_user(request.user)
-
     return render(request, 'request_detail.html', {
         'request': req,
         'recommended_experts': recommended_experts,
         'can_offer_help': can_offer_help,
         'has_offered_help': has_offered_help,
+        'is_assigned_here': is_assigned_here,
         'is_admin': admin_view,
     })
 
