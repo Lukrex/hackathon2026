@@ -168,6 +168,15 @@ class Request(models.Model):
     )
     review_notes = models.TextField(blank=True)
 
+    # Who submitted this request (if a logged-in user)
+    submitted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_requests'
+    )
+
     # Matching
     assigned_experts = models.ManyToManyField(
         Expert,
