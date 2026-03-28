@@ -10,24 +10,14 @@ class RequestSubmissionForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            'is_corporate', 'company_name', 'company_email', 'due_date',
-            'title', 'description', 'requester_name', 'requester_email',
-            'requester_phone', 'requester_type', 'category',
-            'target_skills', 'required_languages', 'target_experience'
+            'requester_name', 'requester_type', 'category',
+            'title', 'description', 'due_date',
+            'target_skills', 'required_languages', 'requester_phone'
         ]
         widgets = {
-            'is_corporate': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'company_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Company name'
-            }),
-            'company_email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'company@example.com'
-            }),
             'due_date': forms.DateInput(attrs={
                 'type': 'date',
-                'class': 'form-control'
+                'class': 'form-control due-date-input'
             }),
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -41,11 +31,7 @@ class RequestSubmissionForm(forms.ModelForm):
             }),
             'requester_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Your name'
-            }),
-            'requester_email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'your@email.com'
+                'placeholder': 'Requester name'
             }),
             'requester_phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -53,27 +39,18 @@ class RequestSubmissionForm(forms.ModelForm):
             }),
             'requester_type': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'target_skills': forms.SelectMultiple(attrs={'class': 'form-control', 'size': 8}),
-            'required_languages': forms.SelectMultiple(attrs={'class': 'form-control', 'size': 8}),
-            'target_experience': forms.Select(attrs={'class': 'form-control'}),
+            'target_skills': forms.CheckboxSelectMultiple(),
+            'required_languages': forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['target_skills'].queryset = self.fields['target_skills'].queryset.order_by('name')
-        self.fields['required_languages'].queryset = self.fields['required_languages'].queryset.order_by('name')
+        self.fields['target_skills'].queryset = self.fields['target_skills'].queryset
+        self.fields['required_languages'].queryset = self.fields['required_languages'].queryset
+        self.fields['requester_name'].label = 'Requester name'
 
     def clean(self):
         cleaned_data = super().clean()
-        is_corporate = cleaned_data.get('is_corporate')
-        company_name = cleaned_data.get('company_name')
-        company_email = cleaned_data.get('company_email')
-
-        if is_corporate:
-            if not company_name:
-                self.add_error('company_name', 'Company name is required for corporate requests.')
-            if not company_email:
-                self.add_error('company_email', 'Company email is required for corporate requests.')
 
         if not cleaned_data.get('title'):
             self.add_error('title', 'Title is required.')

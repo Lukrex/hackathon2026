@@ -157,6 +157,9 @@ def compute_expert_recommendations(req, limit=6):
 
 def index(request):
     """Landing page / home page"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     stats = {
         'total_requests': Request.objects.count(),
         'total_experts': Expert.objects.count(),
@@ -262,17 +265,50 @@ def how_it_works(request):
     return render(request, 'how_it_works.html', {'steps': steps})
 
 
+def _group_skills_by_theme(queryset):
+    theme_rules = [
+        ('Technology', ['python', 'javascript', 'react', 'django', 'node', 'api', 'data', 'ai', 'ml', 'cloud', 'devops', 'mobile', 'frontend', 'backend']),
+        ('Business & Management', ['strategy', 'product', 'project', 'operations', 'management', 'business', 'finance', 'sales']),
+        ('Marketing & Growth', ['marketing', 'seo', 'brand', 'content', 'social', 'growth', 'ads', 'campaign']),
+        ('Design & UX', ['design', 'ui', 'ux', 'figma', 'visual', 'research']),
+        ('People & Communication', ['hr', 'recruit', 'talent', 'coaching', 'communication', 'public speaking']),
+    ]
+
+    grouped = {theme: [] for theme, _ in theme_rules}
+    grouped['Other'] = []
+
+    for skill in queryset:
+        normalized = skill.name.lower()
+        matched = False
+        for theme, keywords in theme_rules:
+            if any(word in normalized for word in keywords):
+                grouped[theme].append(skill)
+                matched = True
+                break
+        if not matched:
+            grouped['Other'].append(skill)
+
+    themed = []
+    for theme, _ in theme_rules:
+        if grouped[theme]:
+            themed.append((theme, grouped[theme]))
+    if grouped['Other']:
+        themed.append(('Other', grouped['Other']))
+    return themed
+
+
+@login_required
 @require_http_methods(["GET", "POST"])
 def submit_request(request):
-    """Public form for submitting new help requests"""
+    """Authenticated form for submitting new help requests"""
     if request.method == 'POST':
         form = RequestSubmissionForm(request.POST)
         if form.is_valid():
             try:
                 new_request = form.save(commit=False)
                 new_request.status = 'open'
-                if request.user.is_authenticated:
-                    new_request.submitted_by = request.user
+                new_request.submitted_by = request.user
+                new_request.requester_email = request.user.email or f'{request.user.username}@local.invalid'
                 new_request.save()
                 form.save_m2m()
 
@@ -292,10 +328,19 @@ def submit_request(request):
     else:
         form = RequestSubmissionForm(initial={'requester_type': 'community_member'})
 
-    categories = Category.objects.all()
+    skills_qs = form.fields['target_skills'].queryset
+    languages_qs = form.fields['required_languages'].queryset
+    skill_groups = _group_skills_by_theme(skills_qs)
+    wanted_languages = list(languages_qs)
+    selected_target_skills = set(request.POST.getlist('target_skills')) if request.method == 'POST' else set()
+    selected_required_languages = set(request.POST.getlist('required_languages')) if request.method == 'POST' else set()
+
     return render(request, 'submit_request.html', {
         'form': form,
-        'categories': categories,
+        'skill_groups': skill_groups,
+        'wanted_languages': wanted_languages,
+        'selected_target_skills': selected_target_skills,
+        'selected_required_languages': selected_required_languages,
     })
 
 
