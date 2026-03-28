@@ -8,6 +8,18 @@
         <div class="d-flex justify-between align-center mb-4">
             <h1>📋 Request Details</h1>
             <div class="d-flex align-center" style="gap: 0.5rem;">
+                {% if is_admin %}
+                <form method="post" action="{% url 'admin_delete_request' request.id %}" class="inline" style="margin:0;">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                        onclick="return confirm('Delete this request permanently? This action cannot be undone.')"
+                    >
+                        Delete request
+                    </button>
+                </form>
+                {% endif %}
                 {% if can_access_request_chat %}
                 <a href="{% url 'request_chat' request.id %}" class="btn btn-outline">Open chat</a>
                 {% endif %}

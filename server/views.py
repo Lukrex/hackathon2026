@@ -545,6 +545,24 @@ def admin_unassign_expert(request, request_id):
 
 
 @login_required
+@user_passes_test(is_admin_user)
+@require_http_methods(["POST"])
+def admin_delete_request(request, request_id):
+    """Admin permanently deletes a request."""
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
+    request_title = req.title
+    assigned_experts = list(req.assigned_experts.all())
+
+    with transaction.atomic():
+        req.delete()
+        for expert in assigned_experts:
+            update_expert_busy_status(expert)
+
+    messages.success(request, f'Request "{request_title}" has been deleted.')
+    return redirect('dashboard')
+
+
+@login_required
 @require_http_methods(["POST"])
 def leave_assigned_request(request, request_id):
     """Assigned expert can leave an active request, becoming free if no other active tasks."""

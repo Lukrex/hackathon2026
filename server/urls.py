@@ -27,6 +27,7 @@ urlpatterns = [
     path('request/<int:request_id>/mark-done/', views.mark_request_done, name='mark_request_done'),
     path('request/<int:request_id>/assign-expert/', views.admin_assign_expert, name='admin_assign_expert'),
     path('request/<int:request_id>/unassign-expert/', views.admin_unassign_expert, name='admin_unassign_expert'),
+    path('request/<int:request_id>/delete/', views.admin_delete_request, name='admin_delete_request'),
     path('request/<int:request_id>/leave/', views.leave_assigned_request, name='leave_assigned_request'),
     path('request/<int:request_id>/review/', views.review_request, name='review_request'),
     path('request/<int:request_id>/chat/', views.request_chat, name='request_chat'),
