@@ -624,7 +624,7 @@
                 <li><a href="{% url 'features' %}">Funkcie</a></li>
                 <li><a href="{% url 'how_it_works' %}">Ako to funguje</a></li>
                 <li><a href="{% url 'about' %}">O nás</a></li>
-                <li><a href="{% url 'api_docs' %}">API Docs</a></li>
+
             </ul>
             <div class="nav-buttons">
                 {% if user.is_authenticated %}
@@ -675,9 +675,7 @@
             <div class="footer-section">
                 <h3>Zdroje</h3>
                 <ul>
-                    <li><a href="{% url 'api_docs' %}">API Dokumentácia</a></li>
                     <li><a href="{% url 'admin:index' %}">Admin</a></li>
-                    <li><a href="/api/">REST API</a></li>
                     <li><a href="{% url 'expert_directory' %}">Expert Directory</a></li>
                 </ul>
             </div>

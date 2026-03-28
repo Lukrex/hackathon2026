@@ -115,38 +115,6 @@ def how_it_works(request):
     return render(request, 'how_it_works.html', {'steps': steps})
 
 
-def api_docs(request):
-    """API documentation page"""
-    endpoints = [
-        {
-            'method': 'GET',
-            'endpoint': '/api/requests/',
-            'description': 'List all requests with filtering and sorting',
-        },
-        {
-            'method': 'POST',
-            'endpoint': '/api/requests/',
-            'description': 'Create new request',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/experts/',
-            'description': 'List all experts with search',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/matches/',
-            'description': 'List expert matches',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/categories/',
-            'description': 'List all request categories',
-        },
-    ]
-    return render(request, 'api_docs.html', {'endpoints': endpoints})
-
-
 @require_http_methods(["GET", "POST"])
 def submit_request(request):
     """Public form for submitting new help requests"""

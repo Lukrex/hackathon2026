@@ -2,18 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rest_framework.routers import DefaultRouter
-from server.viewsets import (
-    CategoryViewSet, ExpertViewSet, RequestViewSet, ExpertMatchViewSet
-)
 from server import views
-
-# REST API Router
-router = DefaultRouter()
-router.register(r'categories', CategoryViewSet, basename='category')
-router.register(r'experts', ExpertViewSet, basename='expert')
-router.register(r'requests', RequestViewSet, basename='request')
-router.register(r'matches', ExpertMatchViewSet, basename='match')
 
 urlpatterns = [
     # Index/Landing pages
@@ -21,7 +10,6 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('features/', views.features, name='features'),
     path('how-it-works/', views.how_it_works, name='how_it_works'),
-    path('api-docs/', views.api_docs, name='api_docs'),
 
     # Authentication
     path('accounts/', include('django.contrib.auth.urls')),
@@ -40,10 +28,6 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     path('dashboard/', views.dashboard, name='dashboard'),
-
-    # API
-    path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls')),
 
     # Health check
     path('health/', lambda request: {'status': 'ok'}, name='health'),
