@@ -34,7 +34,64 @@
                 <div class="stat-number">{{ stats.my_requests_count }}</div>
                 <div class="stat-label">My Requests</div>
             </div>
+            {% if expert_profile %}
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.my_assigned_tasks_count }}</div>
+                <div class="stat-label">My Assigned Tasks</div>
+            </div>
+            {% endif %}
         </div>
+
+        {% if expert_profile %}
+        <div class="card mb-4" id="my-assigned-tasks">
+            <div class="card-header d-flex justify-between align-center">
+                <h3>🧰 Tasks Assigned To Me</h3>
+                <div class="coordination-summary">
+                    {% if expert_profile.is_busy %}
+                    <span class="badge badge-warning">Busy</span>
+                    {% else %}
+                    <span class="badge badge-success">Free</span>
+                    {% endif %}
+                    <span class="badge badge-primary">Karma: {{ expert_profile.karma_points }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if expert_assigned_tasks %}
+                <div class="requests-list">
+                    {% for req in expert_assigned_tasks %}
+                    <div class="request-item">
+                        <div class="request-header">
+                            <div class="request-title">
+                                <span>🎯</span>
+                                <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
+                            </div>
+                            <div class="request-status status-{{ req.status }}">
+                                {{ req.get_status_display }}
+                            </div>
+                        </div>
+                        <div class="request-meta">
+                            <span class="category">{{ req.get_category_display }}</span>
+                            <span class="requester">{{ req.requester_name }}</span>
+                            {% if req.due_date %}
+                            <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="request-actions">
+                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">Open task</a>
+                            <form method="post" action="{% url 'leave_assigned_request' req.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline">Leave task</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No active tasks assigned to you.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         {% if my_requests %}
         <div class="card mb-4" id="my-requests">
@@ -88,13 +145,11 @@
                             {% if not req.is_resolved_by_creator %}
                             <form method="post" action="{% url 'mark_request_done' req.id %}" class="inline">
                                 {% csrf_token %}
-                                <select name="completed_expert_id" class="completion-select" required>
-                                    <option value="">Select completing expert</option>
-                                    {% for expert in req.assigned_experts.all %}
-                                    <option value="{{ expert.id }}">{{ expert.user.get_full_name|default:expert.user.username }}</option>
-                                    {% endfor %}
-                                </select>
+                                {% if req.assigned_experts.count > 0 %}
                                 <button type="submit" class="btn btn-sm btn-success">Mark as done</button>
+                                {% else %}
+                                <span class="text-muted">Waiting for admin to assign expert</span>
+                                {% endif %}
                             </form>
                             {% else %}
                             <span class="done-at-label">Marked done {{ req.creator_resolved_at|date:"d.m.Y H:i" }}</span>
@@ -240,15 +295,6 @@
     .expert-completed {
         color: #1d4ed8;
         font-weight: 600;
-    }
-
-    .completion-select {
-        min-width: 210px;
-        border: 1px solid var(--gray);
-        border-radius: 6px;
-        padding: 0.35rem 0.5rem;
-        font-size: 0.85rem;
-        background: #fff;
     }
 
     .badge-warning {

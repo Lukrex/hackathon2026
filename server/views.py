@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -9,6 +9,21 @@ from django.http import HttpResponseRedirect
 from .models import Request, Expert, Category
 from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, ExpertProfileForm
 from .tasks import calculate_expert_matches
+
+
+ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
+
+
+def is_admin_user(user):
+    return user.is_staff or user.is_superuser
+
+
+def update_expert_busy_status(expert):
+    """Set expert busy/free based on active assigned requests."""
+    is_busy = expert.assigned_requests.filter(status__in=ACTIVE_REQUEST_STATUSES).exists()
+    if expert.is_busy != is_busy:
+        expert.is_busy = is_busy
+        expert.save(update_fields=['is_busy'])
 
 
 def compute_request_priority_score(req, today_date=None):
@@ -277,10 +292,39 @@ def request_submitted(request, request_id):
 
 @login_required
 def dashboard(request):
-    """User dashboard showing all requests sorted by computed priority score."""
-    all_requests = list(
-        Request.objects.select_related('submitted_by').all()
-    )
+    """Role-based dashboard: admins manage assignments, users track requests/tasks."""
+    if is_admin_user(request.user):
+        unassigned_corporate_qs = Request.objects.filter(
+            is_corporate=True,
+            status__in=ACTIVE_REQUEST_STATUSES,
+            assigned_experts__isnull=True,
+        ).select_related('category', 'submitted_by').distinct().order_by('-created_at')
+
+        assigned_corporate_qs = Request.objects.filter(
+            is_corporate=True,
+            status__in=ACTIVE_REQUEST_STATUSES,
+            assigned_experts__isnull=False,
+        ).prefetch_related('assigned_experts__user').select_related('category').distinct().order_by('-created_at')
+
+        free_experts = Expert.objects.select_related('user').exclude(
+            assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
+        ).order_by('-karma_points', '-help_provided').distinct()
+
+        stats = {
+            'unassigned_corporate_count': unassigned_corporate_qs.count(),
+            'assigned_corporate_count': assigned_corporate_qs.count(),
+            'free_experts_count': free_experts.count(),
+            'busy_experts_count': Expert.objects.filter(assigned_requests__status__in=ACTIVE_REQUEST_STATUSES).distinct().count(),
+        }
+
+        return render(request, 'admin_dashboard.html', {
+            'stats': stats,
+            'unassigned_corporate_requests': unassigned_corporate_qs,
+            'assigned_corporate_requests': assigned_corporate_qs,
+            'free_experts': free_experts,
+        })
+
+    all_requests = list(Request.objects.select_related('submitted_by').all())
 
     today_date = timezone.now().date()
     for req in all_requests:
@@ -292,13 +336,22 @@ def dashboard(request):
         reverse=True,
     )
 
-    # My requests: submitted by this user (via the submitted_by FK)
     my_requests_qs = Request.objects.filter(submitted_by=request.user).prefetch_related('assigned_experts').order_by('-created_at')
     my_requests = list(my_requests_qs)
     my_pending_count = my_requests_qs.filter(is_resolved_by_creator=False).count()
     my_done_count = my_requests_qs.filter(is_resolved_by_creator=True).count()
 
-    dashboard_type = 'all'
+    expert_assigned_tasks = []
+    try:
+        expert_profile = request.user.expert
+        expert_assigned_tasks = list(
+            expert_profile.assigned_requests.filter(status__in=ACTIVE_REQUEST_STATUSES)
+            .select_related('category', 'submitted_by')
+            .order_by('-created_at')
+        )
+    except Expert.DoesNotExist:
+        expert_profile = None
+
     stats = {
         'total_requests': Request.objects.count(),
         'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
@@ -308,21 +361,146 @@ def dashboard(request):
         'my_requests_count': my_requests_qs.count(),
         'my_pending_count': my_pending_count,
         'my_done_count': my_done_count,
+        'my_assigned_tasks_count': len(expert_assigned_tasks),
     }
 
     return render(request, 'dashboard.html', {
         'requests': requests,
         'my_requests': my_requests,
-        'dashboard_type': dashboard_type,
+        'expert_assigned_tasks': expert_assigned_tasks,
+        'expert_profile': expert_profile,
         'stats': stats,
     })
+
+
+@login_required
+@user_passes_test(is_admin_user)
+@require_http_methods(["POST"])
+def admin_assign_expert(request, request_id):
+    """Admin assigns a free expert to a corporate request."""
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
+
+    if not req.is_corporate:
+        messages.error(request, 'Only corporate requests are assigned from admin dashboard.')
+        return redirect('request_detail', request_id=request_id)
+
+    if req.status in ['resolved', 'rejected']:
+        messages.error(request, 'Cannot assign expert to completed/rejected request.')
+        return redirect('request_detail', request_id=request_id)
+
+    expert_id = request.POST.get('expert_id')
+    if not expert_id:
+        messages.error(request, 'Please choose an expert to assign.')
+        return redirect('request_detail', request_id=request_id)
+
+    try:
+        expert_id = int(expert_id)
+    except (TypeError, ValueError):
+        messages.error(request, 'Invalid expert selection.')
+        return redirect('request_detail', request_id=request_id)
+
+    expert = Expert.objects.select_related('user').filter(id=expert_id).first()
+    if not expert:
+        messages.error(request, 'Expert does not exist.')
+        return redirect('request_detail', request_id=request_id)
+
+    # Real check: already on this task?
+    if req.assigned_experts.filter(id=expert.id).exists():
+        messages.info(request, f'{expert} is already assigned to this task.')
+        return redirect('request_detail', request_id=request_id)
+
+    # Real check: busy on a different active task?
+    is_actually_busy = expert.assigned_requests.filter(
+        status__in=ACTIVE_REQUEST_STATUSES
+    ).exclude(id=req.id).exists()
+    if is_actually_busy:
+        messages.error(request, f'{expert} is currently busy on another task.')
+        return redirect('request_detail', request_id=request_id)
+
+    with transaction.atomic():
+        req.assigned_experts.add(expert)  # add without clearing — supports multiple experts per task
+        if req.status in ['open', 'in_review']:
+            req.status = 'waiting_expert'
+            req.save(update_fields=['status', 'updated_at'])
+
+        expert.is_busy = True
+        expert.save(update_fields=['is_busy'])
+
+    messages.success(request, f'Assigned {expert} to "{req.title}".')
+    return redirect('request_detail', request_id=request_id)
+
+
+@login_required
+@user_passes_test(is_admin_user)
+@require_http_methods(["POST"])
+def admin_unassign_expert(request, request_id):
+    """Admin removes an expert from a corporate request."""
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
+
+    expert_id = request.POST.get('expert_id')
+    if not expert_id:
+        messages.error(request, 'No expert specified.')
+        return redirect('request_detail', request_id=request_id)
+
+    try:
+        expert_id = int(expert_id)
+    except (TypeError, ValueError):
+        messages.error(request, 'Invalid expert selection.')
+        return redirect('request_detail', request_id=request_id)
+
+    expert = Expert.objects.filter(id=expert_id).first()
+    if not expert:
+        messages.error(request, 'Expert does not exist.')
+        return redirect('request_detail', request_id=request_id)
+
+    if not req.assigned_experts.filter(id=expert.id).exists():
+        messages.error(request, 'That expert is not assigned to this request.')
+        return redirect('request_detail', request_id=request_id)
+
+    with transaction.atomic():
+        req.assigned_experts.remove(expert)
+        if req.status in ['waiting_expert', 'in_progress'] and not req.assigned_experts.exists():
+            req.status = 'open'
+            req.save(update_fields=['status', 'updated_at'])
+        update_expert_busy_status(expert)
+
+    messages.success(request, f'Unassigned {expert} from "{req.title}".')
+    return redirect('request_detail', request_id=request_id)
+
+
+@login_required
+@require_http_methods(["POST"])
+def leave_assigned_request(request, request_id):
+    """Assigned expert can leave an active request, becoming free if no other active tasks."""
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
+
+    try:
+        expert = request.user.expert
+    except Expert.DoesNotExist:
+        messages.error(request, 'Only experts can leave assigned tasks.')
+        return HttpResponseRedirect('/dashboard/')
+
+    if not req.assigned_experts.filter(id=expert.id).exists():
+        messages.error(request, 'You are not assigned to this task.')
+        return HttpResponseRedirect('/dashboard/')
+
+    with transaction.atomic():
+        req.assigned_experts.remove(expert)
+        if req.status in ['waiting_expert', 'in_progress'] and not req.assigned_experts.exists():
+            req.status = 'open'
+            req.save(update_fields=['status', 'updated_at'])
+
+        update_expert_busy_status(expert)
+
+    messages.info(request, f'You left task "{req.title}".')
+    return HttpResponseRedirect('/dashboard/')
 
 
 @login_required
 @require_http_methods(["POST"])
 def mark_request_done(request, request_id):
     """Allow a request creator to mark their own request as done/resolved."""
-    req = get_object_or_404(Request, id=request_id)
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
 
     if req.submitted_by_id != request.user.id:
         messages.error(request, 'You can only mark your own requests as done.')
@@ -332,20 +510,9 @@ def mark_request_done(request, request_id):
         messages.info(request, f'Request "{req.title}" is already marked as done.')
         return HttpResponseRedirect('/dashboard/#my-requests')
 
-    selected_expert_id = request.POST.get('completed_expert_id')
-    if not selected_expert_id:
-        messages.error(request, 'Please select the expert who completed this request.')
-        return HttpResponseRedirect('/dashboard/#my-requests')
-
-    try:
-        selected_expert_id = int(selected_expert_id)
-    except (TypeError, ValueError):
-        messages.error(request, 'Invalid expert selection.')
-        return HttpResponseRedirect('/dashboard/#my-requests')
-
-    selected_expert = req.assigned_experts.filter(id=selected_expert_id).first()
+    selected_expert = req.completed_by_expert or req.assigned_experts.first()
     if not selected_expert:
-        messages.error(request, 'Selected expert must be assigned to this request.')
+        messages.error(request, 'No assigned expert found. Ask admin to assign an expert first.')
         return HttpResponseRedirect('/dashboard/#my-requests')
 
     now = timezone.now()
@@ -371,6 +538,7 @@ def mark_request_done(request, request_id):
         selected_expert.karma_points += 1
         selected_expert.help_provided += 1
         selected_expert.save(update_fields=['karma_points', 'help_provided'])
+        update_expert_busy_status(selected_expert)
 
     messages.success(
         request,
@@ -465,11 +633,12 @@ def request_detail(request, request_id):
     req = get_object_or_404(Request, id=request_id)
 
     # Check if current user is an expert and can offer help
+    # Corporate requests are assigned manually by admins.
     can_offer_help = False
     has_offered_help = False
     try:
         expert = request.user.expert
-        can_offer_help = True
+        can_offer_help = not req.is_corporate
         has_offered_help = req.assigned_experts.filter(id=expert.id).exists()
     except Expert.DoesNotExist:
         pass
@@ -489,11 +658,27 @@ def request_detail(request, request_id):
     # Compute expert recommendations (AI matches or live scoring)
     recommended_experts = compute_expert_recommendations(req, limit=6)
 
+    # Fresh real-time busy/assigned state for each recommended expert
+    already_assigned_ids = set(req.assigned_experts.values_list('id', flat=True))
+    busy_elsewhere_ids = set(
+        Expert.objects.filter(
+            assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
+        ).exclude(
+            assigned_requests=req
+        ).values_list('id', flat=True)
+    )
+    for rec in recommended_experts:
+        rec['is_assigned_here'] = rec['expert'].id in already_assigned_ids
+        rec['is_busy'] = rec['expert'].id in busy_elsewhere_ids
+
+    admin_view = request.user.is_authenticated and is_admin_user(request.user)
+
     return render(request, 'request_detail.html', {
         'request': req,
         'recommended_experts': recommended_experts,
         'can_offer_help': can_offer_help,
         'has_offered_help': has_offered_help,
+        'is_admin': admin_view,
     })
 
 
