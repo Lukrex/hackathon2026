@@ -247,7 +247,7 @@ document.querySelectorAll('.picker-search').forEach(function(input) {
             group.querySelectorAll('.picker-option').forEach(function(option) {
                 var text = option.dataset.text || '';
                 var visible = !query || text.indexOf(query) !== -1;
-                option.style.display = visible ? 'flex' : 'none';
+                option.style.display = visible ? 'grid' : 'none';
                 if (visible) anyVisible = true;
             });
             group.style.display = anyVisible ? 'block' : 'none';
