@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Request Details - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <h1>📋 Request Details</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-between align-center">
+                    <div>
+                        <h3 class="mb-1">{{ request.title }}</h3>
+                        <div class="request-meta">
+                            <span class="badge badge-primary">{{ request.get_category_display }}</span>
+                            <span class="status-badge status-{{ request.status }}">
+                                {{ request.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if can_offer_help and not has_offered_help %}
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">🤝 Offer Help</button>
+                    </form>
+                    {% elif has_offered_help %}
+                    <span class="badge badge-success">✅ You offered help</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4>Description</h4>
+                        <p class="mb-4">{{ request.description }}</p>
+
+                        {% if request.target_skills.all %}
+                        <h4>Target Skills</h4>
+                        <div class="skill-tags mb-4">
+                            {% for skill in request.target_skills.all %}
+                                <span class="badge badge-primary">{{ skill.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if request.target_experience %}
+                        <h4>Target Experience Level</h4>
+                        <p class="mb-4">{{ request.get_target_experience_display }}</p>
+                        {% endif %}
+
+                        {% if request.is_corporate %}
+                        <h4>Corporate Information</h4>
+                        <div class="corporate-info mb-4">
+                            <p><strong>Company:</strong> {{ request.company_name }}</p>
+                            <p><strong>Contact Email:</strong> {{ request.company_email }}</p>
+                            {% if request.due_date %}
+                            <p><strong>Due Date:</strong> {{ request.due_date|date:"F j, Y" }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="request-sidebar">
+                            <h4>Request Information</h4>
+                            <div class="info-item">
+                                <strong>Requester:</strong> {{ request.requester_name }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Email:</strong> {{ request.requester_email }}
+                            </div>
+                            {% if request.requester_phone %}
+                            <div class="info-item">
+                                <strong>Phone:</strong> {{ request.requester_phone }}
+                            </div>
+                            {% endif %}
+                            <div class="info-item">
+                                <strong>Type:</strong> {{ request.get_requester_type_display }}
+                            </div>
+                            <div class="info-item">
+                                <strong>Created:</strong> {{ request.created_at|date:"M j, Y g:i A" }}
+                            </div>
+                            {% if request.updated_at != request.created_at %}
+                            <div class="info-item">
+                                <strong>Updated:</strong> {{ request.updated_at|date:"M j, Y g:i A" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if request.assigned_experts.all %}
+                <div class="mt-4">
+                    <h4>Assigned Experts</h4>
+                    <div class="assigned-experts">
+                        {% for expert in request.assigned_experts.all %}
+                        <div class="expert-item">
+                            <div class="expert-name">{{ expert.user.get_full_name|default:expert.user.username }}</div>
+                            <div class="expert-rating">
+                                {% if expert.rating_count > 0 %}
+                                    ⭐ {{ expert.average_rating }} ({{ expert.rating_count }} reviews)
+                                {% else %}
+                                    No reviews yet
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if suggested_matches %}
+                <div class="mt-4">
+                    <h4>Suggested Expert Matches</h4>
+                    <div class="suggested-matches">
+                        {% for match in suggested_matches %}
+                        <div class="match-item">
+                            <div class="match-expert">
+                                <strong>{{ match.expert.user.get_full_name|default:match.expert.user.username }}</strong>
+                                <span class="match-score">{{ match.match_score }}% match</span>
+                            </div>
+                            {% if match.reasoning %}
+                            <div class="match-reason">{{ match.reasoning }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.request-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.priority-badge {
+    font-size: 0.8rem;
+}
+
+.status-badge {
+    font-size: 0.8rem;
+}
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.skill-tags .badge {
+    margin: 0;
+}
+
+.corporate-info p {
+    margin-bottom: 0.5rem;
+}
+
+.request-sidebar {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 6px;
+}
+
+.info-item {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.assigned-experts {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.expert-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid var(--success);
+}
+
+.expert-rating {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.suggested-matches {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.match-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid var(--primary);
+}
+
+.match-expert {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.match-score {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.match-reason {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+
+    .col-md-4, .col-md-8 {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

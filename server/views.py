@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q, Count
 from .models import Request, Expert, Category
-from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm
+from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, ExpertProfileForm
 from .tasks import calculate_expert_matches
 
 
@@ -115,38 +115,6 @@ def how_it_works(request):
     return render(request, 'how_it_works.html', {'steps': steps})
 
 
-def api_docs(request):
-    """API documentation page"""
-    endpoints = [
-        {
-            'method': 'GET',
-            'endpoint': '/api/requests/',
-            'description': 'List all requests with filtering and sorting',
-        },
-        {
-            'method': 'POST',
-            'endpoint': '/api/requests/',
-            'description': 'Create new request',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/experts/',
-            'description': 'List all experts with search',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/matches/',
-            'description': 'List expert matches',
-        },
-        {
-            'method': 'GET',
-            'endpoint': '/api/categories/',
-            'description': 'List all request categories',
-        },
-    ]
-    return render(request, 'api_docs.html', {'endpoints': endpoints})
-
-
 @require_http_methods(["GET", "POST"])
 def submit_request(request):
     """Public form for submitting new help requests"""
@@ -156,22 +124,22 @@ def submit_request(request):
             try:
                 new_request = form.save(commit=False)
                 new_request.status = 'open'
-                new_request.priority = 'medium'
                 new_request.save()
+                form.save_m2m()
 
                 # Trigger expert matching asynchronously
-                # calculate_expert_matches.delay(new_request.id)  # Commented out for testing
+                # calculate_expert_matches.delay(new_request.id)
 
                 messages.success(
                     request,
-                    f'✅ Tvoja žiadosť "{new_request.title}" bola prijatá! '
-                    f'Potvrdenie bolo zaslané na {new_request.requester_email}'
+                    f'✅ Your request "{new_request.title}" has been submitted successfully! '
+                    f'A confirmation email has been sent to {new_request.requester_email}'
                 )
                 return redirect('request_submitted', request_id=new_request.id)
             except Exception as e:
-                messages.error(request, f'Chyba pri ukladaní žiadosti: {str(e)}')
+                messages.error(request, f'Error saving request: {str(e)}')
         else:
-            messages.error(request, 'Prosím, opravte chyby vo formulári.')
+            messages.error(request, 'Please correct the errors in the form.')
     else:
         form = RequestSubmissionForm(initial={'requester_type': 'community_member'})
 
@@ -188,58 +156,37 @@ def request_submitted(request, request_id):
     return render(request, 'request_submitted.html', {
         'request': req,
         'next_steps': [
-            'Náš tím preskúma tvoju žiadosť',
-            'Vyhľadáme vhodných expertov z komunity',
-            'Skontaktujeme ťa s ponukami pomoci'
+            'Our team reviews the request',
+            'We select matching experts from the community',
+            'We connect you with relevant help offers'
         ]
     })
 
 
 @login_required
 def dashboard(request):
-    """Admin dashboard for request management"""
-    filter_form = RequestFilterForm(request.GET)
+    """User dashboard showing all requests sorted by due date"""
+    # Show all requests sorted by due date (closest first), then by created date
+    requests = Request.objects.all().order_by('due_date', '-created_at')
 
-    # Get requests with optional filters
-    queryset = Request.objects.all()
+    # Filter out requests without due dates or put them at the end
+    requests_with_due = requests.exclude(due_date__isnull=True)
+    requests_without_due = requests.filter(due_date__isnull=True)
+    requests = list(requests_with_due) + list(requests_without_due)
 
-    if request.GET.get('status'):
-        queryset = queryset.filter(status=request.GET['status'])
-
-    if request.GET.get('priority'):
-        queryset = queryset.filter(priority=request.GET['priority'])
-
-    if request.GET.get('category'):
-        queryset = queryset.filter(category=request.GET['category'])
-
-    if request.GET.get('search'):
-        search_term = request.GET['search']
-        queryset = queryset.filter(
-            Q(title__icontains=search_term) |
-            Q(description__icontains=search_term) |
-            Q(requester_name__icontains=search_term)
-        )
-
-    # Statistics
+    dashboard_type = 'all'
     stats = {
         'total_requests': Request.objects.count(),
-        'open_requests': Request.objects.filter(status='open').count(),
+        'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
         'in_progress': Request.objects.filter(status='in_progress').count(),
         'resolved': Request.objects.filter(status='resolved').count(),
         'total_experts': Expert.objects.count(),
-        'high_priority': Request.objects.filter(priority__in=['high', 'critical']).count(),
     }
 
-    # Category distribution
-    category_stats = Request.objects.values('category__name').annotate(
-        count=Count('id')
-    ).order_by('-count')
-
     return render(request, 'dashboard.html', {
-        'requests': queryset.order_by('-created_at'),
-        'filter_form': filter_form,
+        'requests': requests,
+        'dashboard_type': dashboard_type,
         'stats': stats,
-        'category_stats': category_stats,
     })
 
 
@@ -306,7 +253,77 @@ def request_detail(request, request_id):
     req = get_object_or_404(Request, id=request_id)
     suggested_matches = req.expert_matches.all().order_by('-match_score')[:10]
 
+    # Check if current user is an expert and can offer help
+    can_offer_help = False
+    has_offered_help = False
+    try:
+        expert = request.user.expert
+        can_offer_help = True
+        has_offered_help = req.assigned_experts.filter(id=expert.id).exists()
+    except Expert.DoesNotExist:
+        pass
+
+    if request.method == 'POST' and can_offer_help and not has_offered_help:
+        # Expert is offering help
+        try:
+            expert = request.user.expert
+            req.assigned_experts.add(expert)
+            messages.success(request, f'You have successfully offered help for "{req.title}"!')
+            has_offered_help = True
+            # If coming from dashboard, redirect back
+            if 'offer_help' in request.POST:
+                return redirect('dashboard')
+        except Exception as e:
+            messages.error(request, f'Error offering help: {str(e)}')
+
     return render(request, 'request_detail.html', {
         'request': req,
         'suggested_matches': suggested_matches,
+        'can_offer_help': can_offer_help,
+        'has_offered_help': has_offered_help,
+    })
+
+
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+
+
+def register(request):
+    """User registration"""
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, f'Víta vás {user.username}!')
+            return redirect('dashboard')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'registration/register.html', {
+        'form': form,
+    })
+
+
+@login_required
+def edit_profile(request):
+    """Edit user profile"""
+    try:
+        expert = request.user.expert
+    except Expert.DoesNotExist:
+        # Create expert profile if it doesn't exist
+        expert = Expert.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        form = ExpertProfileForm(request.POST, instance=expert)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('dashboard')
+    else:
+        form = ExpertProfileForm(instance=expert)
+
+    return render(request, 'edit_profile.html', {
+        'form': form,
+        'expert': expert,
     })

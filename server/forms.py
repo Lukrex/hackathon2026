@@ -1,5 +1,5 @@
 from django import forms
-from .models import Request, Category
+from .models import Request, Category, Expert
 
 
 class RequestSubmissionForm(forms.ModelForm):
@@ -8,39 +8,72 @@ class RequestSubmissionForm(forms.ModelForm):
     class Meta:
         model = Request
         fields = [
-            'title', 'description', 'requester_name',
-            'requester_email', 'requester_phone', 'requester_type', 'category'
+            'is_corporate', 'company_name', 'company_email', 'due_date',
+            'title', 'description', 'requester_name', 'requester_email',
+            'requester_phone', 'requester_type', 'category',
+            'target_skills', 'target_experience'
         ]
         widgets = {
+            'is_corporate': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'company_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Company name'
+            }),
+            'company_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'company@example.com'
+            }),
+            'due_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Čo potrebuješ? (napr: Hľadám React vývojára)',
+                'placeholder': 'Request title (e.g. Need experienced React developer)',
                 'maxlength': '200'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
-                'placeholder': 'Podrobný popis tvej potreby...',
+                'placeholder': 'Detailed request description...',
                 'rows': 6
             }),
             'requester_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Tvoje meno'
+                'placeholder': 'Your name'
             }),
             'requester_email': forms.EmailInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'tvoj@email.com'
+                'placeholder': 'your@email.com'
             }),
             'requester_phone': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '+421 123 456 789 (voliteľné)'
+                'placeholder': 'Optional phone'
             }),
-            'requester_type': forms.Select(attrs={
-                'class': 'form-control'
-            }),
-            'category': forms.Select(attrs={
-                'class': 'form-control'
-            }),
+            'requester_type': forms.Select(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'target_skills': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'target_experience': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_corporate = cleaned_data.get('is_corporate')
+        company_name = cleaned_data.get('company_name')
+        company_email = cleaned_data.get('company_email')
+
+        if is_corporate:
+            if not company_name:
+                self.add_error('company_name', 'Company name is required for corporate requests.')
+            if not company_email:
+                self.add_error('company_email', 'Company email is required for corporate requests.')
+
+        if not cleaned_data.get('title'):
+            self.add_error('title', 'Title is required.')
+
+        if not cleaned_data.get('description'):
+            self.add_error('description', 'Description is required.')
+
+        return cleaned_data
 
     def clean_title(self):
         title = self.cleaned_data.get('title')
@@ -84,6 +117,33 @@ class RequestFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
+
+
+class ExpertProfileForm(forms.ModelForm):
+    """Form for editing expert profile"""
+
+    class Meta:
+        model = Expert
+        fields = [
+            'bio', 'skills', 'work_experience', 'availability'
+        ]
+        widgets = {
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tell us about yourself, your background, and what you can help with...',
+                'rows': 4
+            }),
+            'skills': forms.SelectMultiple(attrs={
+                'class': 'form-control',
+                'size': 8
+            }),
+            'work_experience': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Describe your relevant work experience and achievements...',
+                'rows': 6
+            }),
+            'availability': forms.Select(attrs={'class': 'form-control'}),
+        }
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         required=False,

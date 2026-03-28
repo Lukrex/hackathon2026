@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Odhlásenie - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="row justify-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h2>👋 Odhlásenie úspešné</h2>
+                        <p class="text-muted">Boli ste úspešne odhlásení.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'login' %}" class="btn btn-primary">Prihlásiť sa znovu</a>
+                            <a href="{% url 'index' %}" class="btn btn-outline">Späť na hlavnú stránku</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
