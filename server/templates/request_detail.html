@@ -144,7 +144,7 @@
                                 <div class="rec-score-badge">{{ rec.score }}%</div>
                             </div>
                             <div class="rec-match-bar">
-                                <div class="rec-match-fill" style="width: {{ rec.score }}%;"></div>
+                                <div class="rec-match-fill" data-score="{{ rec.score }}"></div>
                             </div>
                             {% if rec.reasoning %}
                             <div class="rec-reasoning">{{ rec.reasoning }}</div>
@@ -346,4 +346,10 @@
     }
 }
 </style>
+
+<script>
+document.querySelectorAll('.rec-match-fill[data-score]').forEach(function(el) {
+    el.style.width = el.dataset.score + '%';
+});
+</script>
 {% endblock %}

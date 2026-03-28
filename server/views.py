@@ -11,17 +11,17 @@ from .tasks import calculate_expert_matches
 def compute_expert_recommendations(req, limit=6):
     """Compute live expert recommendations for a request based on relevance scoring."""
     # First try pre-computed AI matches
-    ai_matches = req.expert_matches.select_related('expert__user').prefetch_related(
+    ai_matches_qs = req.expert_matches.select_related('expert__user').prefetch_related(
         'expert__skills', 'expert__languages'
-    ).order_by('-match_score')[:limit]
-    if ai_matches.count() >= 3:
+    ).order_by('-match_score')
+    if ai_matches_qs.count() >= 3:
         # Return AI matches enriched with expert data
         return [{
             'expert': m.expert,
             'score': round(m.match_score),
             'reasoning': m.reasoning,
             'source': 'ai',
-        } for m in ai_matches]
+        } for m in ai_matches_qs[:limit]]
 
     # Fallback: compute live relevance scores
     request_skill_ids = set(req.target_skills.values_list('id', flat=True))
