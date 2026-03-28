@@ -8,6 +8,145 @@ from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm
 from .tasks import calculate_expert_matches
 
 
+def index(request):
+    """Landing page / home page"""
+    stats = {
+        'total_requests': Request.objects.count(),
+        'total_experts': Expert.objects.count(),
+        'resolved_requests': Request.objects.filter(status='resolved').count(),
+        'categories_count': Category.objects.count(),
+    }
+
+    # Get recent requests
+    recent_requests = Request.objects.all().order_by('-created_at')[:3]
+
+    # Get featured experts (most helpful)
+    featured_experts = Expert.objects.all().order_by('-help_provided')[:3]
+
+    return render(request, 'index.html', {
+        'stats': stats,
+        'recent_requests': recent_requests,
+        'featured_experts': featured_experts,
+    })
+
+
+def about(request):
+    """About page"""
+    return render(request, 'about.html')
+
+
+def features(request):
+    """Features page"""
+    features_list = [
+        {
+            'icon': '📝',
+            'title': 'Jednoduché zadávanie žiadostí',
+            'description': 'Komunita jednoducho zadáva svoje potreby cez verejný formulár.',
+        },
+        {
+            'icon': '🔍',
+            'title': 'Manuálne preverovanie',
+            'description': 'Admin tím skúma žiadosti a zaraďuje ich do kategórií.',
+        },
+        {
+            'icon': '🧠',
+            'title': 'Inteligentný matching',
+            'description': 'Systém navrhuje najvhodnejších expertov na základe skúsenosti.',
+        },
+        {
+            'icon': '📧',
+            'title': 'Email notifikácie',
+            'description': 'Všetci účastníci dostávajú profesionálne email potvrdenia.',
+        },
+        {
+            'icon': '📊',
+            'title': 'Tracking a štatistiky',
+            'description': 'Sledujte vplyv a merateľné výsledky pomoci.',
+        },
+        {
+            'icon': '🔗',
+            'title': 'Notion integrácia',
+            'description': 'Export údajov a synchronizácia s vašim Notion workspace.',
+        },
+    ]
+    return render(request, 'features.html', {'features': features_list})
+
+
+def how_it_works(request):
+    """How it works page"""
+    steps = [
+        {
+            'number': '1',
+            'title': 'Zadaj odkázal',
+            'description': 'Comunita zadá svoju potrebu cez jednoduchý formulár.',
+            'icon': '📝',
+        },
+        {
+            'number': '2',
+            'title': 'Preverenie',
+            'description': 'Náš tím preskúma žiadosť a zaradí ju do správnej kategórie.',
+            'icon': '🔍',
+        },
+        {
+            'number': '3',
+            'title': 'Matching',
+            'description': 'Systém nájde najlepšie vyhovujúcich expertov z komunity.',
+            'icon': '🧠',
+        },
+        {
+            'number': '4',
+            'title': 'Spojenie',
+            'description': 'Experti sa dozvedia o požiadavke a kontaktujú žiadateľa.',
+            'icon': '🤝',
+        },
+        {
+            'number': '5',
+            'title': 'Pomoc',
+            'description': 'Experti poskytnú know-how a pomoc vyriešiť problém.',
+            'icon': '💡',
+        },
+        {
+            'number': '6',
+            'title': 'Tracking',
+            'description': 'Merame vplyv a zaznamenávame úspešné riešenia.',
+            'icon': '📊',
+        },
+    ]
+    return render(request, 'how_it_works.html', {'steps': steps})
+
+
+def api_docs(request):
+    """API documentation page"""
+    endpoints = [
+        {
+            'method': 'GET',
+            'endpoint': '/api/requests/',
+            'description': 'List all requests with filtering and sorting',
+        },
+        {
+            'method': 'POST',
+            'endpoint': '/api/requests/',
+            'description': 'Create new request',
+        },
+        {
+            'method': 'GET',
+            'endpoint': '/api/experts/',
+            'description': 'List all experts with search',
+        },
+        {
+            'method': 'GET',
+            'endpoint': '/api/matches/',
+            'description': 'List expert matches',
+        },
+        {
+            'method': 'GET',
+            'endpoint': '/api/categories/',
+            'description': 'List all request categories',
+        },
+    ]
+    return render(request, 'api_docs.html', {'endpoints': endpoints})
+
+
 @require_http_methods(["GET", "POST"])
 def submit_request(request):
     """Public form for submitting new help requests"""

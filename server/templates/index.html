@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Community Help System{% endblock %}
+
+{% block content %}
+<!-- HERO SECTION -->
+<div class="container">
+    <section class="hero">
+        <h1>🤝 Community Help System</h1>
+        <p>Spájame ľudí, ktorí potrebujú pomoc, s expertami z komunity. Jednoduchý, efektívny a merateľný systém.</p>
+        <div class="hero-buttons">
+            <a href="{% url 'submit_request' %}" class="btn btn-primary-light">Poslať žiadosť</a>
+            <a href="{% url 'features' %}" class="btn btn-outline">Viac informácií</a>
+        </div>
+    </section>
+</div>
+
+<!-- STATISTICS -->
+<div class="container section">
+    <h2 class="text-center">Metriky komunity</h2>
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.total_requests }}</div>
+            <div class="stat-label">Žiadostí</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.total_experts }}</div>
+            <div class="stat-label">Expertov</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.resolved_requests }}</div>
+            <div class="stat-label">Vyriešených</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ stats.categories_count }}</div>
+            <div class="stat-label">Kategórií</div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURES OVERVIEW -->
+<div class="container section">
+    <h2 class="text-center">Kľúčové vlastnosti</h2>
+    <div class="grid grid-3">
+        <div class="card fade-in">
+            <div class="card-icon">📝</div>
+            <h3>Jednoduché podávanie</h3>
+            <p>Komunita môže jednoducho zadávať svoje potreby prostredníctvom verejného formulára bez prihlasovania.</p>
+        </div>
+        <div class="card fade-in">
+            <div class="card-icon">🔍</div>
+            <h3>Manuálne preverovanie</h3>
+            <p>Admin tím skúma a kategorizuje žiadosti, aby sa zabezpečila kvalita a relevancia.</p>
+        </div>
+        <div class="card fade-in">
+            <div class="card-icon">🧠</div>
+            <h3>Inteligentný matching</h3>
+            <p>Systém navrhuje najvhodnejších expertov na základe skúsenosti, dostupnosti a pracovného zaťaženia.</p>
+        </div>
+        <div class="card fade-in">
+            <div class="card-icon">📧</div>
+            <h3>Email notifikácie</h3>
+            <p>Všetci účastníci dostávajú profesionálne HTML e-mailové správy o stave a zhodách.</p>
+        </div>
+        <div class="card fade-in">
+            <div class="card-icon">📊</div>
+            <h3>Sledovanie dopadom</h3>
+            <p>Sledujte metriky, priebehy a merateľné výsledky pomoci poskytnutej komunitou.</p>
+        </div>
+        <div class="card fade-in">
+            <div class="card-icon">🔗</div>
+            <h3>Notion integrácia</h3>
+            <p>Bezproblémovo exportujte a synchronizujte údaje s vaším Notion workspace pre koordináciu tímu.</p>
+        </div>
+    </div>
+</div>
+
+<!-- RECENT REQUESTS -->
+{% if recent_requests %}
+<div class="container section">
+    <h2 class="text-center">Nedávne žiadosti</h2>
+    <div class="grid grid-2">
+        {% for request in recent_requests %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3>{{ request.title }}</h3>
+                <span class="badge badge-{{ request.get_priority_display|lower }}">{{ request.get_priority_display }}</span>
+            </div>
+            <p class="text-muted">{{ request.description|truncatewords:20 }}</p>
+            <div style="margin-top: 1rem;">
+                <p><strong>Kategória:</strong> {{ request.get_category_display }}</p>
+                <p><strong>Žiadateľ:</strong> {{ request.requester_name }}</p>
+                <p><strong>Status:</strong> <span class="badge badge-primary">{{ request.get_status_display }}</span></p>
+            </div>
+            <a href="{% url 'request_detail' request.id %}" class="btn btn-primary btn-sm" style="margin-top: 1rem; width: 100%; text-align: center;">Viac info</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- FEATURED EXPERTS -->
+{% if featured_experts %}
+<div class="container section">
+    <h2 class="text-center">Najlepší experti</h2>
+    <p class="text-center text-muted" style="margin-bottom: 2rem;">Experti s najviac poskytnutými pomocami</p>
+    <div class="grid grid-3">
+        {% for expert in featured_experts %}
+        <div class="card">
+            <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">👤</div>
+            <h3 style="text-align: center;">{{ expert.user.get_full_name }}</h3>
+            <p class="text-muted" style="text-align: center; margin-bottom: 1rem;">{{ expert.bio }}</p>
+
+            <div style="background: var(--primary-light); padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                <p style="font-size: 0.9rem; color: var(--text-light);">
+                    <strong>Odbornosti:</strong><br>
+                    {{ expert.expertise }}
+                </p>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; text-align: center; margin: 1rem 0;">
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">{{ expert.help_provided }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light);">Pomoci</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">{{ expert.get_availability_display }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-light);">Dostupnosť</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- CTA SECTION -->
+<div class="container section">
+    <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 3rem; border-radius: 8px; text-align: center;">
+        <h2 style="color: white; margin-bottom: 1rem;">Máš potrebu, ktorú môžeme riešiť?</h2>
+        <p style="margin-bottom: 2rem; opacity: 0.95;">Присоедняйся k našej komunite a uži si podpory a know-how z siete expertov.</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary-light">Poslať žiadosť teraz</a>
+    </div>
+</div>
+
+<!-- HOW IT WORKS PREVIEW -->
+<div class="container section">
+    <h2 class="text-center">Ako to funguje?</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 3rem;">
+        <div style="text-align: center;">
+            <div class="step-number">1</div>
+            <h3 style="margin-top: 1rem;">Zadaj žiadosť</h3>
+            <p class="text-muted">Použi verejný formulár</p>
+        </div>
+        <div style="text-align: center;">
+            <div class="step-number">2</div>
+            <h3 style="margin-top: 1rem;">Preverenie</h3>
+            <p class="text-muted">Náš tím skúma požiadavku</p>
+        </div>
+        <div style="text-align: center;">
+            <div class="step-number">3</div>
+            <h3 style="margin-top: 1rem;">Matching</h3>
+            <p class="text-muted">Nájdeme vhodných expertov</p>
+        </div>
+        <div style="text-align: center;">
+            <div class="step-number">4</div>
+            <h3 style="margin-top: 1rem;">Pomoc</h3>
+            <p class="text-muted">Experti ťa pomôžu</p>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{% url 'how_it_works' %}" class="btn btn-primary">Viac detailov</a>
+    </div>
+</div>
+{% endblock %}
