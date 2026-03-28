@@ -60,29 +60,15 @@
                         </div>
                         {% endif %}
 
-                        {% if request.target_experience %}
-                        <h4>Target Experience Level</h4>
-                        <p class="mb-4">{{ request.get_target_experience_display }}</p>
-                        {% endif %}
-
-                        {% if request.is_corporate %}
-                        <h4>Corporate Information</h4>
-                        <div class="corporate-info mb-4">
-                            <p><strong>Company:</strong> {{ request.company_name }}</p>
-                            <p><strong>Contact Email:</strong> {{ request.company_email }}</p>
-                            {% if request.due_date %}
-                            <p><strong>Due Date:</strong> {{ request.due_date|date:"F j, Y" }}</p>
-                            {% endif %}
-                        </div>
+                        {% if request.due_date %}
+                        <h4>Target Due Date</h4>
+                        <p class="mb-4">{{ request.due_date|date:"F j, Y" }}</p>
                         {% endif %}
 
                         <div class="request-sidebar">
                             <h4>Request Information</h4>
                             <div class="info-item">
                                 <strong>Requester:</strong> {{ request.requester_name }}
-                            </div>
-                            <div class="info-item">
-                                <strong>Email:</strong> {{ request.requester_email }}
                             </div>
                             {% if request.requester_phone %}
                             <div class="info-item">
