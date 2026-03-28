@@ -29,29 +29,21 @@
                             {% csrf_token %}
 
                             <div class="form-group">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">
-                                    Username *
-                                </label>
                                 {{ form.username }}
-                                <small class="form-text text-muted">Use letters, digits and @/./+/-/_ only.</small>
                             </div>
 
                             <div class="form-group">
-                                <label for="{{ form.password1.id_for_label }}" class="form-label">
-                                    Password *
-                                </label>
+                                {{ form.email }}
+                            </div>
+
+                            <div class="form-group password-group">
                                 {{ form.password1 }}
-                                <small class="form-text text-muted">
-                                    Password must have at least 8 characters and can't be too common.
-                                </small>
+                                <button type="button" class="password-toggle" data-target="{{ form.password1.id_for_label }}">Show</button>
                             </div>
 
-                            <div class="form-group">
-                                <label for="{{ form.password2.id_for_label }}" class="form-label">
-                                    Confirm password *
-                                </label>
+                            <div class="form-group password-group">
                                 {{ form.password2 }}
-                                <small class="form-text text-muted">Enter the same password again.</small>
+                                <button type="button" class="password-toggle" data-target="{{ form.password2.id_for_label }}">Show</button>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-block">
@@ -73,5 +65,57 @@
 .btn-block {
     width: 100%;
 }
+
+.row.justify-center {
+    display: flex;
+    justify-content: center;
+}
+
+.col-md-6 {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.password-group {
+    position: relative;
+}
+
+.password-group input {
+    padding-right: 4.4rem;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: var(--dark);
+}
 </style>
+
+<script>
+document.querySelectorAll('.password-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            btn.textContent = 'Show';
+        }
+    });
+});
+</script>
 {% endblock %}

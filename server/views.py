@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.views import LoginView
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -7,11 +9,31 @@ from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect
 from .models import Request, Expert, Category
-from .forms import RequestSubmissionForm, RequestFilterForm, RequestReviewForm, ExpertProfileForm
+from .forms import (
+    RequestSubmissionForm,
+    RequestFilterForm,
+    RequestReviewForm,
+    ExpertProfileForm,
+    RegisterForm,
+    UsernameEmailAuthenticationForm,
+)
 from .tasks import calculate_expert_matches
 
 
 ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
+
+
+class RememberMeLoginView(LoginView):
+    template_name = 'registration/login.html'
+    authentication_form = UsernameEmailAuthenticationForm
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.request.POST.get('remember'):
+            self.request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+        else:
+            self.request.session.set_expiry(0)
+        return response
 
 
 def is_admin_user(user):
@@ -692,21 +714,20 @@ def request_detail(request, request_id):
     })
 
 
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 
 
 def register(request):
     """User registration"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             messages.success(request, f'Víta vás {user.username}!')
             return redirect('dashboard')
     else:
-        form = UserCreationForm()
+        form = RegisterForm()
 
     return render(request, 'registration/register.html', {
         'form': form,
