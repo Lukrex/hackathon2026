@@ -1,5 +1,5 @@
 from django import forms
-from .models import Request, Category
+from .models import Request, Category, Expert
 
 
 class RequestSubmissionForm(forms.ModelForm):
@@ -10,7 +10,7 @@ class RequestSubmissionForm(forms.ModelForm):
         fields = [
             'is_corporate', 'company_name', 'company_email', 'due_date',
             'title', 'description', 'requester_name', 'requester_email',
-            'requester_phone', 'requester_type', 'category', 'priority',
+            'requester_phone', 'requester_type', 'category',
             'target_skills', 'target_experience'
         ]
         widgets = {
@@ -51,7 +51,6 @@ class RequestSubmissionForm(forms.ModelForm):
             }),
             'requester_type': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
-            'priority': forms.Select(attrs={'class': 'form-control'}),
             'target_skills': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'target_experience': forms.Select(attrs={'class': 'form-control'}),
         }
@@ -118,6 +117,33 @@ class RequestFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
+
+
+class ExpertProfileForm(forms.ModelForm):
+    """Form for editing expert profile"""
+
+    class Meta:
+        model = Expert
+        fields = [
+            'bio', 'skills', 'work_experience', 'availability'
+        ]
+        widgets = {
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tell us about yourself, your background, and what you can help with...',
+                'rows': 4
+            }),
+            'skills': forms.SelectMultiple(attrs={
+                'class': 'form-control',
+                'size': 8
+            }),
+            'work_experience': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Describe your relevant work experience and achievements...',
+                'rows': 6
+            }),
+            'availability': forms.Select(attrs={'class': 'form-control'}),
+        }
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         required=False,

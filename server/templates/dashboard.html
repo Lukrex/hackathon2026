@@ -10,219 +10,207 @@
             <div>
                 <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
-        <div class="stats mb-4">
-            {% if dashboard_type == 'expert' %}
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.assigned_requests }}</div>
-                    <div class="stat-label">Assigned Requests</div>
+                <div class="stats mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.total_requests }}</div>
+                        <div class="stat-label">Total Requests</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.open_requests }}</div>
+                        <div class="stat-label">Open Requests</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.in_progress }}</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.resolved }}</div>
+                        <div class="stat-label">Resolved</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.open_requests }}</div>
-                    <div class="stat-label">Open Requests</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.in_progress }}</div>
-                    <div class="stat-label">In Progress</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.resolved }}</div>
-                    <div class="stat-label">Resolved</div>
-                </div>
-            {% else %}
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.available_requests }}</div>
-                    <div class="stat-label">Available Requests</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.total_requests }}</div>
-                    <div class="stat-label">Total Requests</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">{{ stats.total_experts }}</div>
-                    <div class="stat-label">Experts</div>
-                </div>
-            {% endif %}
-        </div>
 
-        <!-- Requests List -->
-        <div class="card">
-            <div class="card-header">
-                <h3>
-                    {% if dashboard_type == 'expert' %}
-                        🛠️ Requests assigned to you
-                    {% else %}
-                        🤝 Requests you can help with
-                    {% endif %}
-                </h3>
-            </div>
-            <div class="card-body">
-                {% if requests %}
-                    <div class="requests-list">
-                        {% for request in requests %}
-                        <div class="request-item">
-                            <div class="request-header">
-                                <div class="request-title">
-                                    <span class="priority-badge priority-{{ request.priority }}">
-                                        {{ request.get_priority_display }}
-                                    </span>
-                                    <a href="{% url 'request_detail' request.id %}">{{ request.title }}</a>
+                <!-- Requests List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 All Community Requests</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if requests %}
+                        <div class="requests-list">
+                            {% for req in requests %}
+                            <div class="request-item">
+                                <div class="request-header">
+                                    <div class="request-title">
+                                        <a href="{% url 'request_detail' req.id %}">{{ req.title }}</a>
+                                    </div>
+                                    <div class="request-status status-{{ req.status }}">
+                                        {{ req.get_status_display }}
+                                    </div>
                                 </div>
-                                <div class="request-status status-{{ request.status }}">
-                                    {{ request.get_status_display }}
+                                <div class="request-meta">
+                                    <span class="category">{{ req.get_category_display }}</span>
+                                    <span class="requester">{{ req.requester_name }}</span>
+                                    <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
+                                    {% if req.due_date %}
+                                    <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="request-description">
+                                    {{ req.description|truncatechars:150 }}
+                                </div>
+                                <div class="request-actions">
+                                    <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">View
+                                        details</a>
+                                    {% if req.status == 'open' %}
+                                    <form method="post" action="{% url 'request_detail' req.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline" name="offer_help"
+                                            value="1">Offer help</button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
-                            <div class="request-meta">
-                                <span class="category">{{ request.get_category_display }}</span>
-                                <span class="requester">{{ request.requester_name }}</span>
-                                <span class="date">{{ request.created_at|date:"d.m.Y" }}</span>
-                            </div>
-                            <div class="request-description">
-                                {{ request.description|truncatechars:150 }}
-                            </div>
-                            {% if dashboard_type == 'expert' %}
-                            <div class="request-actions">
-                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">View details</a>
-                                {% if request.status == 'in_progress' %}
-                                    <button class="btn btn-sm btn-success">Mark resolved</button>
-                                {% endif %}
-                            </div>
-                            {% else %}
-                            <div class="request-actions">
-                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">View details</a>
-                                <button class="btn btn-sm btn-outline">Offer help</button>
-                            </div>
-                            {% endif %}
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No requests available at the moment.</p>
+                            <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
+                        </div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted">
-                            {% if dashboard_type == 'expert' %}
-                                No requests are assigned to you yet.
-                            {% else %}
-                                No available requests at the moment.
-                            {% endif %}
-                        </p>
-                        <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+                </div>
     </section>
 </div>
 
 <style>
-.stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
 
-.stat-item {
-    background: var(--gray-light);
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-}
+    .stat-item {
+        background: var(--gray-light);
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+    }
 
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary);
-    display: block;
-}
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary);
+        display: block;
+    }
 
-.stat-label {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
+    .stat-label {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
 
-.requests-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
+    .requests-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
 
-.request-item {
-    border: 1px solid var(--gray);
-    border-radius: 8px;
-    padding: 1rem;
-    background: white;
-}
+    .request-item {
+        border: 1px solid var(--gray);
+        border-radius: 8px;
+        padding: 1rem;
+        background: white;
+    }
 
-.request-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
 
-.request-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    .request-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-.request-title a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 600;
-}
+    .request-title a {
+        color: var(--text);
+        text-decoration: none;
+        font-weight: 600;
+    }
 
-.request-title a:hover {
-    color: var(--primary);
-}
+    .request-title a:hover {
+        color: var(--primary);
+    }
 
-.priority-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
+    .request-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
 
-.priority-low { background: var(--gray-light); color: var(--text); }
-.priority-medium { background: #fef3c7; color: #92400e; }
-.priority-high { background: #fee2e2; color: #dc2626; }
-.priority-critical { background: #dc2626; color: white; }
+    .status-open {
+        background: #dbeafe;
+        color: #1e40af;
+    }
 
-.request-status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
+    .status-in_review {
+        background: #fef3c7;
+        color: #92400e;
+    }
 
-.status-open { background: #dbeafe; color: #1e40af; }
-.status-in_review { background: #fef3c7; color: #92400e; }
-.status-waiting_expert { background: #e0e7ff; color: #3730a3; }
-.status-in_progress { background: #fed7aa; color: #9a3412; }
-.status-resolved { background: #d1fae5; color: #065f46; }
-.status-rejected { background: #fee2e2; color: #dc2626; }
+    .status-waiting_expert {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
 
-.request-meta {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.9rem;
-    color: var(--text-light);
-    margin-bottom: 0.5rem;
-}
+    .status-in_progress {
+        background: #fed7aa;
+        color: #9a3412;
+    }
 
-.request-description {
-    color: var(--text);
-    margin-bottom: 1rem;
-}
+    .status-resolved {
+        background: #d1fae5;
+        color: #065f46;
+    }
 
-.request-actions {
-    display: flex;
-    gap: 0.5rem;
-}
+    .status-rejected {
+        background: #fee2e2;
+        color: #dc2626;
+    }
 
-.badge-primary {
-    background: var(--primary);
-    color: white;
-    padding: 0.5rem;
-    border-radius: 4px;
-}
+    .request-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .due-date {
+        color: var(--danger) !important;
+        font-weight: 600;
+    }
+
+    .request-description {
+        color: var(--text);
+        margin-bottom: 1rem;
+    }
+
+    .request-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .badge-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 4px;
+    }
 </style>
 {% endblock %}
