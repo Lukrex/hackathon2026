@@ -10,123 +10,21 @@
             <p class="text-muted">Tell us who you are and what you need. We match with community experts.</p>
         </div>
 
-        <div class="row justify-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <form method="post" action="{% url 'submit_request' %}">
-                            {% csrf_token %}
+        <div class="card submit-card">
+            <div class="card-body">
+                <form method="post" action="{% url 'submit_request' %}">
+                    {% csrf_token %}
 
-                            <div class="form-check mb-3">
-                                {{ form.is_corporate }}
-                                <label class="form-check-label" for="{{ form.is_corporate.id_for_label }}">
-                                    Corporate request
-                                </label>
-                                {% if form.is_corporate.errors %}
-                                    <div class="text-danger small">{{ form.is_corporate.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                    <div class="form-group">
+                        <label for="{{ form.requester_name.id_for_label }}">Requester name</label>
+                        {{ form.requester_name }}
+                        {% if form.requester_name.errors %}
+                            <div class="text-danger small">{{ form.requester_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="{{ form.company_name.id_for_label }}">Company name</label>
-                                        {{ form.company_name }}
-                                        {% if form.company_name.errors %}
-                                            <div class="text-danger small">{{ form.company_name.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="{{ form.company_email.id_for_label }}">Company email</label>
-                                        {{ form.company_email }}
-                                        {% if form.company_email.errors %}
-                                            <div class="text-danger small">{{ form.company_email.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.due_date.id_for_label }}">Target due date</label>
-                                {{ form.due_date }}
-                                {% if form.due_date.errors %}
-                                    <div class="text-danger small">{{ form.due_date.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.title.id_for_label }}">Request title</label>
-                                {{ form.title }}
-                                {% if form.title.errors %}
-                                    <div class="text-danger small">{{ form.title.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.description.id_for_label }}">Request description</label>
-                                {{ form.description }}
-                                {% if form.description.errors %}
-                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.target_skills.id_for_label }}">Target skills (look for users with)</label>
-                                {{ form.target_skills }}
-                                {% if form.target_skills.errors %}
-                                    <div class="text-danger small">{{ form.target_skills.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.required_languages.id_for_label }}">Required languages</label>
-                                <small class="text-muted d-block mb-2">Select multiple languages with Ctrl/Cmd</small>
-                                {{ form.required_languages }}
-                                {% if form.required_languages.errors %}
-                                    <div class="text-danger small">{{ form.required_languages.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.target_experience.id_for_label }}">Target experience level</label>
-                                {{ form.target_experience }}
-                                {% if form.target_experience.errors %}
-                                    <div class="text-danger small">{{ form.target_experience.errors.0 }}</div>
-                                {% endif %}
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="{{ form.requester_name.id_for_label }}">Your name</label>
-                                        {{ form.requester_name }}
-                                        {% if form.requester_name.errors %}
-                                            <div class="text-danger small">{{ form.requester_name.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="{{ form.requester_email.id_for_label }}">Your email</label>
-                                        {{ form.requester_email }}
-                                        {% if form.requester_email.errors %}
-                                            <div class="text-danger small">{{ form.requester_email.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="{{ form.requester_phone.id_for_label }}">Phone (optional)</label>
-                                        {{ form.requester_phone }}
-                                        {% if form.requester_phone.errors %}
-                                            <div class="text-danger small">{{ form.requester_phone.errors.0 }}</div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
+                    <div class="row two-up">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="{{ form.requester_type.id_for_label }}">Requester type</label>
                                 {{ form.requester_type }}
@@ -134,7 +32,8 @@
                                     <div class="text-danger small">{{ form.requester_type.errors.0 }}</div>
                                 {% endif %}
                             </div>
-
+                        </div>
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="{{ form.category.id_for_label }}">Category</label>
                                 {{ form.category }}
@@ -142,27 +41,200 @@
                                     <div class="text-danger small">{{ form.category.errors.0 }}</div>
                                 {% endif %}
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="text-center mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">Submit request</button>
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">Request title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}">Request description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group due-date-group">
+                        <label for="{{ form.due_date.id_for_label }}">Target due date</label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                            <div class="text-danger small">{{ form.due_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label>Target skills (look for users with)</label>
+                        <div class="picker-panel" id="skills-panel">
+                            <input type="text" class="picker-search" placeholder="Search skills..." data-target="skills-list">
+                            <div class="picker-list" id="skills-list">
+                                {% for theme, skills in skill_groups %}
+                                <div class="picker-group" data-group>
+                                    <div class="picker-group-title">{{ theme }}</div>
+                                    <div class="picker-options">
+                                        {% for skill in skills %}
+                                        <label class="picker-option" data-text="{{ skill.name|lower }}">
+                                            <input type="checkbox" name="target_skills" value="{{ skill.id }}" {% if skill.id|stringformat:'s' in selected_target_skills %}checked{% endif %}>
+                                            <span>{{ skill.name }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
-                        </form>
+                        </div>
+                        {% if form.target_skills.errors %}
+                            <div class="text-danger small">{{ form.target_skills.errors.0 }}</div>
+                        {% endif %}
                     </div>
-                </div>
 
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h4>How to write a good request</h4>
-                        <ul class="text-muted small">
-                            <li>Be specific: Include expected deliverables and scope of work</li>
-                            <li>Include context: What you already tried and what your business needs</li>
-                            <li>Set a due date and priority to improve matching speed</li>
-                            <li>Use target skills and experience to find the best fit</li>
-                        </ul>
+                    <div class="form-group">
+                        <label>Wanted languages</label>
+                        <div class="picker-panel" id="languages-panel">
+                            <input type="text" class="picker-search" placeholder="Search languages..." data-target="languages-list">
+                            <div class="picker-list" id="languages-list">
+                                <div class="picker-group" data-group>
+                                    <div class="picker-options">
+                                        {% for language in wanted_languages %}
+                                        <label class="picker-option" data-text="{{ language.name|lower }}">
+                                            <input type="checkbox" name="required_languages" value="{{ language.id }}" {% if language.id|stringformat:'s' in selected_required_languages %}checked{% endif %}>
+                                            <span>{{ language.name }}</span>
+                                        </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if form.required_languages.errors %}
+                            <div class="text-danger small">{{ form.required_languages.errors.0 }}</div>
+                        {% endif %}
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.requester_phone.id_for_label }}">Phone (optional)</label>
+                        {{ form.requester_phone }}
+                        {% if form.requester_phone.errors %}
+                            <div class="text-danger small">{{ form.requester_phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit request</button>
+                    </div>
+                </form>
             </div>
         </div>
     </section>
 </div>
+
+<style>
+.submit-card {
+    width: 100%;
+}
+
+.submit-card form {
+    max-width: none;
+    width: 100%;
+}
+
+.two-up {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.due-date-group .due-date-input {
+    border: 1.5px solid rgba(23, 22, 66, 0.2);
+    box-shadow: none;
+    border-radius: 14px;
+    padding: 0.95rem 1rem;
+    background: #fff;
+}
+
+.picker-panel {
+    border: 1px solid rgba(23, 22, 66, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 0.8rem;
+}
+
+.picker-search {
+    width: 100%;
+    border: 1px solid rgba(23, 22, 66, 0.12);
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+    margin-bottom: 0.7rem;
+    background: #fff;
+}
+
+.picker-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    max-height: 190px;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.picker-group {
+    border: 1px solid rgba(23, 22, 66, 0.08);
+    border-radius: 12px;
+    padding: 0.65rem;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.picker-group-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.picker-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.93rem;
+}
+
+@media (max-width: 860px) {
+    .two-up {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.querySelectorAll('.picker-search').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var query = input.value.trim().toLowerCase();
+        var list = document.getElementById(input.dataset.target);
+        if (!list) return;
+
+        list.querySelectorAll('.picker-group').forEach(function(group) {
+            var anyVisible = false;
+            group.querySelectorAll('.picker-option').forEach(function(option) {
+                var text = option.dataset.text || '';
+                var visible = !query || text.indexOf(query) !== -1;
+                option.style.display = visible ? 'flex' : 'none';
+                if (visible) anyVisible = true;
+            });
+            group.style.display = anyVisible ? 'block' : 'none';
+        });
+    });
+});
+</script>
 {% endblock %}
