@@ -5,19 +5,23 @@
 {% block content %}
 <div class="container">
     <section class="section">
-        <div class="d-flex justify-between align-center mb-4">
+        <div class="text-center mb-4">
             <h1>👤 Edit Your Profile</h1>
-            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+            <p class="text-muted">Update your skills, experience, and availability to help others find you.</p>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3>Expert Profile Information</h3>
-                <p class="text-muted">Update your skills, experience, and availability to help others find you.</p>
-            </div>
+        <div class="card submit-card">
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
+
+                    <div class="profile-form-intro">
+                        <div>
+                            <h3>Expert Profile Information</h3>
+                            <p class="text-muted">Keep your profile current so requesters and admins can understand where you can help.</p>
+                        </div>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+                    </div>
 
                     <div class="form-group">
                         <label for="{{ form.bio.id_for_label }}">Bio</label>
@@ -29,79 +33,234 @@
                         {% endif %}
                     </div>
 
-                    <div class="form-group">
-                        <label for="{{ form.skills.id_for_label }}">Skills</label>
-                        <small class="text-muted d-block mb-2">Select all skills you can help with (hold Ctrl/Cmd to select multiple)</small>
-                        {{ form.skills }}
-                        {% if form.skills.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.skills.errors %}{{ error }}{% endfor %}
+                    <div class="row two-up">
+                        <div class="col-md-6">
+                            <div class="form-group picker-panel">
+                                <label>Skills</label>
+                                <small class="text-muted d-block mb-2">Search and select the skills you can help with</small>
+                                <input type="text" class="picker-search" placeholder="Search skills..." data-target="profile-skills-list">
+                                <div class="picker-list" id="profile-skills-list">
+                                    {% for theme, skills in skill_groups %}
+                                    <div class="picker-group" data-group>
+                                        <div class="picker-group-title">{{ theme }}</div>
+                                        <div class="picker-options">
+                                            {% for skill in skills %}
+                                            <label class="picker-option" data-text="{{ skill.name|lower }}">
+                                                <input type="checkbox" name="skills" value="{{ skill.id }}" {% if skill.id|stringformat:'s' in selected_skills %}checked{% endif %}>
+                                                <span>{{ skill.name }}</span>
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.skills.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.skills.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group picker-panel">
+                                <label>Known Languages</label>
+                                <small class="text-muted d-block mb-2">Search and select all languages you can communicate in</small>
+                                <input type="text" class="picker-search" placeholder="Search languages..." data-target="profile-languages-list">
+                                <div class="picker-list" id="profile-languages-list">
+                                    <div class="picker-group" data-group>
+                                        <div class="picker-options">
+                                            {% for language in known_languages %}
+                                            <label class="picker-option" data-text="{{ language.name|lower }}">
+                                                <input type="checkbox" name="languages" value="{{ language.id }}" {% if language.id|stringformat:'s' in selected_languages %}checked{% endif %}>
+                                                <span>{{ language.name }}</span>
+                                            </label>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if form.languages.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.languages.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="{{ form.languages.id_for_label }}">Known Languages</label>
-                        <small class="text-muted d-block mb-2">Select all languages you can communicate in</small>
-                        {{ form.languages }}
-                        {% if form.languages.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.languages.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
+                    <div class="availability-panel">
+                        <div class="form-group">
+                            <label for="{{ form.availability.id_for_label }}">Availability</label>
+                            {{ form.availability }}
+                            {% if form.availability.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.availability.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="{{ form.availability.id_for_label }}">Availability</label>
-                        {{ form.availability }}
-                        {% if form.availability.errors %}
-                            <div class="text-danger mt-1">
-                                {% for error in form.availability.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mt-4">
+                    <div class="form-actions mt-4">
                         <button type="submit" class="btn btn-primary">Save Profile</button>
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline ml-2">Cancel</a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
 
-        {% if expert.skills.all %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h3>Your Current Skills</h3>
-            </div>
-            <div class="card-body">
-                <div class="skill-tags">
-                    {% for skill in expert.skills.all %}
-                        <span class="badge badge-primary">{{ skill.name }}</span>
-                    {% endfor %}
+        <div class="row two-up mt-4">
+            {% if expert.skills.all %}
+            <div class="col-md-6">
+                <div class="card profile-summary-card">
+                    <div class="card-header">
+                        <h3>Your Current Skills</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="skill-tags">
+                            {% for skill in expert.skills.all %}
+                                <span class="badge badge-primary">{{ skill.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        {% if expert.languages.all %}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h3>Your Known Languages</h3>
-            </div>
-            <div class="card-body">
-                <div class="skill-tags">
-                    {% for language in expert.languages.all %}
-                        <span class="badge badge-success">{{ language.name }}</span>
-                    {% endfor %}
+            {% if expert.languages.all %}
+            <div class="col-md-6">
+                <div class="card profile-summary-card">
+                    <div class="card-header">
+                        <h3>Your Known Languages</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="skill-tags">
+                            {% for language in expert.languages.all %}
+                                <span class="badge badge-success">{{ language.name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </section>
 </div>
 
 <style>
+.submit-card {
+    width: 100%;
+}
+
+.submit-card form {
+    width: 100%;
+    max-width: none;
+}
+
+.profile-form-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.two-up {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.picker-panel {
+    border: 1px solid rgba(23, 22, 66, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 1rem;
+}
+
+.picker-search {
+    width: 100%;
+    border: 1px solid rgba(23, 22, 66, 0.12);
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+    margin-bottom: 0.7rem;
+    background: #fff;
+}
+
+.picker-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.picker-group {
+    border: 1px solid rgba(23, 22, 66, 0.08);
+    border-radius: 12px;
+    padding: 0.65rem;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.picker-group-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.picker-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.picker-option {
+    display: grid;
+    grid-template-columns: 1rem 1fr;
+    align-items: start;
+    column-gap: 0.6rem;
+    font-size: 0.93rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+}
+
+.picker-option input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    flex: 0 0 auto;
+    accent-color: var(--primary-dark);
+    align-self: start;
+    margin-top: 0.15rem;
+}
+
+.picker-option span {
+    flex: 1;
+    line-height: 1.35;
+}
+
+.availability-panel {
+    border: 1px solid rgba(23, 22, 66, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 1rem;
+}
+
+.availability-panel select,
+.submit-card textarea,
+.submit-card input {
+    width: 100%;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
 .skill-tags {
     display: flex;
     flex-wrap: wrap;
@@ -112,19 +271,50 @@
     margin: 0;
 }
 
-.card-header {
+.profile-summary-card .card-header {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
 }
 
-.card-body {
+.profile-summary-card .card-body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+}
+
+@media (max-width: 860px) {
+    .two-up {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-form-intro {
+        flex-direction: column;
+    }
 }
 
 </style>
+
+<script>
+document.querySelectorAll('.picker-search').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var query = input.value.trim().toLowerCase();
+        var list = document.getElementById(input.dataset.target);
+        if (!list) return;
+
+        list.querySelectorAll('.picker-group').forEach(function(group) {
+            var anyVisible = false;
+            group.querySelectorAll('.picker-option').forEach(function(option) {
+                var text = option.dataset.text || '';
+                var visible = !query || text.indexOf(query) !== -1;
+                option.style.display = visible ? 'flex' : 'none';
+                if (visible) anyVisible = true;
+            });
+            group.style.display = anyVisible ? 'block' : 'none';
+        });
+    });
+});
+</script>
 {% endblock %}

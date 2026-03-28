@@ -29,6 +29,7 @@ urlpatterns = [
     path('request/<int:request_id>/unassign-expert/', views.admin_unassign_expert, name='admin_unassign_expert'),
     path('request/<int:request_id>/leave/', views.leave_assigned_request, name='leave_assigned_request'),
     path('request/<int:request_id>/review/', views.review_request, name='review_request'),
+    path('request/<int:request_id>/chat/', views.request_chat, name='request_chat'),
 
     # Expert directory
     path('experts/', views.expert_directory, name='expert_directory'),
@@ -38,6 +39,7 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('admin-chat/', views.admin_chat, name='admin_chat'),
 
     # Health check
     path('health/', lambda request: {'status': 'ok'}, name='health'),
