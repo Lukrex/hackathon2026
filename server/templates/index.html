@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Home - Community Help System{% endblock %}
 
@@ -6,7 +7,7 @@
 <!-- HERO SECTION -->
 <div class="container">
     <section class="hero">
-        <h1>🤝 Community Help System</h1>
+        <img src="{% static 'image.png' %}" alt="zero one hundred" style="height: 110px; width: auto; margin-bottom: 1.5rem;">
         <p>Spájame ľudí, ktorí potrebujú pomoc, s expertami z komunity. Jednoduchý, efektívny a merateľný systém.</p>
         <div class="hero-buttons">
             <a href="{% url 'submit_request' %}" class="btn btn-primary-light">Poslať žiadosť</a>
