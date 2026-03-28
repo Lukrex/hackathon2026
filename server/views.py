@@ -156,22 +156,22 @@ def submit_request(request):
             try:
                 new_request = form.save(commit=False)
                 new_request.status = 'open'
-                new_request.priority = 'medium'
                 new_request.save()
+                form.save_m2m()
 
                 # Trigger expert matching asynchronously
-                # calculate_expert_matches.delay(new_request.id)  # Commented out for testing
+                # calculate_expert_matches.delay(new_request.id)
 
                 messages.success(
                     request,
-                    f'✅ Tvoja žiadosť "{new_request.title}" bola prijatá! '
-                    f'Potvrdenie bolo zaslané na {new_request.requester_email}'
+                    f'✅ Your request "{new_request.title}" has been submitted successfully! '
+                    f'A confirmation email has been sent to {new_request.requester_email}'
                 )
                 return redirect('request_submitted', request_id=new_request.id)
             except Exception as e:
-                messages.error(request, f'Chyba pri ukladaní žiadosti: {str(e)}')
+                messages.error(request, f'Error saving request: {str(e)}')
         else:
-            messages.error(request, 'Prosím, opravte chyby vo formulári.')
+            messages.error(request, 'Please correct the errors in the form.')
     else:
         form = RequestSubmissionForm(initial={'requester_type': 'community_member'})
 
@@ -188,9 +188,9 @@ def request_submitted(request, request_id):
     return render(request, 'request_submitted.html', {
         'request': req,
         'next_steps': [
-            'Náš tím preskúma tvoju žiadosť',
-            'Vyhľadáme vhodných expertov z komunity',
-            'Skontaktujeme ťa s ponukami pomoci'
+            'Our team reviews the request',
+            'We select matching experts from the community',
+            'We connect you with relevant help offers'
         ]
     })
 

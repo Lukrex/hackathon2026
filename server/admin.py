@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Q
-from .models import Category, Expert, Request, ExpertMatch, Notification
+from .models import Category, Skill, Expert, Request, ExpertMatch, Notification
 
 
 @admin.register(Category)
@@ -11,25 +11,27 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+
+
 @admin.register(Expert)
 class ExpertAdmin(admin.ModelAdmin):
-    list_display = ['name', 'expertise_display', 'availability', 'help_provided', 'created_at']
+    list_display = ['name', 'expertise_display', 'availability', 'rating', 'help_provided', 'created_at']
     list_filter = ['availability', 'created_at']
-    search_fields = ['user__first_name', 'user__last_name', 'user__email', 'expertise']
+    search_fields = ['user__first_name', 'user__last_name', 'user__email', 'expertise', 'skills__name']
     readonly_fields = ['created_at', 'help_provided']
 
     fieldsets = (
-        ('Základné informácie', {
-            'fields': ('user', 'profile_image', 'bio')
+        ('Basic Information', {
+            'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'availability')
         }),
-        ('Odbornosti a dostupnosť', {
-            'fields': ('expertise', 'availability')
-        }),
-        ('Štatistika', {
-            'fields': ('help_provided', 'created_at'),
+        ('Ratings', {
+            'fields': ('rating', 'rating_count', 'help_provided', 'created_at'),
         }),
     )
-
     def name(self, obj):
         return obj.user.get_full_name() or obj.user.username
     name.short_description = 'Meno'
@@ -60,21 +62,22 @@ class RequestAdmin(admin.ModelAdmin):
     search_fields = ['title', 'description', 'requester_name', 'requester_email']
 
     fieldsets = (
-        ('🎯 Informácie o žiadosti', {
-            'fields': ('title', 'description', 'category', 'requester_name', 'requester_email', 'requester_phone')
+        ('Request Details', {
+            'fields': (
+                'title', 'description', 'category', 'priority', 'value_score',
+                'requester_type', 'requester_name', 'requester_email', 'requester_phone',
+                'is_corporate', 'company_name', 'company_email', 'due_date',
+                'target_skills', 'target_experience'
+            )
         }),
-        ('🔍 Klasifikácia (Manuálne)', {
-            'fields': ('priority', 'value_score', 'review_notes'),
-            'classes': ('collapse',),
-        }),
-        ('📊 Status', {
+        ('Status', {
             'fields': ('status', 'resolved_at', 'resolution_notes'),
         }),
-        ('👥 Experto matchmaking', {
+        ('Matching', {
             'fields': ('assigned_experts',),
             'classes': ('collapse',),
         }),
-        ('📝 Audit', {
+        ('Audit', {
             'fields': ('reviewed_by', 'created_at', 'updated_at'),
             'classes': ('collapse',),
         }),

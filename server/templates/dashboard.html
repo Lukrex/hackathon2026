@@ -9,41 +9,37 @@
             <h1>👤 Dashboard</h1>
             <div>
                 <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
-                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Odhlásiť sa</a>
-            </div>
-        </div>
-
-        <!-- Statistics -->
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
         <div class="stats mb-4">
             {% if dashboard_type == 'expert' %}
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.assigned_requests }}</div>
-                    <div class="stat-label">Pridelené žiadosti</div>
+                    <div class="stat-label">Assigned Requests</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.open_requests }}</div>
-                    <div class="stat-label">Otvorené</div>
+                    <div class="stat-label">Open Requests</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.in_progress }}</div>
-                    <div class="stat-label">V riešení</div>
+                    <div class="stat-label">In Progress</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.resolved }}</div>
-                    <div class="stat-label">Vyriešené</div>
+                    <div class="stat-label">Resolved</div>
                 </div>
             {% else %}
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.available_requests }}</div>
-                    <div class="stat-label">Dostupné žiadosti</div>
+                    <div class="stat-label">Available Requests</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.total_requests }}</div>
-                    <div class="stat-label">Celkovo žiadostí</div>
+                    <div class="stat-label">Total Requests</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-number">{{ stats.total_experts }}</div>
-                    <div class="stat-label">Expertov</div>
+                    <div class="stat-label">Experts</div>
                 </div>
             {% endif %}
         </div>
@@ -53,9 +49,9 @@
             <div class="card-header">
                 <h3>
                     {% if dashboard_type == 'expert' %}
-                        🛠️ Žiadosti pridelené vám
+                        🛠️ Requests assigned to you
                     {% else %}
-                        🤝 Žiadosti, ktoré môžete pomôcť vyriešiť
+                        🤝 Requests you can help with
                     {% endif %}
                 </h3>
             </div>
@@ -85,15 +81,15 @@
                             </div>
                             {% if dashboard_type == 'expert' %}
                             <div class="request-actions">
-                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">Zobraziť detaily</a>
+                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">View details</a>
                                 {% if request.status == 'in_progress' %}
-                                    <button class="btn btn-sm btn-success">Označiť ako vyriešené</button>
+                                    <button class="btn btn-sm btn-success">Mark resolved</button>
                                 {% endif %}
                             </div>
                             {% else %}
                             <div class="request-actions">
-                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">Zobraziť detaily</a>
-                                <button class="btn btn-sm btn-outline">Ponúknuť pomoc</button>
+                                <a href="{% url 'request_detail' request.id %}" class="btn btn-sm btn-primary">View details</a>
+                                <button class="btn btn-sm btn-outline">Offer help</button>
                             </div>
                             {% endif %}
                         </div>
@@ -103,12 +99,12 @@
                     <div class="text-center py-4">
                         <p class="text-muted">
                             {% if dashboard_type == 'expert' %}
-                                Zatiaľ vám neboli pridelené žiadne žiadosti.
+                                No requests are assigned to you yet.
                             {% else %}
-                                Žiadne dostupné žiadosti na pomoc.
+                                No available requests at the moment.
                             {% endif %}
                         </p>
-                        <a href="{% url 'submit_request' %}" class="btn btn-primary">Poslať novú žiadosť</a>
+                        <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
                     </div>
                 {% endif %}
             </div>
