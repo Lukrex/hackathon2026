@@ -13,7 +13,7 @@
             </div>
         </div>
 
-        <div class="stats mb-4">
+        <div class="stats stats-grid-{% if expert_profile %}6{% else %}5{% endif %} mb-4">
             <div class="stat-item">
                 <div class="stat-number">{{ stats.total_requests }}</div>
                 <div class="stat-label">Total Requests</div>
@@ -227,8 +227,36 @@
 <style>
     .stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
+    }
+
+    .stats-grid-6 {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .stats-grid-5 {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid-6,
+        .stats-grid-5 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .stats-grid-6,
+        .stats-grid-5 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid-6,
+        .stats-grid-5 {
+            grid-template-columns: 1fr;
+        }
     }
 
     .stat-item {
