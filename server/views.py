@@ -157,6 +157,9 @@ def compute_expert_recommendations(req, limit=6):
 
 def index(request):
     """Landing page / home page"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
     stats = {
         'total_requests': Request.objects.count(),
         'total_experts': Expert.objects.count(),
@@ -262,17 +265,17 @@ def how_it_works(request):
     return render(request, 'how_it_works.html', {'steps': steps})
 
 
+@login_required
 @require_http_methods(["GET", "POST"])
 def submit_request(request):
-    """Public form for submitting new help requests"""
+    """Authenticated form for submitting new help requests"""
     if request.method == 'POST':
         form = RequestSubmissionForm(request.POST)
         if form.is_valid():
             try:
                 new_request = form.save(commit=False)
                 new_request.status = 'open'
-                if request.user.is_authenticated:
-                    new_request.submitted_by = request.user
+                new_request.submitted_by = request.user
                 new_request.save()
                 form.save_m2m()
 
