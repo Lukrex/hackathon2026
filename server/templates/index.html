@@ -77,10 +77,10 @@
     </div>
 </div>
 
-<!-- RECENT REQUESTS -->
 {% if recent_requests %}
 <div class="container section">
-    <h2 class="text-center">Recent Requests</h2>
+    <h2>Recent requests in the system</h2>
+    <p class="section-lead">Recent activity gives new users a quick picture of the kinds of work already being tracked.</p>
     <div class="grid grid-2">
         {% for request in recent_requests %}
         <div class="card">
@@ -101,21 +101,20 @@
 </div>
 {% endif %}
 
-<!-- FEATURED EXPERTS -->
 {% if featured_experts %}
 <div class="container section">
-    <h2 class="text-center">Top Experts</h2>
-    <p class="text-center text-muted" style="margin-bottom: 2rem;">People with a strong record of helping in the community.</p>
+    <h2>Community experts</h2>
+    <p class="section-lead">These profiles are pulled dynamically from current users in the platform.</p>
     <div class="grid grid-3">
         {% for expert in featured_experts %}
         <div class="card">
             <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">👤</div>
-            <h3 style="text-align: center;">{{ expert.user.get_full_name }}</h3>
+            <h3 style="text-align: center;">{{ expert.user.get_full_name|default:expert.user.username }}</h3>
             <p class="text-muted" style="text-align: center; margin-bottom: 1rem;">{{ expert.bio|default:"Expert profile is ready for community request collaboration."|truncatewords:24 }}</p>
 
             <div style="background: var(--primary-soft); padding: 1rem; border-radius: 16px; margin: 1rem 0;">
                 <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.75rem;">
-                    <strong>Skilly:</strong>
+                    <strong>Skills:</strong>
                 </p>
                 <p style="font-size: 0.95rem; color: var(--text);">
                     {% for skill in expert.skills.all|slice:":4" %}
@@ -125,59 +124,20 @@
                     {% endfor %}
                 </p>
             </div>
-
-            <div style="display: flex; justify-content: space-around; text-align: center; margin: 1rem 0;">
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">{{ expert.help_provided }}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-light);">Helps</div>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">{{ expert.karma_points }}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-light);">Karma</div>
-                </div>
-            </div>
         </div>
         {% endfor %}
     </div>
 </div>
 {% endif %}
 
-<!-- CTA SECTION -->
 <div class="container section">
-    <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 3rem; border-radius: 8px; text-align: center;">
-        <h2 style="color: white; margin-bottom: 1rem;">Do you have an open problem or capacity gap?</h2>
-        <p style="margin-bottom: 2rem; opacity: 0.95;">Submit a request with clear context and let the internal team assign the right expert.</p>
-        <a href="{% url 'submit_request' %}" class="btn btn-primary-light">Submit Request Now</a>
-    </div>
-</div>
-
-<!-- HOW IT WORKS PREVIEW -->
-<div class="container section">
-    <h2 class="text-center">How It Works</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 3rem;">
-        <div style="text-align: center;">
-            <div class="step-number">1</div>
-            <h3 style="margin-top: 1rem;">Submit</h3>
-            <p class="text-muted">User creates a request</p>
+    <div style="background: linear-gradient(135deg, #171642 0%, #0f5f5e 100%); color: white; padding: 3rem; border-radius: 32px; text-align: center; box-shadow: var(--shadow-card);">
+        <h2 style="color: white; margin-bottom: 1rem;">Need a practical overview before you onboard people into the app?</h2>
+        <p style="margin-bottom: 2rem; opacity: 0.92; max-width: 720px; margin-left: auto; margin-right: auto;">Use the Features page for capability and access boundaries, then move to How It Works for the exact lifecycle from submission to closure.</p>
+        <div class="hero-buttons">
+            <a href="{% url 'features' %}" class="btn btn-primary-light">View Features</a>
+            <a href="{% url 'how_it_works' %}" class="btn btn-outline">Read Workflow</a>
         </div>
-        <div style="text-align: center;">
-            <div class="step-number">2</div>
-            <h3 style="margin-top: 1rem;">Triage</h3>
-            <p class="text-muted">Internal team sets priority</p>
-        </div>
-        <div style="text-align: center;">
-            <div class="step-number">3</div>
-            <h3 style="margin-top: 1rem;">Assign</h3>
-            <p class="text-muted">Expert or worker is assigned</p>
-        </div>
-        <div style="text-align: center;">
-            <div class="step-number">4</div>
-            <h3 style="margin-top: 1rem;">Confirm</h3>
-            <p class="text-muted">Requester confirms completion</p>
-        </div>
-    </div>
-    <div style="text-align: center; margin-top: 2rem;">
-        <a href="{% url 'how_it_works' %}" class="btn btn-primary">View Full Flow</a>
     </div>
 </div>
 {% endblock %}

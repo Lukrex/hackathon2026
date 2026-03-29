@@ -261,8 +261,8 @@ def index(request):
     # Get recent requests
     recent_requests = Request.objects.all().order_by('-created_at')[:3]
 
-    # Get featured experts (most helpful)
-    featured_experts = Expert.objects.all().order_by('-help_provided')[:3]
+    # Get featured experts dynamically from existing user profiles.
+    featured_experts = Expert.objects.select_related('user').prefetch_related('skills').order_by('?')[:3]
 
     return render(request, 'index.html', {
         'stats': stats,
@@ -273,7 +273,64 @@ def index(request):
 
 def about(request):
     """About page"""
-    return render(request, 'about.html')
+    role_guides = [
+        {
+            'title': 'Request creators',
+            'summary': 'Signed-in users who open requests, monitor progress, and confirm when work is genuinely complete.',
+            'points': [
+                'Create requests with category, due date, skills, and languages.',
+                'Track their own requests in the dashboard.',
+                'Use request chat when they are the requester.',
+            ],
+        },
+        {
+            'title': 'Experts',
+            'summary': 'Community helpers with profiles, skills, languages, reputation, and active assignment tracking.',
+            'points': [
+                'Receive assignments from the internal team.',
+                'See active work in their dashboard view.',
+                'Earn karma and help history after confirmed completion.',
+            ],
+        },
+        {
+            'title': 'Tier 2 workers',
+            'summary': 'Company workers scoped to selected categories so routing can be distributed without giving full access.',
+            'points': [
+                'Review only requests in allowed categories.',
+                'Participate in company chat and direct Tier 1 or Tier 2 coordination.',
+                'Support triage and assignment without global admin rights.',
+            ],
+        },
+        {
+            'title': 'Tier 1 super-admins',
+            'summary': 'Global operators who can review every request, manage workers, and use the full internal coordination layer.',
+            'points': [
+                'See all requests across categories.',
+                'Assign experts, manage workers, and delete requests when needed.',
+                'Access the Tier 1 admin chat stream in addition to company chat.',
+            ],
+        },
+    ]
+
+    operating_principles = [
+        'The platform is a coordination system, not an autopilot. Matching helps, but people still own decisions.',
+        'Every request is treated as a tracked work item with status, ownership, and audit history.',
+        'Completion is requester-confirmed, which prevents dashboards from reporting unfinished work as done.',
+        'Access is deliberately role-scoped so workers and experts only see what they should act on.',
+    ]
+
+    system_boundaries = [
+        'The active product is the Django application driven by models, views, forms, and templates.',
+        'Legacy Node and Express files remain in the repository, but they are not the main web workflow.',
+        'The current app already supports request intake, dashboards, chats, assignments, and completion tracking.',
+        'Attachment support exists in internal chat channels, including files, images, video, and audio.',
+    ]
+
+    return render(request, 'about.html', {
+        'role_guides': role_guides,
+        'operating_principles': operating_principles,
+        'system_boundaries': system_boundaries,
+    })
 
 
 def features(request):
@@ -297,7 +354,7 @@ def features(request):
         {
             'icon': '💬',
             'title': 'Chat-based coordination',
-            'description': 'Each request can include conversations between the requester, expert, and internal team.',
+            'description': 'The app supports request chat plus internal company and admin coordination channels.',
         },
         {
             'icon': '📊',
@@ -306,11 +363,118 @@ def features(request):
         },
         {
             'icon': '🏅',
-            'title': 'Karma and expert reputation',
-            'description': 'After completion is confirmed, the expert receives credit and a karma point.',
+            'title': 'Score and expert reputation',
+            'description': 'After completion is confirmed, the expert receives credit and a score point.',
         },
     ]
-    return render(request, 'features.html', {'features': features_list})
+
+    feature_groups = [
+        {
+            'title': 'Request intake and structure',
+            'description': 'The form captures the data the team actually uses when deciding priority and fit.',
+            'items': [
+                'Requester type, contact details, and deadline.',
+                'Category selection linked to worker routing.',
+                'Target skills and required languages.',
+                'Automatic link to the signed-in submitter account.',
+            ],
+        },
+        {
+            'title': 'Review, routing, and assignment',
+            'description': 'Requests are reviewed by company roles instead of dropping directly into an unfiltered queue.',
+            'items': [
+                'Priority and value scoring support triage.',
+                'Tier 2 workers are restricted to assigned categories.',
+                'Tier 1 can manage workers and all requests globally.',
+                'One or more experts can be assigned to the same request.',
+            ],
+        },
+        {
+            'title': 'Matching and expert fit',
+            'description': 'The recommendation layer uses explicit signals that are understandable by operators.',
+            'items': [
+                'Precomputed match support when available.',
+                'Fallback live scoring from skills, languages, keywords, and ratings.',
+                'Expert busy or free state based on active assignments.',
+                'Offer-help flow for experts who want to raise their hand proactively.',
+            ],
+        },
+        {
+            'title': 'Communication and accountability',
+            'description': 'The app keeps important coordination attached to the work instead of forcing external side channels.',
+            'items': [
+                'Request chat for request creators and assigned experts.',
+                'Company chat for internal team coordination.',
+                'Tier 1 admin chat and Tier 1 or Tier 2 direct chat.',
+                'Unread state, mute controls, and attachment uploads in internal chat.',
+            ],
+        },
+    ]
+
+    role_matrix = [
+        {
+            'role': 'Requester',
+            'visibility': 'Own requests and related request chats.',
+            'actions': 'Submit, review progress, and confirm done.',
+        },
+        {
+            'role': 'Expert',
+            'visibility': 'Assigned requests plus matching profile context.',
+            'actions': 'Work requests, chat on assigned threads, leave if needed.',
+        },
+        {
+            'role': 'Tier 2 worker',
+            'visibility': 'Requests in selected categories only.',
+            'actions': 'Triage, coordinate internally, and support assignment.',
+        },
+        {
+            'role': 'Tier 1 super-admin',
+            'visibility': 'All requests, workers, and internal chat channels.',
+            'actions': 'Global review, worker management, assignment, and cleanup.',
+        },
+    ]
+
+    category_details = {
+        'hiring': ('🔍', 'Recruiting support, sourcing, evaluations, and hiring process work.'),
+        'investment': ('💰', 'Fundraising strategy, investor preparation, and capital-related support.'),
+        'consulting': ('📊', 'Business, product, technical, or operational consulting requests.'),
+        'marketing': ('📢', 'Campaigns, content, SEO, brand, and growth execution.'),
+        'speaking': ('🎤', 'Talks, events, panels, and public speaking opportunities.'),
+        'networking': ('🤝', 'Introductions, partnerships, and community connections.'),
+        'sales': ('💼', 'Go-to-market, enablement, revenue support, and pipeline execution.'),
+        'other': ('➕', 'Anything outside the main buckets that still needs structured handling.'),
+    }
+    category_cards = [
+        {
+            'icon': category_details[slug][0],
+            'title': label,
+            'description': category_details[slug][1],
+        }
+        for slug, label in Category.CATEGORY_CHOICES
+    ]
+
+    chat_channels = [
+        {
+            'title': 'Request chat',
+            'description': 'Used by the requester and currently assigned experts on a specific request.',
+        },
+        {
+            'title': 'Company chat',
+            'description': 'Shared internal channel for company-side coordination across workers and Tier 1.',
+        },
+        {
+            'title': 'Admin and direct chat',
+            'description': 'Tier 1 gets an admin stream, and Tier 1 or Tier 2 pairs can message directly.',
+        },
+    ]
+
+    return render(request, 'features.html', {
+        'features': features_list,
+        'feature_groups': feature_groups,
+        'role_matrix': role_matrix,
+        'category_cards': category_cards,
+        'chat_channels': chat_channels,
+    })
 
 
 def how_it_works(request):
@@ -319,41 +483,113 @@ def how_it_works(request):
         {
             'number': '1',
             'title': 'Submit a request',
-            'description': 'A signed-in user creates a new request with a deadline, required skills, and contact details.',
+            'description': 'A signed-in user creates a request with deadline, category, context, target skills, and required languages.',
             'icon': '📝',
+            'owner': 'Requester',
+            'location': 'Submit Request form',
+            'status': 'Open',
+            'details': [
+                'The request is tied to the submitting account.',
+                'Contact details stay attached to the work item.',
+                'The goal is enough context for fast triage, not a vague ticket title.',
+            ],
         },
         {
             'number': '2',
             'title': 'Internal triage',
             'description': 'An admin or worker reviews the request, sets priority, and defines the next action.',
             'icon': '🔍',
+            'owner': 'Tier 1 or Tier 2',
+            'location': 'Dashboard and request detail',
+            'status': 'In Review',
+            'details': [
+                'Tier 2 workers only see requests in their assigned categories.',
+                'Priority, value, and review notes can be updated.',
+                'The team decides whether to assign, clarify, or defer.',
+            ],
         },
         {
             'number': '3',
             'title': 'Select experts',
             'description': 'The system prepares recommendations and the team assigns one or more suitable experts.',
             'icon': '🧠',
+            'owner': 'Internal team',
+            'location': 'Request detail recommendations',
+            'status': 'Waiting for Expert',
+            'details': [
+                'Recommendations are based on skills, languages, profile text, and rating.',
+                'The team can override or ignore suggestions.',
+                'Experts may also offer help before formal assignment.',
+            ],
         },
         {
             'number': '4',
             'title': 'Coordinate work',
             'description': 'After assignment, communication continues in dashboards and chats with full traceability.',
             'icon': '🤝',
+            'owner': 'Requester, experts, and internal team',
+            'location': 'Request chat and internal chats',
+            'status': 'In Progress',
+            'details': [
+                'Request chat is for the requester and assigned experts.',
+                'Internal company and admin channels support operational coordination.',
+                'Experts are marked busy while active work is assigned.',
+            ],
         },
         {
             'number': '5',
             'title': 'Deliver help',
             'description': 'The expert works on the request, aligns on details, and moves the request toward completion.',
             'icon': '💡',
+            'owner': 'Assigned expert',
+            'location': 'Dashboard, request detail, and chats',
+            'status': 'In Progress',
+            'details': [
+                'The system keeps the work tied to the request record.',
+                'Experts can clarify scope through the chat thread.',
+                'If an expert needs to step away, they can leave the request.',
+            ],
         },
         {
             'number': '6',
             'title': 'Confirm completion',
             'description': 'The requester marks the request as done, and the system records completion and expert credit.',
             'icon': '📊',
+            'owner': 'Requester',
+            'location': 'Request detail completion flow',
+            'status': 'Resolved',
+            'details': [
+                'The completion timestamp is stored.',
+                'The completing expert receives score and help credit.',
+                'Busy or free state is recalculated from active assignments.',
+            ],
         },
     ]
-    return render(request, 'how_it_works.html', {'steps': steps})
+
+    status_path = ['Open', 'In Review', 'Waiting for Expert', 'In Progress', 'Resolved']
+    faqs = [
+        {
+            'question': 'Does the system auto-assign experts?',
+            'answer': 'No. It suggests candidates, but the internal team controls final assignment.',
+        },
+        {
+            'question': 'Can workers see every request?',
+            'answer': 'No. Tier 2 workers are limited to categories assigned to them by Tier 1.',
+        },
+        {
+            'question': 'Who can chat on a request?',
+            'answer': 'The request creator and currently assigned experts can post in request chat. Admins can view the thread.',
+        },
+        {
+            'question': 'When is work considered finished?',
+            'answer': 'Only when the requester confirms completion through the request detail flow.',
+        },
+    ]
+    return render(request, 'how_it_works.html', {
+        'steps': steps,
+        'status_path': status_path,
+        'faqs': faqs,
+    })
 
 
 def _group_skills_by_theme(queryset):
@@ -812,7 +1048,7 @@ def mark_request_done(request, request_id):
 
     messages.success(
         request,
-        f'Request "{req.title}" has been marked as done. {selected_expert} received +1 karma point.'
+        f'Request "{req.title}" has been marked as done. {selected_expert} received +1 score point.'
     )
     return HttpResponseRedirect('/dashboard/#my-requests')
 

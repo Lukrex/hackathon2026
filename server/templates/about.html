@@ -1,94 +1,172 @@
 {% extends "base.html" %}
 
-{% block title %}About - Community Help System{% endblock %}
+{% block title %}About - zero one hundred{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .info-panel {
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(23, 22, 66, 0.08);
+        border-radius: 28px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .info-panel h3 {
+        margin-top: 0;
+    }
+
+    .plain-list {
+        list-style: none;
+        display: grid;
+        gap: 0.9rem;
+        margin-top: 1.2rem;
+    }
+
+    .plain-list li {
+        color: var(--text-light);
+        padding-left: 1.25rem;
+        position: relative;
+    }
+
+    .plain-list li::before {
+        content: '';
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--gradient) 100%);
+        position: absolute;
+        left: 0;
+        top: 0.55rem;
+    }
+
+    .role-card {
+        height: 100%;
+    }
+
+    .fact-band {
+        background: linear-gradient(135deg, rgba(15, 239, 170, 0.12) 0%, rgba(17, 237, 226, 0.12) 100%);
+        border-radius: 32px;
+        padding: 2rem;
+        border: 1px solid rgba(23, 22, 66, 0.08);
+    }
+
+    @media (max-width: 900px) {
+        .info-hero {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1>About The Platform</h1>
-        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 2rem;">A collaborative workspace for community requests, experts, and internal coordinators.</p>
-
-        <div style="margin: 3rem 0;">
-            <h2>Why This App Exists</h2>
-            <p>
-                When needs are handled through scattered emails, chats, and ad-hoc sheets, teams lose priority, ownership, and history.
-                This app gives requests one shared place where they can be submitted, triaged, assigned, and safely closed.
-            </p>
+        <div class="info-hero">
+            <div>
+                <h1>About the platform</h1>
+                <p class="text-muted" style="font-size: 1.12rem; margin-bottom: 2rem; max-width: 720px;">This is not a brochure site pretending to be a workflow. It is the working system zero one hundred uses to intake requests, route them internally, assign experts, and close the loop only when delivery is confirmed.</p>
+            </div>
+            <div class="info-panel">
+                <h3>Why it exists</h3>
+                <p>Email threads, chat fragments, and spreadsheets break down once multiple roles need to review the same request. This app keeps one record for the request, the people involved, the current status, and the final outcome.</p>
+            </div>
         </div>
 
-        <div style="background: var(--primary-soft); padding: 2rem; border-radius: 24px; margin: 2rem 0;">
-            <h3 style="color: var(--primary);">Where It Helps Most</h3>
-            <ul class="feature-list">
-                <li>Separating urgent requests from lower-priority work.</li>
-                <li>Splitting workload between super-admins and category-assigned workers.</li>
-                <li>Selecting experts based on skills, languages, and reputation.</li>
-                <li>Tracking ownership, communication, and completion status in one place.</li>
+        <div class="fact-band" style="margin: 3rem 0;">
+            <h2 style="margin-top: 0;">Where it is useful right now</h2>
+            <ul class="plain-list">
+                <li>Requests need structured intake instead of a vague message in a chat.</li>
+                <li>Internal review must be split between global admins and category-scoped workers.</li>
+                <li>Expert selection should be informed by skills, languages, reputation, and workload.</li>
+                <li>The team needs proof of who owned the request and when it was actually completed.</li>
             </ul>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h2>What The System Includes</h2>
-            <p>
-                Instead of a full "AI autopilot", this is a practical workflow where technology accelerates decisions while final ownership stays with the team.
-            </p>
-            <ul class="feature-list">
-                <li><strong>Request form:</strong> requests with deadline, skills, languages, and requester type.</li>
-                <li><strong>Role-based dashboard:</strong> different views for users, experts, workers, and super-admins.</li>
-                <li><strong>Expert recommendations:</strong> scoring based on profile data and request content.</li>
-                <li><strong>Request chats:</strong> communication tied directly to each request.</li>
-                <li><strong>Karma and help history:</strong> completed outcomes build expert reputation.</li>
-            </ul>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h2>How Roles Are Structured</h2>
+            <h2>What the system includes</h2>
+            <p class="text-muted" style="max-width: 760px;">The current app is already opinionated about how work should move. It is not a generic task board. It models a real intake-to-delivery process with distinct responsibilities.</p>
             <div class="grid grid-2">
-                <div>
-                    <h3>Request creators</h3>
-                    <ul class="feature-list">
-                        <li>Create requests and track status.</li>
-                        <li>Communicate in request chat threads.</li>
-                        <li>Mark work as completed once delivered.</li>
+                <div class="card role-card">
+                    <h3>In scope</h3>
+                    <ul class="plain-list">
+                        <li>Request intake with categories, skills, languages, and due dates.</li>
+                        <li>Review notes, prioritization, and internal routing.</li>
+                        <li>Expert recommendations and assignment tracking.</li>
+                        <li>Request chat and internal chat channels.</li>
+                        <li>Requester-confirmed completion with expert credit.</li>
                     </ul>
                 </div>
-                <div>
-                    <h3>Internal team and experts</h3>
-                    <ul class="feature-list">
-                        <li>Super-admin sees all requests and manages workers.</li>
-                        <li>Workers process only their assigned categories.</li>
-                        <li>Experts handle assigned tasks and build reputation through completed help.</li>
+                <div class="card role-card">
+                    <h3>What it is not</h3>
+                    <ul class="plain-list">
+                        <li>Not an auto-assignment engine that removes human review.</li>
+                        <li>Not a public marketplace where every user sees every request.</li>
+                        <li>Not a generic CRM replacing all community operations.</li>
+                        <li>Not driven by the old Node files still sitting in the repository.</li>
                     </ul>
                 </div>
+            </div>
+        </div>
+
+        <div style="margin: 3rem 0;">
+            <h2>Roles in the live workflow</h2>
+            <div class="grid grid-2">
+                {% for role in role_guides %}
+                <div class="card role-card">
+                    <h3>{{ role.title }}</h3>
+                    <p>{{ role.summary }}</p>
+                    <ul class="plain-list">
+                        {% for point in role.points %}
+                        <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
         <div style="background: var(--gray-light); padding: 2rem; border-radius: 24px; margin: 2rem 0;">
-            <h3>Technology Foundation</h3>
+            <h3>System boundary and technology</h3>
             <div class="grid grid-3">
                 <div>
                     <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Django</div>
-                    <div class="text-muted">Web app framework, templates, and authentication</div>
+                    <div class="text-muted">The active application layer for routing, auth, templates, forms, and dashboards</div>
                 </div>
                 <div>
                     <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">SQLite</div>
-                    <div class="text-muted">Local storage for development</div>
+                    <div class="text-muted">Current development database backing the live workflow in this repo</div>
                 </div>
                 <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Celery-ready</div>
-                    <div class="text-muted">Optional async jobs and matching automation</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Chat attachments</div>
+                    <div class="text-muted">Internal chat channels support file, image, video, and audio uploads</div>
                 </div>
             </div>
+            <ul class="plain-list">
+                {% for fact in system_boundaries %}
+                <li>{{ fact }}</li>
+                {% endfor %}
+            </ul>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h2>Product Principle</h2>
-            <p>
-                The platform is built for fast internal execution. It prioritizes operations over marketing storytelling:
-                who submitted what, who owns it, current status, and whether delivery was confirmed.
-            </p>
+            <h2>Operating principles</h2>
+            <ul class="plain-list">
+                {% for principle in operating_principles %}
+                <li>{{ principle }}</li>
+                {% endfor %}
+            </ul>
         </div>
 
         <div style="text-align: center; margin: 3rem 0;">
+            <a href="{% url 'features' %}" class="btn btn-outline btn-lg" style="margin-right: 1rem;">See Features</a>
             <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Create A New Request</a>
         </div>
     </section>
