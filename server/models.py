@@ -71,7 +71,7 @@ class Expert(models.Model):
         choices=AVAILABILITY_CHOICES,
         default='medium'
     )
-    is_busy = models.BooleanField(default=False, help_text='Whether expert is currently assigned to an active task')
+    is_busy = models.BooleanField(default=False, help_text='Whether expert is currently assigned to an active request')
     karma_points = models.IntegerField(default=0, help_text='Karma points earned for completed help')
     help_provided = models.IntegerField(default=0, help_text='Number of help contributions')
     profile_image = models.ImageField(upload_to='experts/', blank=True)

@@ -77,11 +77,11 @@
                             {% endif %}
                         </div>
                         <div class="request-actions">
-                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">Open task</a>
+                            <a href="{% url 'request_detail' req.id %}" class="btn btn-sm btn-primary">Open request</a>
                             <a href="{% url 'request_chat' req.id %}" class="btn btn-sm btn-outline">Open chat</a>
                             <form method="post" action="{% url 'leave_assigned_request' req.id %}" class="inline">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline">Leave task</button>
+                                <button type="submit" class="btn btn-sm btn-outline">Leave request</button>
                             </form>
                         </div>
                     </div>

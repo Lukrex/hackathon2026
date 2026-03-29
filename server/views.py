@@ -138,7 +138,7 @@ def compute_request_priority_score(req, today_date=None):
     else:
         time_factor = 0.0
 
-    # Age factor: V / (V + 10), where V is task age in days.
+    # Age factor: V / (V + 10), where V is request age in days.
     task_age_days = max((today_date - req.created_at.date()).days, 0)
     age_factor = task_age_days / (task_age_days + 10) if task_age_days > 0 else 0.0
 
@@ -330,7 +330,7 @@ def how_it_works(request):
         {
             'number': '5',
             'title': 'Deliver help',
-            'description': 'The expert works on the task, aligns on details, and moves the request toward completion.',
+            'description': 'The expert works on the request, aligns on details, and moves the request toward completion.',
             'icon': '💡',
         },
         {
@@ -586,21 +586,21 @@ def admin_assign_expert(request, request_id):
         messages.error(request, 'Expert does not exist.')
         return redirect('request_detail', request_id=request_id)
 
-    # Real check: already on this task?
+    # Real check: already on this request?
     if req.assigned_experts.filter(id=expert.id).exists():
-        messages.info(request, f'{expert} is already assigned to this task.')
+        messages.info(request, f'{expert} is already assigned to this request.')
         return redirect('request_detail', request_id=request_id)
 
-    # Real check: busy on a different active task?
+    # Real check: busy on a different active request?
     is_actually_busy = expert.assigned_requests.filter(
         status__in=ACTIVE_REQUEST_STATUSES
     ).exclude(id=req.id).exists()
     if is_actually_busy:
-        messages.error(request, f'{expert} is currently busy on another task.')
+        messages.error(request, f'{expert} is currently busy on another request.')
         return redirect('request_detail', request_id=request_id)
 
     with transaction.atomic():
-        req.assigned_experts.add(expert)  # add without clearing — supports multiple experts per task
+        req.assigned_experts.add(expert)  # add without clearing — supports multiple experts per request
         if req.status in ['open', 'in_review']:
             req.status = 'waiting_expert'
             req.save(update_fields=['status', 'updated_at'])
@@ -681,7 +681,7 @@ def leave_assigned_request(request, request_id):
         return HttpResponseRedirect('/dashboard/')
 
     if not req.assigned_experts.filter(id=expert.id).exists():
-        messages.error(request, 'You are not assigned to this task.')
+        messages.error(request, 'You are not assigned to this request.')
         return HttpResponseRedirect('/dashboard/')
 
     with transaction.atomic():
@@ -692,7 +692,7 @@ def leave_assigned_request(request, request_id):
 
         update_expert_busy_status(expert)
 
-    messages.info(request, f'You left task "{req.title}".')
+    messages.info(request, f'You left request "{req.title}".')
     return HttpResponseRedirect('/dashboard/')
 
 

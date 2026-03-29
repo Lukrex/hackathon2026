@@ -55,7 +55,7 @@ Compared with a basic ticket list, this system adds:
 
 The app supports multiple conversation channels:
 
-- request chat (task-scoped)
+- request chat (request-scoped)
 - admin chat
 - company chat
 - direct chat between Tier 1 and Tier 2 accounts

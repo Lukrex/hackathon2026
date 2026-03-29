@@ -192,7 +192,7 @@
                                         {% if rec.is_assigned_here %}
                                         <span class="assigned-label">✓ Assigned</span>
                                         {% elif rec.is_busy %}
-                                        <span class="busy-label">Busy on another task</span>
+                                        <span class="busy-label">Busy on another request</span>
                                         {% else %}
                                         <form method="post" action="{% url 'admin_assign_expert' request.id %}" style="margin:0;">
                                             {% csrf_token %}
