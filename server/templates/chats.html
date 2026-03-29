@@ -423,6 +423,10 @@
     background: #ffffff;
 }
 
+.emoji-panel[hidden] {
+    display: none;
+}
+
 .emoji-btn {
     border: 1px solid #d8deea;
     background: #ffffff;
@@ -485,10 +489,26 @@
         document.getElementById('chat-box-direct')
     ];
 
-    boxes.forEach(function (chatBox) {
-        if (chatBox) {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    function scrollBoxToBottom(chatBox) {
+        if (!chatBox) return;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function scrollAllChatsToBottom() {
+        boxes.forEach(function (chatBox) {
+            scrollBoxToBottom(chatBox);
+        });
+    }
+
+    // Scroll immediately, then again after layout settles.
+    scrollAllChatsToBottom();
+    requestAnimationFrame(scrollAllChatsToBottom);
+    window.addEventListener('load', scrollAllChatsToBottom);
+
+    // Media can load after initial render and increase message height.
+    document.querySelectorAll('.chat-box img, .chat-box video, .chat-box audio').forEach(function (mediaEl) {
+        mediaEl.addEventListener('load', scrollAllChatsToBottom);
+        mediaEl.addEventListener('loadeddata', scrollAllChatsToBottom);
     });
 
     const emojiToggles = document.querySelectorAll('.emoji-toggle');
@@ -496,6 +516,9 @@
     function closeAllEmojiPanels() {
         document.querySelectorAll('.emoji-panel').forEach(function (panel) {
             panel.hidden = true;
+        });
+        emojiToggles.forEach(function (btn) {
+            btn.setAttribute('aria-expanded', 'false');
         });
     }
 
@@ -506,11 +529,14 @@
         const textarea = document.getElementById(targetId);
         if (!panel || !textarea) return;
 
+        toggleBtn.setAttribute('aria-expanded', 'false');
+
         toggleBtn.addEventListener('click', function (event) {
             event.stopPropagation();
             const shouldOpen = panel.hidden;
             closeAllEmojiPanels();
             panel.hidden = !shouldOpen;
+            toggleBtn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
         });
 
         panel.querySelectorAll('.emoji-btn').forEach(function (emojiBtn) {
@@ -525,10 +551,6 @@
                 textarea.setSelectionRange(newPos, newPos);
             });
         });
-    });
-
-    document.addEventListener('click', function () {
-        closeAllEmojiPanels();
     });
 
     document.querySelectorAll('.attach-trigger').forEach(function (attachBtn) {
