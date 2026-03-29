@@ -266,7 +266,9 @@ class RequestChatMessage(models.Model):
     """Message exchanged between request creator and assigned experts."""
     request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='chat_messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_request_chat_messages')
-    message = models.TextField(max_length=4000)
+    message = models.TextField(max_length=4000, blank=True, default='')
+    attachment = models.FileField(upload_to='chat_uploads/%Y/%m/%d/', null=True, blank=True)
+    attachment_type = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

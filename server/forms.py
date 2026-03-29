@@ -286,7 +286,7 @@ class UsernameEmailAuthenticationForm(AuthenticationForm):
 class RequestChatMessageForm(forms.ModelForm):
     class Meta:
         model = RequestChatMessage
-        fields = ['message']
+        fields = ['message', 'attachment']
         widgets = {
             'message': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -297,9 +297,16 @@ class RequestChatMessageForm(forms.ModelForm):
 
     def clean_message(self):
         message = (self.cleaned_data.get('message') or '').strip()
-        if not message:
-            raise forms.ValidationError('Message cannot be empty.')
         return message
+
+    def clean(self):
+        cleaned_data = super().clean()
+        message = (cleaned_data.get('message') or '').strip()
+        attachment = cleaned_data.get('attachment')
+        if not message and not attachment:
+            raise forms.ValidationError('Message cannot be empty unless a file is attached.')
+        cleaned_data['message'] = message
+        return cleaned_data
 
 
 class AdminChatMessageForm(forms.ModelForm):

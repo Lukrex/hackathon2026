@@ -1221,11 +1221,12 @@ def request_chat(request, request_id):
             messages.error(request, 'Only requester and assigned experts can send messages in this chat.')
             return redirect('request_chat', request_id=req.id)
 
-        form = RequestChatMessageForm(request.POST)
+        form = RequestChatMessageForm(request.POST, request.FILES)
         if form.is_valid():
             chat_message = form.save(commit=False)
             chat_message.request = req
             chat_message.sender = request.user
+            chat_message.attachment_type = detect_attachment_type(chat_message.attachment)
             chat_message.save()
             return redirect('request_chat', request_id=req.id)
     else:
