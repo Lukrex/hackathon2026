@@ -445,6 +445,8 @@ def dashboard(request):
             assigned_experts__isnull=True,
         ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
 
+        unassigned_requests = list(unassigned_requests_qs)
+
         assigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=False,
@@ -453,6 +455,26 @@ def dashboard(request):
         free_experts = Expert.objects.select_related('user').exclude(
             assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
         ).order_by('-karma_points', '-help_provided').distinct()
+        free_experts_list = list(free_experts)
+        free_expert_ids = {expert.id for expert in free_experts_list}
+
+        for req in unassigned_requests:
+            ranked = []
+            seen_ids = set()
+            recommendations = compute_expert_recommendations(req, limit=max(len(free_experts_list), 20))
+            for rec in recommendations:
+                expert = rec.get('expert')
+                if not expert or expert.id not in free_expert_ids or expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': rec.get('score', 0)})
+                seen_ids.add(expert.id)
+
+            for expert in free_experts_list:
+                if expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': 0})
+
+            req.assignable_experts = ranked
 
         stats = {
             'unassigned_requests_count': unassigned_requests_qs.count(),
@@ -463,7 +485,7 @@ def dashboard(request):
 
         return render(request, 'admin_dashboard.html', {
             'stats': stats,
-            'unassigned_requests': unassigned_requests_qs,
+            'unassigned_requests': unassigned_requests,
             'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
             'is_tier1': True,
@@ -484,6 +506,8 @@ def dashboard(request):
             category_id__in=allowed_category_ids,
         ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
 
+        unassigned_requests = list(unassigned_requests_qs)
+
         assigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=False,
@@ -493,6 +517,26 @@ def dashboard(request):
         free_experts = Expert.objects.select_related('user').exclude(
             assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
         ).order_by('-karma_points', '-help_provided').distinct()
+        free_experts_list = list(free_experts)
+        free_expert_ids = {expert.id for expert in free_experts_list}
+
+        for req in unassigned_requests:
+            ranked = []
+            seen_ids = set()
+            recommendations = compute_expert_recommendations(req, limit=max(len(free_experts_list), 20))
+            for rec in recommendations:
+                expert = rec.get('expert')
+                if not expert or expert.id not in free_expert_ids or expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': rec.get('score', 0)})
+                seen_ids.add(expert.id)
+
+            for expert in free_experts_list:
+                if expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': 0})
+
+            req.assignable_experts = ranked
 
         stats = {
             'unassigned_requests_count': unassigned_requests_qs.count(),
@@ -503,7 +547,7 @@ def dashboard(request):
 
         return render(request, 'admin_dashboard.html', {
             'stats': stats,
-            'unassigned_requests': unassigned_requests_qs,
+            'unassigned_requests': unassigned_requests,
             'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
             'is_tier1': False,
