@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse, Http404
 from .models import (
     Request,
     Expert,
@@ -34,6 +34,14 @@ from .tasks import calculate_expert_matches
 
 
 ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
+
+
+def favicon(request):
+    """Serve favicon from static asset with stable /favicon.ico URL."""
+    favicon_path = settings.BASE_DIR / 'server' / 'static' / 'favicon.ico' / 'favicon-96x96.png'
+    if not favicon_path.exists():
+        raise Http404('Favicon not found')
+    return FileResponse(open(favicon_path, 'rb'), content_type='image/png')
 
 
 class RememberMeLoginView(LoginView):

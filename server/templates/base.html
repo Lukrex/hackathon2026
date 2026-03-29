@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}zero one hundred{% endblock %}</title>
-    <link rel="icon" type="image/png" href="{% static 'favicon.ico/favicon-96x96.png' %}" sizes="96x96" />
-    <link rel="shortcut icon" href="{% static 'favicon.ico/favicon-96x96.png' %}" />
+    <link rel="icon" href="{% url 'favicon' %}?v=2" sizes="any" />
+    <link rel="icon" type="image/png" href="{% static 'favicon.ico/favicon-96x96.png' %}?v=2" sizes="96x96" />
+    <link rel="shortcut icon" href="{% url 'favicon' %}?v=2" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@400;500;700&display=swap');
 

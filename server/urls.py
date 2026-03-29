@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from server import views
 
 urlpatterns = [
+    path('favicon.ico', views.favicon, name='favicon'),
+
     # Index/Landing pages
     path('', views.index, name='index'),
     path('about/', views.about, name='about'),
