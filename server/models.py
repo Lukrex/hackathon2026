@@ -324,6 +324,19 @@ class DirectChatMessage(models.Model):
         return f"Direct chat {self.sender.username} -> {self.recipient.username}"
 
 
+class RequestChatReadState(models.Model):
+    """Tracks per-user last-read timestamp for request chat threads."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_chat_read_states')
+    request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name='chat_read_states')
+    last_read_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'request')
+
+    def __str__(self):
+        return f"Request chat read: {self.user.username} on #{self.request_id}"
+
+
 class ChatReadState(models.Model):
     """Tracks last-read timestamp per user and chat scope."""
     CHAT_TYPE_CHOICES = [

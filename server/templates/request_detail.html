@@ -21,7 +21,12 @@
                 </form>
                 {% endif %}
                 {% if can_access_request_chat %}
-                <a href="{% url 'request_chat' request.id %}" class="btn btn-outline">Open chat</a>
+                <a href="{% url 'request_chat' request.id %}" class="btn btn-outline nav-chat-btn">
+                    Open chat
+                    {% if request_chat_unread_count > 0 %}
+                    <span class="chat-unread-badge">{{ request_chat_unread_count }}</span>
+                    {% endif %}
+                </a>
                 {% endif %}
                 <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
             </div>

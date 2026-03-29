@@ -10,11 +10,13 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect, FileResponse, Http404
+from collections import defaultdict
 from .models import (
     Request,
     Expert,
     Category,
     RequestChatMessage,
+    RequestChatReadState,
     AdminChatMessage,
     CompanyChatMessage,
     DirectChatMessage,
@@ -42,6 +44,33 @@ from .chat_utils import (
 
 
 ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
+
+
+def get_request_chat_unread_counts(user, request_ids):
+    """Return unread message counts per request for requester-expert chat."""
+    request_ids = [rid for rid in request_ids if rid]
+    if not user or not user.is_authenticated or not request_ids:
+        return {}
+
+    last_read_by_request = {
+        row.request_id: row.last_read_at
+        for row in RequestChatReadState.objects.filter(
+            user=user,
+            request_id__in=request_ids,
+        ).only('request_id', 'last_read_at')
+    }
+
+    unread_counts = defaultdict(int)
+    message_rows = RequestChatMessage.objects.filter(
+        request_id__in=request_ids,
+    ).exclude(sender=user).values_list('request_id', 'created_at')
+
+    for req_id, created_at in message_rows:
+        last_read_at = last_read_by_request.get(req_id)
+        if last_read_at is None or created_at > last_read_at:
+            unread_counts[req_id] += 1
+
+    return dict(unread_counts)
 
 
 def favicon(request):
@@ -844,6 +873,16 @@ def dashboard(request):
             reverse=True,
         )
 
+    request_ids_for_unread = {req.id for req in my_requests}
+    request_ids_for_unread.update(req.id for req in expert_assigned_tasks)
+    unread_counts = get_request_chat_unread_counts(request.user, list(request_ids_for_unread))
+
+    for req in my_requests:
+        req.request_chat_unread_count = unread_counts.get(req.id, 0)
+
+    for req in expert_assigned_tasks:
+        req.request_chat_unread_count = unread_counts.get(req.id, 0)
+
     stats = {
         'total_requests': Request.objects.count(),
         'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
@@ -1189,6 +1228,11 @@ def request_detail(request, request_id):
         rec['is_assigned_here'] = rec['expert'].id in already_assigned_ids
         rec['is_busy'] = rec['expert'].id in busy_elsewhere_ids
 
+    can_access_request_chat = admin_view or is_request_chat_participant(request.user, req)
+    request_chat_unread_count = 0
+    if can_access_request_chat:
+        request_chat_unread_count = get_request_chat_unread_counts(request.user, [req.id]).get(req.id, 0)
+
     return render(request, 'request_detail.html', {
         'request': req,
         'recommended_experts': recommended_experts,
@@ -1197,7 +1241,8 @@ def request_detail(request, request_id):
         'is_assigned_here': is_assigned_here,
         'is_admin': admin_view,
         'is_tier1': is_tier1(request.user),
-        'can_access_request_chat': admin_view or is_request_chat_participant(request.user, req),
+        'can_access_request_chat': can_access_request_chat,
+        'request_chat_unread_count': request_chat_unread_count,
     })
 
 
@@ -1233,6 +1278,12 @@ def request_chat(request, request_id):
         form = RequestChatMessageForm()
 
     chat_messages = req.chat_messages.select_related('sender').order_by('created_at')
+
+    RequestChatReadState.objects.update_or_create(
+        user=request.user,
+        request=req,
+        defaults={'last_read_at': timezone.now()},
+    )
 
     return render(request, 'request_chat.html', {
         'request_obj': req,
