@@ -279,7 +279,9 @@ class RequestChatMessage(models.Model):
 class AdminChatMessage(models.Model):
     """Internal chat room for admins."""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_admin_chat_messages')
-    message = models.TextField(max_length=4000)
+    message = models.TextField(max_length=4000, blank=True, default='')
+    attachment = models.FileField(upload_to='chat_uploads/%Y/%m/%d/', null=True, blank=True)
+    attachment_type = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -292,7 +294,9 @@ class AdminChatMessage(models.Model):
 class CompanyChatMessage(models.Model):
     """Shared chat room for all company accounts (Tier 1 and Tier 2)."""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_company_chat_messages')
-    message = models.TextField(max_length=4000)
+    message = models.TextField(max_length=4000, blank=True, default='')
+    attachment = models.FileField(upload_to='chat_uploads/%Y/%m/%d/', null=True, blank=True)
+    attachment_type = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -306,7 +310,9 @@ class DirectChatMessage(models.Model):
     """Direct chat message between Tier 1 admin and Tier 2 worker."""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_direct_chat_messages')
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_direct_chat_messages')
-    message = models.TextField(max_length=4000)
+    message = models.TextField(max_length=4000, blank=True, default='')
+    attachment = models.FileField(upload_to='chat_uploads/%Y/%m/%d/', null=True, blank=True)
+    attachment_type = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

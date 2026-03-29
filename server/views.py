@@ -90,6 +90,21 @@ def can_use_direct_company_chat(user_a, user_b):
     return (is_tier1(user_a) and is_tier2(user_b)) or (is_tier2(user_a) and is_tier1(user_b))
 
 
+def detect_attachment_type(uploaded_file):
+    """Classify uploaded chat attachment for rendering."""
+    if not uploaded_file:
+        return ''
+
+    content_type = (getattr(uploaded_file, 'content_type', '') or '').lower()
+    if content_type.startswith('image/'):
+        return 'image'
+    if content_type.startswith('video/'):
+        return 'video'
+    if content_type.startswith('audio/'):
+        return 'audio'
+    return 'file'
+
+
 def is_request_chat_participant(user, req):
     """Requester and currently assigned experts can send request chat messages."""
     if req.submitted_by_id == user.id:
@@ -1027,6 +1042,7 @@ def chats(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+        uploaded_attachment = request.FILES.get('attachment')
 
         if action in {'mute_company', 'mute_admin', 'mute_direct'}:
             mute_enabled = request.POST.get('mute') == '1'
@@ -1059,15 +1075,31 @@ def chats(request):
         message_form = ChatMessageForm(request.POST)
         if message_form.is_valid():
             text = message_form.cleaned_data['message']
+            attachment_type = detect_attachment_type(uploaded_attachment)
+
+            if not text and not uploaded_attachment:
+                messages.error(request, 'Write a message or attach a file.')
+                return HttpResponseRedirect(request.get_full_path())
+
             if action == 'company':
-                CompanyChatMessage.objects.create(sender=request.user, message=text)
+                CompanyChatMessage.objects.create(
+                    sender=request.user,
+                    message=text,
+                    attachment=uploaded_attachment,
+                    attachment_type=attachment_type,
+                )
                 return HttpResponseRedirect(f"{reverse('chats')}?tab=company")
 
             if action == 'admin':
                 if not is_tier1(request.user):
                     messages.error(request, 'Only Tier 1 accounts can post in Admin Chat.')
                 else:
-                    AdminChatMessage.objects.create(sender=request.user, message=text)
+                    AdminChatMessage.objects.create(
+                        sender=request.user,
+                        message=text,
+                        attachment=uploaded_attachment,
+                        attachment_type=attachment_type,
+                    )
                     return HttpResponseRedirect(f"{reverse('chats')}?tab=admin")
 
             if action == 'direct':
@@ -1082,10 +1114,12 @@ def chats(request):
                         sender=request.user,
                         recipient=partner,
                         message=text,
+                        attachment=uploaded_attachment,
+                        attachment_type=attachment_type,
                     )
                     return HttpResponseRedirect(f"{reverse('chats')}?tab=direct&partner={partner.id}")
         else:
-            messages.error(request, 'Message cannot be empty.')
+            messages.error(request, 'Invalid chat input.')
 
     company_chat_messages = CompanyChatMessage.objects.select_related('sender').order_by('created_at')
     admin_chat_messages = AdminChatMessage.objects.select_related('sender').order_by('created_at') if is_tier1(request.user) else []
