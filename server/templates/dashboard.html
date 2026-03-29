@@ -168,12 +168,12 @@
 
         <div class="card">
             <div class="card-header">
-                <h3>📋 All Community Requests</h3>
+                <h3>📋 Requests For You</h3>
             </div>
             <div class="card-body">
-                {% if requests %}
+                {% if requests_for_you %}
                 <div class="requests-list">
-                    {% for req in requests %}
+                    {% for req in requests_for_you %}
                     <div class="request-item">
                         <div class="request-header">
                             <div class="request-title">
@@ -186,6 +186,7 @@
                         <div class="request-meta">
                             <span class="category">{{ req.get_category_display }}</span>
                             <span class="requester">{{ req.requester_name }}</span>
+                            <span class="badge badge-success">{{ req.relevance_score|floatformat:0 }}% match</span>
                             <span class="date">{{ req.created_at|date:"d.m.Y" }}</span>
                             {% if req.due_date %}
                             <span class="due-date">Due: {{ req.due_date|date:"M j, Y" }}</span>
@@ -215,8 +216,13 @@
                 </div>
                 {% else %}
                 <div class="text-center py-4">
-                    <p class="text-muted">No requests available at the moment.</p>
-                    <a href="{% url 'submit_request' %}" class="btn btn-primary">Submit a new request</a>
+                    {% if expert_profile %}
+                    <p class="text-muted">No active requests currently match both your skills and languages.</p>
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary">Update your profile</a>
+                    {% else %}
+                    <p class="text-muted">Create an expert profile with skills and languages to get a personalized request feed.</p>
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary">Set up your profile</a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

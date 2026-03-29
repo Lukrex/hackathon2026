@@ -228,6 +228,24 @@ def compute_expert_recommendations(req, limit=6):
     return scored[:limit]
 
 
+def compute_request_relevance_for_expert(req, expert_skill_ids, expert_language_ids):
+    """Score how relevant a request is for a specific expert."""
+    request_skill_ids = {skill.id for skill in req.target_skills.all()}
+    request_language_ids = {language.id for language in req.required_languages.all()}
+
+    skill_overlap = request_skill_ids & expert_skill_ids
+    language_overlap = request_language_ids & expert_language_ids
+
+    # Personalized feed requires at least one matching skill and one shared required language.
+    if not skill_overlap or not language_overlap:
+        return None
+
+    score = 0.0
+    score += (len(skill_overlap) / max(len(request_skill_ids), 1)) * 70.0
+    score += (len(language_overlap) / max(len(request_language_ids), 1)) * 30.0
+    return round(min(score, 100.0), 1)
+
+
 def index(request):
     """Landing page / home page"""
     if request.user.is_authenticated:
@@ -549,18 +567,6 @@ def dashboard(request):
             'my_category_names': my_category_names,
         })
 
-    all_requests = list(Request.objects.select_related('submitted_by').all())
-
-    today_date = timezone.now().date()
-    for req in all_requests:
-        req.algorithm_priority_score = compute_request_priority_score(req, today_date=today_date)
-
-    requests = sorted(
-        all_requests,
-        key=lambda req: (req.algorithm_priority_score, req.created_at.timestamp()),
-        reverse=True,
-    )
-
     my_requests_qs = Request.objects.filter(submitted_by=request.user).prefetch_related('assigned_experts').order_by('-created_at')
     my_requests = list(my_requests_qs)
     my_pending_count = my_requests_qs.filter(is_resolved_by_creator=False).count()
@@ -577,6 +583,31 @@ def dashboard(request):
     except Expert.DoesNotExist:
         expert_profile = None
 
+    requests_for_you = []
+    if expert_profile:
+        expert_skill_ids = {skill.id for skill in expert_profile.skills.all()}
+        expert_language_ids = {language.id for language in expert_profile.languages.all()}
+        candidate_requests = list(
+            Request.objects.filter(status__in=ACTIVE_REQUEST_STATUSES)
+            .exclude(submitted_by=request.user)
+            .exclude(assigned_experts=expert_profile)
+            .select_related('category', 'submitted_by')
+            .prefetch_related('target_skills', 'required_languages', 'assigned_experts', 'offered_experts')
+            .distinct()
+        )
+
+        for req in candidate_requests:
+            relevance_score = compute_request_relevance_for_expert(req, expert_skill_ids, expert_language_ids)
+            if relevance_score is None:
+                continue
+            req.relevance_score = relevance_score
+            requests_for_you.append(req)
+
+        requests_for_you.sort(
+            key=lambda req: (req.relevance_score, req.created_at.timestamp()),
+            reverse=True,
+        )
+
     stats = {
         'total_requests': Request.objects.count(),
         'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
@@ -590,7 +621,7 @@ def dashboard(request):
     }
 
     return render(request, 'dashboard.html', {
-        'requests': requests,
+        'requests_for_you': requests_for_you,
         'my_requests': my_requests,
         'expert_assigned_tasks': expert_assigned_tasks,
         'expert_profile': expert_profile,
