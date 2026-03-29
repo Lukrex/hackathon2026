@@ -873,7 +873,7 @@ def request_detail(request, request_id):
         return redirect('request_detail', request_id=request_id)
 
     # Compute expert recommendations (AI matches or live scoring)
-    recommended_experts = compute_expert_recommendations(req, limit=6)
+    recommended_experts = compute_expert_recommendations(req, limit=20)
 
     # Fresh real-time busy/assigned state for each recommended expert
     already_assigned_ids = set(req.assigned_experts.values_list('id', flat=True))
