@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from server import views
 
 urlpatterns = [
+    path('favicon.ico', views.favicon, name='favicon'),
+
     # Index/Landing pages
     path('', views.index, name='index'),
     path('about/', views.about, name='about'),
@@ -40,6 +42,7 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('chats/', views.chats, name='chats'),
     path('admin-chat/', views.admin_chat, name='admin_chat'),
     path('workers/', views.admin_manage_workers, name='admin_manage_workers'),
     path('workers/<int:worker_id>/role/', views.admin_set_worker_role, name='admin_set_worker_role'),

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Chats - Community Help System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <div>
+                <h1>Chats</h1>
+                <p class="text-muted" style="margin-top:0.25rem;">Company communication hub</p>
+            </div>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to dashboard</a>
+        </div>
+
+        <div class="chat-tabs mb-4">
+            <a href="{% url 'chats' %}?tab=company" class="btn btn-sm {% if active_tab == 'company' %}btn-primary{% else %}btn-outline{% endif %}">Company Chat</a>
+            {% if is_tier1 %}
+            <a href="{% url 'chats' %}?tab=admin" class="btn btn-sm {% if active_tab == 'admin' %}btn-primary{% else %}btn-outline{% endif %}">Admin Chat</a>
+            <a href="{% url 'chats' %}?tab=direct" class="btn btn-sm {% if active_tab == 'direct' %}btn-primary{% else %}btn-outline{% endif %}">Category Chat</a>
+            {% else %}
+            <a href="{% url 'chats' %}?tab=direct" class="btn btn-sm {% if active_tab == 'direct' %}btn-primary{% else %}btn-outline{% endif %}">Chat with Admin</a>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                {% if active_tab == 'company' %}
+                <div class="d-flex justify-between align-center" style="gap:0.75rem; flex-wrap: wrap;">
+                    <div>
+                        <h3 class="mb-2">Company Chat</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">Visible to all Tier 1 and Tier 2 company accounts.</p>
+                    </div>
+                    <form method="post" class="inline" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mute_company">
+                        <input type="hidden" name="mute" value="{% if company_muted %}0{% else %}1{% endif %}">
+                        <button type="submit" class="btn btn-sm btn-outline">{% if company_muted %}Unmute{% else %}Mute{% endif %}</button>
+                    </form>
+                </div>
+
+                <div class="chat-box" id="chat-box-company">
+                    {% for msg in company_chat_messages %}
+                    <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
+                        <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No messages yet.</p>
+                    {% endfor %}
+                </div>
+
+                <form method="post" class="chat-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="company">
+                    <textarea name="message" class="form-control" rows="3" placeholder="Write to company chat..."></textarea>
+                    <button type="submit" class="btn btn-primary">Send message</button>
+                </form>
+                {% endif %}
+
+                {% if active_tab == 'admin' and is_tier1 %}
+                <div class="d-flex justify-between align-center" style="gap:0.75rem; flex-wrap: wrap;">
+                    <div>
+                        <h3 class="mb-2">Admin Chat</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">Visible only to Tier 1 admins.</p>
+                    </div>
+                    <form method="post" class="inline" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mute_admin">
+                        <input type="hidden" name="mute" value="{% if admin_muted %}0{% else %}1{% endif %}">
+                        <button type="submit" class="btn btn-sm btn-outline">{% if admin_muted %}Unmute{% else %}Mute{% endif %}</button>
+                    </form>
+                </div>
+
+                <div class="chat-box" id="chat-box-admin">
+                    {% for msg in admin_chat_messages %}
+                    <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
+                        <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No admin messages yet.</p>
+                    {% endfor %}
+                </div>
+
+                <form method="post" class="chat-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="admin">
+                    <textarea name="message" class="form-control" rows="3" placeholder="Write to admin chat..."></textarea>
+                    <button type="submit" class="btn btn-primary">Send message</button>
+                </form>
+                {% endif %}
+
+                {% if active_tab == 'direct' %}
+                <div class="d-flex justify-between align-center mb-3" style="gap:1rem; flex-wrap: wrap;">
+                    <div>
+                        {% if is_tier1 %}
+                        <h3 class="mb-2">Category Chat</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">One-to-one chat with a specific Tier 2 worker.</p>
+                        {% else %}
+                        <h3 class="mb-2">Chat with Admin</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">One-to-one chat with a selected Tier 1 admin.</p>
+                        {% endif %}
+                    </div>
+                    <form method="get" class="partner-select-form">
+                        <input type="hidden" name="tab" value="direct">
+                        <select name="partner" class="form-control" onchange="this.form.submit()">
+                            <option value="">Select...</option>
+                            {% for p in partner_users %}
+                            <option value="{{ p.id }}" {% if selected_partner and p.id == selected_partner.id %}selected{% endif %}>
+                                {{ p.get_full_name|default:p.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                {% if selected_partner %}
+                <form method="post" class="inline" style="margin:0 0 0.75rem 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mute_direct">
+                    <input type="hidden" name="partner_id" value="{{ selected_partner.id }}">
+                    <input type="hidden" name="mute" value="{% if direct_muted %}0{% else %}1{% endif %}">
+                    <button type="submit" class="btn btn-sm btn-outline">{% if direct_muted %}Unmute this chat{% else %}Mute this chat{% endif %}</button>
+                </form>
+
+                <div class="chat-box" id="chat-box-direct">
+                    {% for msg in direct_chat_messages %}
+                    <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
+                        <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No direct messages yet.</p>
+                    {% endfor %}
+                </div>
+
+                <form method="post" class="chat-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="direct">
+                    <input type="hidden" name="partner_id" value="{{ selected_partner.id }}">
+                    <textarea name="message" class="form-control" rows="3" placeholder="Write a direct message..."></textarea>
+                    <button type="submit" class="btn btn-primary">Send message</button>
+                </form>
+                {% else %}
+                <p class="text-muted">No available users for this chat yet.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.chat-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chat-box {
+    border: 1px solid var(--gray);
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 1rem;
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chat-message {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+    max-width: min(78%, 760px);
+    align-self: flex-start;
+}
+
+.chat-message.mine {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    align-self: flex-end;
+    text-align: right;
+}
+
+.chat-author {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.chat-time {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.chat-form {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.partner-select-form {
+    min-width: 250px;
+}
+
+.partner-select-form .form-control {
+    width: 100%;
+}
+</style>
+
+<script>
+(function () {
+    const boxes = [
+        document.getElementById('chat-box-company'),
+        document.getElementById('chat-box-admin'),
+        document.getElementById('chat-box-direct')
+    ];
+
+    boxes.forEach(function (chatBox) {
+        if (chatBox) {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+})();
+</script>
+{% endblock %}

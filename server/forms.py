@@ -320,3 +320,20 @@ class AdminChatMessageForm(forms.ModelForm):
         if not message:
             raise forms.ValidationError('Message cannot be empty.')
         return message
+
+
+class ChatMessageForm(forms.Form):
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Write your message...'
+        }),
+        max_length=4000,
+    )
+
+    def clean_message(self):
+        message = (self.cleaned_data.get('message') or '').strip()
+        if not message:
+            raise forms.ValidationError('Message cannot be empty.')
+        return message
