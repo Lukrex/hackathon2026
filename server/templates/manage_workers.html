@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Workers{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="section">
+        <div class="d-flex justify-between align-center mb-4">
+            <div>
+                <h1>👥 Manage Workers</h1>
+                <p class="text-muted" style="margin-top:0.25rem;">Promote users to Tier 2 and assign their category access.</p>
+            </div>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+
+        <form method="get" class="worker-search mb-4">
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                class="form-control"
+                placeholder="Search users by username, name, or email"
+            >
+            <button type="submit" class="btn btn-sm btn-primary">Search</button>
+            {% if search_query %}
+            <a href="{% url 'admin_manage_workers' %}" class="btn btn-sm btn-outline">Clear</a>
+            {% endif %}
+        </form>
+
+        {% if workers %}
+        <div class="workers-list">
+            {% for w in workers %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-between align-center">
+                    <div>
+                        <strong>{{ w.user.get_full_name|default:w.user.username }}</strong>
+                        <span class="text-muted" style="font-size:0.85rem; margin-left:0.5rem;">@{{ w.user.username }}</span>
+                    </div>
+                    {% if w.is_tier2 %}
+                    <span class="badge badge-primary tier-badge">Tier 2 — Worker</span>
+                    {% else %}
+                    <span class="badge badge-secondary tier-badge">Regular User</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_set_worker_role' w.user.id %}" style="margin-bottom: 1rem;">
+                        {% csrf_token %}
+                        {% if w.is_tier2 %}
+                        <input type="hidden" name="make_tier2" value="0">
+                        <button type="submit" class="btn btn-sm btn-outline">Remove Tier 2 Access</button>
+                        {% else %}
+                        <input type="hidden" name="make_tier2" value="1">
+                        <button type="submit" class="btn btn-sm btn-primary">Make Tier 2 Worker</button>
+                        {% endif %}
+                    </form>
+
+                    {% if w.is_tier2 %}
+                    <form method="post" action="{% url 'admin_set_worker_categories' w.user.id %}">
+                        {% csrf_token %}
+                        <p class="text-muted mb-2" style="font-size:0.88rem;">Select which request categories this worker can see and manage:</p>
+                        <div class="category-grid">
+                            {% for cat in all_categories %}
+                            <label class="cat-option">
+                                <input
+                                    type="checkbox"
+                                    name="categories"
+                                    value="{{ cat.id }}"
+                                    {% if cat.id in w.selected_category_ids %}checked{% endif %}
+                                >
+                                <span>{{ cat.get_name_display }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <div style="margin-top:1rem;">
+                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <p class="text-muted" style="font-size:0.9rem; margin:0;">Promote this user to Tier 2 first, then category settings will appear.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-4">
+                {% if search_query %}
+                <p class="text-muted">No users match "{{ search_query }}".</p>
+                <a href="{% url 'admin_manage_workers' %}" class="btn btn-outline" style="margin-top:1rem;">Show all users</a>
+                {% else %}
+                <p class="text-muted">No users found.</p>
+                <p class="text-muted" style="font-size:0.88rem;">Create a user account first, then return here to promote it to Tier 2.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+.workers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.worker-search {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.worker-search .form-control {
+    max-width: 420px;
+}
+
+@media (max-width: 680px) {
+    .worker-search {
+        flex-wrap: wrap;
+    }
+
+    .worker-search .form-control {
+        max-width: 100%;
+        flex: 1 1 100%;
+    }
+}
+
+.tier-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.65rem;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.4rem 1.2rem;
+}
+
+.cat-option {
+    display: grid;
+    grid-template-columns: 1rem 1fr;
+    column-gap: 0.55rem;
+    align-items: center;
+    font-size: 0.93rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+}
+
+.cat-option input {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    accent-color: var(--primary-dark, #171642);
+}
+</style>
+{% endblock %}

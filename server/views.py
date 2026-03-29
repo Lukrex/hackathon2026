@@ -8,7 +8,7 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect
-from .models import Request, Expert, Category, RequestChatMessage, AdminChatMessage
+from .models import Request, Expert, Category, RequestChatMessage, AdminChatMessage, WorkerProfile
 from .forms import (
     RequestSubmissionForm,
     RequestFilterForm,
@@ -38,8 +38,24 @@ class RememberMeLoginView(LoginView):
         return response
 
 
+def is_tier1(user):
+    """Tier 1: global super-admin — sees all requests, manages workers."""
+    return bool(user and user.is_active and user.is_superuser)
+
+
+def is_tier2(user):
+    """Tier 2: company worker — sees only their assigned categories."""
+    return bool(user and user.is_active and user.is_staff and not user.is_superuser)
+
+
+def is_any_company(user):
+    """Any company account (Tier 1 or Tier 2)."""
+    return bool(user and user.is_active and (user.is_staff or user.is_superuser))
+
+
 def is_admin_user(user):
-    return user.is_staff or user.is_superuser
+    """Backward-compat alias for is_any_company."""
+    return is_any_company(user)
 
 
 def is_request_chat_participant(user, req):
@@ -375,7 +391,8 @@ def request_submitted(request, request_id):
 @login_required
 def dashboard(request):
     """Role-based dashboard: admins manage assignments, users track requests/tasks."""
-    if is_admin_user(request.user):
+    if is_tier1(request.user):
+        # ── Tier 1: global admin — sees all requests ──────────────────────
         unassigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=True,
@@ -402,6 +419,48 @@ def dashboard(request):
             'unassigned_requests': unassigned_requests_qs,
             'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
+            'is_tier1': True,
+        })
+
+    if is_tier2(request.user):
+        # ── Tier 2: worker — sees only their assigned categories ───────────
+        try:
+            allowed_category_ids = list(request.user.worker_profile.categories.values_list('id', flat=True))
+            my_category_names = list(request.user.worker_profile.categories.values_list('name', flat=True))
+        except WorkerProfile.DoesNotExist:
+            allowed_category_ids = []
+            my_category_names = []
+
+        unassigned_requests_qs = Request.objects.filter(
+            status__in=ACTIVE_REQUEST_STATUSES,
+            assigned_experts__isnull=True,
+            category_id__in=allowed_category_ids,
+        ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
+
+        assigned_requests_qs = Request.objects.filter(
+            status__in=ACTIVE_REQUEST_STATUSES,
+            assigned_experts__isnull=False,
+            category_id__in=allowed_category_ids,
+        ).prefetch_related('assigned_experts__user', 'offered_experts__user').select_related('category').distinct().order_by('-created_at')
+
+        free_experts = Expert.objects.select_related('user').exclude(
+            assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
+        ).order_by('-karma_points', '-help_provided').distinct()
+
+        stats = {
+            'unassigned_requests_count': unassigned_requests_qs.count(),
+            'assigned_requests_count': assigned_requests_qs.count(),
+            'free_experts_count': free_experts.count(),
+            'busy_experts_count': Expert.objects.filter(assigned_requests__status__in=ACTIVE_REQUEST_STATUSES).distinct().count(),
+        }
+
+        return render(request, 'admin_dashboard.html', {
+            'stats': stats,
+            'unassigned_requests': unassigned_requests_qs,
+            'assigned_requests': assigned_requests_qs,
+            'free_experts': free_experts,
+            'is_tier1': False,
+            'my_category_names': my_category_names,
         })
 
     all_requests = list(Request.objects.select_related('submitted_by').all())
@@ -542,6 +601,24 @@ def admin_unassign_expert(request, request_id):
 
     messages.success(request, f'Unassigned {expert} from "{req.title}".')
     return redirect('request_detail', request_id=request_id)
+
+
+@login_required
+@user_passes_test(is_tier1)
+@require_http_methods(["POST"])
+def admin_delete_request(request, request_id):
+    """Tier 1 admin permanently deletes a request."""
+    req = get_object_or_404(Request.objects.prefetch_related('assigned_experts'), id=request_id)
+    request_title = req.title
+    assigned_experts = list(req.assigned_experts.all())
+
+    with transaction.atomic():
+        req.delete()
+        for expert in assigned_experts:
+            update_expert_busy_status(expert)
+
+    messages.success(request, f'Request "{request_title}" has been deleted.')
+    return redirect('dashboard')
 
 
 @login_required
@@ -771,6 +848,7 @@ def request_detail(request, request_id):
         'has_offered_help': has_offered_help,
         'is_assigned_here': is_assigned_here,
         'is_admin': admin_view,
+        'is_tier1': is_tier1(request.user),
         'can_access_request_chat': admin_view or is_request_chat_participant(request.user, req),
     })
 
@@ -805,7 +883,7 @@ def request_chat(request, request_id):
     else:
         form = RequestChatMessageForm()
 
-    chat_messages = req.chat_messages.select_related('sender').order_by('-created_at')
+    chat_messages = req.chat_messages.select_related('sender').order_by('created_at')
 
     return render(request, 'request_chat.html', {
         'request_obj': req,
@@ -814,6 +892,78 @@ def request_chat(request, request_id):
         'can_send': can_send,
         'is_admin': is_admin,
     })
+
+
+@login_required
+@user_passes_test(is_tier1)
+def admin_manage_workers(request):
+    """Tier 1: manage Tier 2 role and category assignments."""
+    from django.contrib.auth.models import User as DjangoUser
+    search_query = (request.GET.get('q') or '').strip()
+
+    users_qs = DjangoUser.objects.filter(is_superuser=False)
+    if search_query:
+        users_qs = users_qs.filter(
+            Q(username__icontains=search_query)
+            | Q(email__icontains=search_query)
+            | Q(first_name__icontains=search_query)
+            | Q(last_name__icontains=search_query)
+        )
+
+    users_qs = users_qs.order_by('-is_staff', 'username')
+    all_categories = Category.objects.all()
+
+    workers = []
+    for worker in users_qs:
+        profile, _ = WorkerProfile.objects.get_or_create(user=worker)
+        workers.append({
+            'user': worker,
+            'profile': profile,
+            'is_tier2': bool(worker.is_staff),
+            'selected_category_ids': set(profile.categories.values_list('id', flat=True)),
+        })
+
+    return render(request, 'manage_workers.html', {
+        'workers': workers,
+        'all_categories': all_categories,
+        'search_query': search_query,
+    })
+
+
+@login_required
+@user_passes_test(is_tier1)
+@require_http_methods(["POST"])
+def admin_set_worker_role(request, worker_id):
+    """Tier 1: toggle a user in/out of Tier 2 worker role."""
+    from django.contrib.auth.models import User as DjangoUser
+    worker = get_object_or_404(DjangoUser, id=worker_id, is_superuser=False)
+
+    make_tier2 = request.POST.get('make_tier2') == '1'
+    worker.is_staff = make_tier2
+    worker.save(update_fields=['is_staff'])
+
+    profile, _ = WorkerProfile.objects.get_or_create(user=worker)
+    if not make_tier2:
+        profile.categories.clear()
+        messages.success(request, f'{worker.username} removed from Tier 2 worker accounts.')
+    else:
+        messages.success(request, f'{worker.username} is now a Tier 2 worker. You can assign categories below.')
+
+    return redirect('admin_manage_workers')
+
+
+@login_required
+@user_passes_test(is_tier1)
+@require_http_methods(["POST"])
+def admin_set_worker_categories(request, worker_id):
+    """Tier 1: update category assignments for a Tier 2 worker."""
+    from django.contrib.auth.models import User as DjangoUser
+    worker = get_object_or_404(DjangoUser, id=worker_id, is_staff=True, is_superuser=False)
+    profile, _ = WorkerProfile.objects.get_or_create(user=worker)
+    category_ids = request.POST.getlist('categories')
+    profile.categories.set(Category.objects.filter(id__in=category_ids))
+    messages.success(request, f'Categories updated for {worker.username}.')
+    return redirect('admin_manage_workers')
 
 
 @login_required
@@ -831,7 +981,7 @@ def admin_chat(request):
     else:
         form = AdminChatMessageForm()
 
-    chat_messages = AdminChatMessage.objects.select_related('sender').order_by('-created_at')
+    chat_messages = AdminChatMessage.objects.select_related('sender').order_by('created_at')
 
     return render(request, 'admin_chat.html', {
         'chat_messages': chat_messages,
@@ -862,6 +1012,10 @@ def register(request):
 @login_required
 def edit_profile(request):
     """Edit user profile"""
+    if request.user.is_staff or request.user.is_superuser:
+        messages.error(request, 'Company accounts cannot edit expert profiles.')
+        return redirect('dashboard')
+
     try:
         expert = request.user.expert
     except Expert.DoesNotExist:

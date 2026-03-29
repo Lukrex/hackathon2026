@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
 class Category(models.Model):
     """Request category"""
     CATEGORY_CHOICES = [
@@ -221,6 +222,12 @@ class Request(models.Model):
     def __str__(self):
         return f"[{self.get_priority_display()}] {self.title}"
 
+    def get_category_display(self):
+        """Return human-friendly category label for templates."""
+        if not self.category:
+            return 'Uncategorized'
+        return self.category.get_name_display()
+
     def assign_expert(self, expert):
         """Assign expert to request"""
         self.assigned_experts.add(expert)
@@ -299,3 +306,12 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} → {self.recipient_email}"
+
+
+class WorkerProfile(models.Model):
+    """Company account Tier 2 profile — stores which categories a worker can manage."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='worker_profile')
+    categories = models.ManyToManyField(Category, blank=True, related_name='workers')
+
+    def __str__(self):
+        return f"Worker: {self.user.username}"
