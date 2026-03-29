@@ -1300,8 +1300,19 @@ def admin_manage_workers(request):
     """Tier 1: manage Tier 2 role and category assignments."""
     from django.contrib.auth.models import User as DjangoUser
     search_query = (request.GET.get('q') or '').strip()
+    worker_filter = (request.GET.get('filter') or 'tier2').strip().lower()
+    if worker_filter not in {'tier2', 'non_tier2'}:
+        worker_filter = 'tier2'
 
     users_qs = DjangoUser.objects.filter(is_superuser=False)
+    tier2_total = users_qs.filter(is_staff=True).count()
+    non_tier2_total = users_qs.filter(is_staff=False).count()
+
+    if worker_filter == 'tier2':
+        users_qs = users_qs.filter(is_staff=True)
+    else:
+        users_qs = users_qs.filter(is_staff=False)
+
     if search_query:
         users_qs = users_qs.filter(
             Q(username__icontains=search_query)
@@ -1327,6 +1338,9 @@ def admin_manage_workers(request):
         'workers': workers,
         'all_categories': all_categories,
         'search_query': search_query,
+        'worker_filter': worker_filter,
+        'tier2_total': tier2_total,
+        'non_tier2_total': non_tier2_total,
     })
 
 
