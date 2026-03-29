@@ -768,7 +768,9 @@
                     {% if user.is_staff or user.is_superuser %}
                     <a href="{% url 'admin_chat' %}" class="btn btn-sm btn-outline">Admin room</a>
                     {% endif %}
+                    {% if not user.is_staff and not user.is_superuser %}
                     <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline">Profile</a>
+                    {% endif %}
                     <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
                     <a href="{% url 'submit_request' %}" class="btn btn-sm">Submit Request</a>
                 {% else %}

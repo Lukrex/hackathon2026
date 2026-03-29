@@ -6,8 +6,20 @@
 <div class="container">
     <section class="section">
         <div class="d-flex justify-between align-center mb-4">
-            <h1>🛠️ Admin Assignment Dashboard</h1>
+            <div>
+                <h1>{% if is_tier1 %}🛠️ Admin Dashboard{% else %}🗂️ Worker Dashboard{% endif %}</h1>
+                {% if not is_tier1 and my_category_names %}
+                <p class="text-muted" style="margin-top:0.25rem;font-size:0.9rem;">
+                    Your categories: <strong>{{ my_category_names|join:", " }}</strong>
+                </p>
+                {% elif not is_tier1 %}
+                <p class="text-muted" style="margin-top:0.25rem;font-size:0.9rem;">No categories assigned yet — contact a Tier 1 admin.</p>
+                {% endif %}
+            </div>
             <div class="d-flex align-center" style="gap: 0.5rem;">
+                {% if is_tier1 %}
+                <a href="{% url 'admin_manage_workers' %}" class="btn btn-sm btn-outline">Manage Workers</a>
+                {% endif %}
                 <a href="{% url 'admin_chat' %}" class="btn btn-sm btn-outline">Admin room</a>
                 <span class="badge badge-primary">{{ user.get_full_name|default:user.username }}</span>
                 <a href="{% url 'logout' %}" class="btn btn-sm btn-outline">Log out</a>
