@@ -289,6 +289,33 @@ class AdminChatMessage(models.Model):
         return f"Admin chat by {self.sender.username}"
 
 
+class CompanyChatMessage(models.Model):
+    """Shared chat room for all company accounts (Tier 1 and Tier 2)."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_company_chat_messages')
+    message = models.TextField(max_length=4000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Company chat by {self.sender.username}"
+
+
+class DirectChatMessage(models.Model):
+    """Direct chat message between Tier 1 admin and Tier 2 worker."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_direct_chat_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_direct_chat_messages')
+    message = models.TextField(max_length=4000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Direct chat {self.sender.username} -> {self.recipient.username}"
+
+
 class Notification(models.Model):
     """Email notifications tracking"""
     REQUEST_NOTIFICATION_TYPES = [

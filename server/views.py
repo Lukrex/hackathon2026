@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.views.decorators.http import require_http_methods
@@ -8,7 +10,16 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect
-from .models import Request, Expert, Category, RequestChatMessage, AdminChatMessage, WorkerProfile
+from .models import (
+    Request,
+    Expert,
+    Category,
+    RequestChatMessage,
+    AdminChatMessage,
+    CompanyChatMessage,
+    DirectChatMessage,
+    WorkerProfile,
+)
 from .forms import (
     RequestSubmissionForm,
     RequestFilterForm,
@@ -17,7 +28,7 @@ from .forms import (
     RegisterForm,
     UsernameEmailAuthenticationForm,
     RequestChatMessageForm,
-    AdminChatMessageForm,
+    ChatMessageForm,
 )
 from .tasks import calculate_expert_matches
 
@@ -56,6 +67,11 @@ def is_any_company(user):
 def is_admin_user(user):
     """Backward-compat alias for is_any_company."""
     return is_any_company(user)
+
+
+def can_use_direct_company_chat(user_a, user_b):
+    """Allow direct chat only between Tier 1 and Tier 2 accounts."""
+    return (is_tier1(user_a) and is_tier2(user_b)) or (is_tier2(user_a) and is_tier1(user_b))
 
 
 def is_request_chat_participant(user, req):
@@ -969,24 +985,90 @@ def admin_set_worker_categories(request, worker_id):
 @login_required
 @user_passes_test(is_admin_user)
 @require_http_methods(["GET", "POST"])
-def admin_chat(request):
-    """Shared chat room for admins."""
-    if request.method == 'POST':
-        form = AdminChatMessageForm(request.POST)
-        if form.is_valid():
-            chat_message = form.save(commit=False)
-            chat_message.sender = request.user
-            chat_message.save()
-            return redirect('admin_chat')
+def chats(request):
+    """Unified chat hub for company accounts with role-based tabs."""
+    if is_tier1(request.user):
+        allowed_tabs = {'company', 'admin', 'direct'}
+        default_tab = 'company'
+        partner_label = 'Tier 2 worker'
+        partner_users = User.objects.filter(is_staff=True, is_superuser=False).order_by('username')
     else:
-        form = AdminChatMessageForm()
+        allowed_tabs = {'company', 'direct'}
+        default_tab = 'company'
+        partner_label = 'Tier 1 admin'
+        partner_users = User.objects.filter(is_superuser=True).order_by('username')
 
-    chat_messages = AdminChatMessage.objects.select_related('sender').order_by('created_at')
+    active_tab = request.GET.get('tab', default_tab)
+    if active_tab not in allowed_tabs:
+        active_tab = default_tab
 
-    return render(request, 'admin_chat.html', {
-        'chat_messages': chat_messages,
-        'form': form,
+    selected_partner_id = request.GET.get('partner')
+    selected_partner = None
+    if selected_partner_id:
+        selected_partner = partner_users.filter(id=selected_partner_id).first()
+    if not selected_partner and partner_users.exists():
+        selected_partner = partner_users.first()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        message_form = ChatMessageForm(request.POST)
+        if message_form.is_valid():
+            text = message_form.cleaned_data['message']
+            if action == 'company':
+                CompanyChatMessage.objects.create(sender=request.user, message=text)
+                return HttpResponseRedirect(f"{reverse('chats')}?tab=company")
+
+            if action == 'admin':
+                if not is_tier1(request.user):
+                    messages.error(request, 'Only Tier 1 accounts can post in Admin Chat.')
+                else:
+                    AdminChatMessage.objects.create(sender=request.user, message=text)
+                    return HttpResponseRedirect(f"{reverse('chats')}?tab=admin")
+
+            if action == 'direct':
+                partner_id = request.POST.get('partner_id')
+                partner = partner_users.filter(id=partner_id).first()
+                if not partner:
+                    messages.error(request, f'Select a valid {partner_label.lower()} first.')
+                elif not can_use_direct_company_chat(request.user, partner):
+                    messages.error(request, 'Direct chat is allowed only between Tier 1 and Tier 2 accounts.')
+                else:
+                    DirectChatMessage.objects.create(
+                        sender=request.user,
+                        recipient=partner,
+                        message=text,
+                    )
+                    return HttpResponseRedirect(f"{reverse('chats')}?tab=direct&partner={partner.id}")
+        else:
+            messages.error(request, 'Message cannot be empty.')
+
+    company_chat_messages = CompanyChatMessage.objects.select_related('sender').order_by('created_at')
+    admin_chat_messages = AdminChatMessage.objects.select_related('sender').order_by('created_at') if is_tier1(request.user) else []
+
+    direct_chat_messages = []
+    if selected_partner and can_use_direct_company_chat(request.user, selected_partner):
+        direct_chat_messages = DirectChatMessage.objects.filter(
+            Q(sender=request.user, recipient=selected_partner)
+            | Q(sender=selected_partner, recipient=request.user)
+        ).select_related('sender', 'recipient').order_by('created_at')
+
+    return render(request, 'chats.html', {
+        'is_tier1': is_tier1(request.user),
+        'is_tier2': is_tier2(request.user),
+        'active_tab': active_tab,
+        'company_chat_messages': company_chat_messages,
+        'admin_chat_messages': admin_chat_messages,
+        'partner_users': partner_users,
+        'selected_partner': selected_partner,
+        'direct_chat_messages': direct_chat_messages,
     })
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def admin_chat(request):
+    """Legacy route: redirect to unified chats hub."""
+    return redirect('chats')
 
 
 from django.contrib.auth import login
