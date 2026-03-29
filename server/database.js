@@ -79,7 +79,6 @@ export const database = {
       email: 'peter@experts.sk',
       expertise: ['hiring', 'recruitment', 'hr', 'tech'],
       bio: 'Recruitment expert s 10 rokmi skúsenosti v tech industriii',
-      availability: 'high',
       helpProvided: 8
     },
     {
@@ -88,7 +87,6 @@ export const database = {
       email: 'jana@vcfunduators.sk',
       expertise: ['investment', 'finance', 'saas', 'seed'],
       bio: 'VC investor zameraný na early-stage startupy v CEE regióne',
-      availability: 'medium',
       helpProvided: 12
     },
     {
@@ -97,7 +95,6 @@ export const database = {
       email: 'marko@marketing.sk',
       expertise: ['marketing', 'gtm', 'copywriting', 'content'],
       bio: 'Marketing strategist s skúsenosťou v európskych startupoch',
-      availability: 'high',
       helpProvided: 6
     },
     {
@@ -106,7 +103,6 @@ export const database = {
       email: 'lucia@consulting.sk',
       expertise: ['consulting', 'strategy', 'expansion', 'business'],
       bio: 'Consulting expert na business development a market entry',
-      availability: 'medium',
       helpProvided: 14
     },
     {
@@ -115,7 +111,6 @@ export const database = {
       email: 'david@speaking.sk',
       expertise: ['speaking', 'ai', 'tech', 'event'],
       bio: 'Tech speaker a evangelist s vášňou pre AI',
-      availability: 'low',
       helpProvided: 9
     }
   ],

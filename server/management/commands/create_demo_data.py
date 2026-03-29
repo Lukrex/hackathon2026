@@ -106,7 +106,6 @@ class Command(BaseCommand):
                 'bio': '10+ rokov skúseností v startupoch, specialista na GTM a scaling',
                 'skills': 'React, Node.js, Scaling, Product Management',
                 'languages': ['English', 'Slovak'],
-                'availability': 'high',
             },
             {
                 'username': 'peter.sisko',
@@ -116,7 +115,6 @@ class Command(BaseCommand):
                 'bio': 'VC investor a mentor, pomáham startupom s fundraisingom',
                 'skills': 'Fundraising, Investor Relations, Business Strategy',
                 'languages': ['English', 'Slovak', 'German'],
-                'availability': 'medium',
             },
             {
                 'username': 'maria.rehakova',
@@ -126,7 +124,6 @@ class Command(BaseCommand):
                 'bio': 'Marketing guru s fokusom na digitálny marketing a branding',
                 'skills': 'Digital Marketing, Branding, Copywriting',
                 'languages': ['English', 'Slovak', 'Czech'],
-                'availability': 'medium',
             },
             {
                 'username': 'jozef.koval',
@@ -136,7 +133,6 @@ class Command(BaseCommand):
                 'bio': 'HR expert a talent scout, pomáham startupom budovať tímy',
                 'skills': 'Recruiting, HR, Team Building',
                 'languages': ['English', 'Slovak'],
-                'availability': 'high',
             },
             {
                 'username': 'lucia.svoboda',
@@ -146,7 +142,6 @@ class Command(BaseCommand):
                 'bio': 'Sales expert s 15+ rokmi v B2B, školiteľka a konsultantka',
                 'skills': 'Sales, B2B Sales, Account Management',
                 'languages': ['English', 'Slovak', 'Spanish'],
-                'availability': 'low',
             },
         ]
 
@@ -168,7 +163,6 @@ class Command(BaseCommand):
                 user=user,
                 defaults={
                     'bio': exp_data['bio'],
-                    'availability': exp_data['availability'],
                     'help_provided': random.randint(2, 12),
                 }
             )

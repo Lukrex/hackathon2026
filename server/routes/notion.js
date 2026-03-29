@@ -32,7 +32,6 @@ router.get('/export-experts', (req, res) => {
     Email: expert.email,
     Expertise: expert.expertise.join(', '),
     Bio: expert.bio,
-    Availability: expert.availability,
     'Help Provided': expert.helpProvided
   }));
 

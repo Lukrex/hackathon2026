@@ -176,8 +176,6 @@ def compute_expert_recommendations(req, limit=6):
     request_lang_ids = set(req.required_languages.values_list('id', flat=True))
     req_words = set((req.title + ' ' + req.description).lower().split())
 
-    availability_weight = {'high': 1.0, 'medium': 0.7, 'low': 0.3}
-
     experts = Expert.objects.select_related('user').prefetch_related('skills', 'languages').all()
     scored = []
     for expert in experts:
@@ -206,9 +204,6 @@ def compute_expert_recommendations(req, limit=6):
         # Rating (10 pts)
         if expert.rating_count > 0:
             score += (expert.rating / 5.0) * 10
-
-        # Availability (10 pts)
-        score += availability_weight.get(expert.availability, 0.5) * 10
 
         if score > 0:
             skill_names = [s.name for s in expert.skills.all()]
@@ -279,7 +274,7 @@ def features(request):
         {
             'icon': '🧠',
             'title': 'Expert recommendations',
-            'description': 'The platform combines skills, languages, experience, rating, and availability into one score.',
+            'description': 'The platform combines skills, languages, experience, and rating into one score.',
         },
         {
             'icon': '💬',
@@ -829,10 +824,6 @@ def expert_directory(request):
     """Browse expert profiles"""
     experts = Expert.objects.all().order_by('-help_provided')
 
-    availability_filter = request.GET.get('availability')
-    if availability_filter:
-        experts = experts.filter(availability=availability_filter)
-
     search_term = request.GET.get('search')
     if search_term:
         experts = experts.filter(
@@ -846,7 +837,6 @@ def expert_directory(request):
     return render(request, 'expert_directory.html', {
         'experts': experts,
         'search_term': search_term or '',
-        'availability_filter': availability_filter or '',
     })
 
 

@@ -16,7 +16,7 @@ class ExpertSerializer(serializers.ModelSerializer):
         model = Expert
         fields = [
             'id', 'full_name', 'bio', 'expertise', 'expertise_list',
-            'availability', 'help_provided', 'profile_image'
+            'help_provided', 'profile_image'
         ]
 
     def get_full_name(self, obj):

@@ -158,7 +158,7 @@
                         {% if is_admin and recommended_experts %}
                         <div class="rec-experts-panel">
                             <h4>🎯 Recommended Experts</h4>
-                            <p class="text-muted" style="font-size:0.85rem;margin-bottom:1rem;">Ranked by relevance — skills, languages, experience &amp; availability.</p>
+                            <p class="text-muted" style="font-size:0.85rem;margin-bottom:1rem;">Ranked by relevance — skills, languages, and experience.</p>
                             <div class="rec-experts-list">
                                 {% for rec in recommended_experts %}
                                 <div class="rec-expert-card">
@@ -180,7 +180,6 @@
                                     <div class="rec-reasoning">{{ rec.reasoning }}</div>
                                     {% endif %}
                                     <div class="rec-meta">
-                                        <span class="avail-badge avail-{{ rec.expert.availability }}">{{ rec.expert.get_availability_display }}</span>
                                         {% for skill in rec.expert.skills.all|slice:":3" %}
                                         <span class="badge badge-light">{{ skill.name }}</span>
                                         {% endfor %}
@@ -505,17 +504,6 @@
     padding: 0.2rem 0.65rem;
     border-radius: 999px;
 }
-
-.avail-badge {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-.avail-high { background: #d1fae5; color: #065f46; }
-.avail-medium { background: #fef3c7; color: #92400e; }
-.avail-low { background: #fee2e2; color: #991b1b; }
 
 .badge-light {
     background: #e5e7eb;

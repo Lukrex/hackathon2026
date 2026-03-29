@@ -110,7 +110,7 @@ class ExpertProfileForm(forms.ModelForm):
     class Meta:
         model = Expert
         fields = [
-            'bio', 'skills', 'languages', 'work_experience', 'availability'
+            'bio', 'skills', 'languages', 'work_experience'
         ]
         widgets = {
             'bio': forms.Textarea(attrs={
@@ -131,7 +131,6 @@ class ExpertProfileForm(forms.ModelForm):
                 'placeholder': 'Describe your relevant work experience and achievements...',
                 'rows': 6
             }),
-            'availability': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):

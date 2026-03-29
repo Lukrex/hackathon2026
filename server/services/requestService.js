@@ -49,8 +49,6 @@ export const requestService = {
         const matchingKeywords = keywords.filter(k => reqText.includes(k)).length;
         score += matchingKeywords;
 
-        const availabilityScore = { high: 3, medium: 1, low: 0 };
-        score += availabilityScore[expert.availability] || 0;
         score += Math.max(10 - expert.helpProvided, 0) * 0.5;
 
         return { expert, score };

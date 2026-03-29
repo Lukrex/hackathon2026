@@ -197,14 +197,6 @@ def calculate_expert_matches(request_id):
                 if any(kw in ' '.join(expert_keywords) for kw in category_keywords):
                     match_score += 30
 
-            # Availability bonus (20 points)
-            availability_bonus = {
-                'high': 20,
-                'medium': 10,
-                'low': 5,
-            }
-            match_score += availability_bonus.get(expert.availability, 0)
-
             # Workload inverse (10 points)
             workload = expert.assigned_requests.count()
             if workload < 3:
@@ -222,7 +214,7 @@ def calculate_expert_matches(request_id):
                     request=request_obj,
                     expert=expert,
                     match_score=match_score,
-                    reasoning=f"Keyword overlap: {overlaps}, Category fit: good, Availability: {expert.get_availability_display()}"
+                    reasoning=f"Keyword overlap: {overlaps}, Category fit: good"
                 )
 
         return f"Matches calculated for request {request_id}"
