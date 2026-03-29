@@ -26,8 +26,18 @@
         <div class="card">
             <div class="card-body">
                 {% if active_tab == 'company' %}
-                <h3 class="mb-2">Company Chat</h3>
-                <p class="text-muted" style="margin-top:0.25rem;">Visible to all Tier 1 and Tier 2 company accounts.</p>
+                <div class="d-flex justify-between align-center" style="gap:0.75rem; flex-wrap: wrap;">
+                    <div>
+                        <h3 class="mb-2">Company Chat</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">Visible to all Tier 1 and Tier 2 company accounts.</p>
+                    </div>
+                    <form method="post" class="inline" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mute_company">
+                        <input type="hidden" name="mute" value="{% if company_muted %}0{% else %}1{% endif %}">
+                        <button type="submit" class="btn btn-sm btn-outline">{% if company_muted %}Unmute{% else %}Mute{% endif %}</button>
+                    </form>
+                </div>
 
                 <div class="chat-box" id="chat-box-company">
                     {% for msg in company_chat_messages %}
@@ -50,8 +60,18 @@
                 {% endif %}
 
                 {% if active_tab == 'admin' and is_tier1 %}
-                <h3 class="mb-2">Admin Chat</h3>
-                <p class="text-muted" style="margin-top:0.25rem;">Visible only to Tier 1 admins.</p>
+                <div class="d-flex justify-between align-center" style="gap:0.75rem; flex-wrap: wrap;">
+                    <div>
+                        <h3 class="mb-2">Admin Chat</h3>
+                        <p class="text-muted" style="margin-top:0.25rem;">Visible only to Tier 1 admins.</p>
+                    </div>
+                    <form method="post" class="inline" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mute_admin">
+                        <input type="hidden" name="mute" value="{% if admin_muted %}0{% else %}1{% endif %}">
+                        <button type="submit" class="btn btn-sm btn-outline">{% if admin_muted %}Unmute{% else %}Mute{% endif %}</button>
+                    </form>
+                </div>
 
                 <div class="chat-box" id="chat-box-admin">
                     {% for msg in admin_chat_messages %}
@@ -98,6 +118,14 @@
                 </div>
 
                 {% if selected_partner %}
+                <form method="post" class="inline" style="margin:0 0 0.75rem 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mute_direct">
+                    <input type="hidden" name="partner_id" value="{{ selected_partner.id }}">
+                    <input type="hidden" name="mute" value="{% if direct_muted %}0{% else %}1{% endif %}">
+                    <button type="submit" class="btn btn-sm btn-outline">{% if direct_muted %}Unmute this chat{% else %}Mute this chat{% endif %}</button>
+                </form>
+
                 <div class="chat-box" id="chat-box-direct">
                     {% for msg in direct_chat_messages %}
                     <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">

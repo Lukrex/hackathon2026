@@ -31,6 +31,14 @@ from .forms import (
     ChatMessageForm,
 )
 from .tasks import calculate_expert_matches
+from .chat_utils import (
+    CHAT_ADMIN,
+    CHAT_COMPANY,
+    CHAT_DIRECT,
+    is_chat_muted,
+    mark_chat_read,
+    set_chat_muted,
+)
 
 
 ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
@@ -1019,6 +1027,35 @@ def chats(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+
+        if action in {'mute_company', 'mute_admin', 'mute_direct'}:
+            mute_enabled = request.POST.get('mute') == '1'
+
+            if action == 'mute_company':
+                set_chat_muted(request.user, CHAT_COMPANY, mute_enabled)
+                return HttpResponseRedirect(f"{reverse('chats')}?tab=company")
+
+            if action == 'mute_admin':
+                if not is_tier1(request.user):
+                    messages.error(request, 'Only Tier 1 accounts can mute Admin Chat.')
+                else:
+                    set_chat_muted(request.user, CHAT_ADMIN, mute_enabled)
+                return HttpResponseRedirect(f"{reverse('chats')}?tab=admin")
+
+            if action == 'mute_direct':
+                partner_id = request.POST.get('partner_id')
+                partner = partner_users.filter(id=partner_id).first()
+                if not partner:
+                    messages.error(request, f'Select a valid {partner_label.lower()} first.')
+                    return HttpResponseRedirect(f"{reverse('chats')}?tab=direct")
+
+                if not can_use_direct_company_chat(request.user, partner):
+                    messages.error(request, 'Direct chat is allowed only between Tier 1 and Tier 2 accounts.')
+                    return HttpResponseRedirect(f"{reverse('chats')}?tab=direct")
+
+                set_chat_muted(request.user, CHAT_DIRECT, mute_enabled, partner=partner)
+                return HttpResponseRedirect(f"{reverse('chats')}?tab=direct&partner={partner.id}")
+
         message_form = ChatMessageForm(request.POST)
         if message_form.is_valid():
             text = message_form.cleaned_data['message']
@@ -1060,6 +1097,17 @@ def chats(request):
             | Q(sender=selected_partner, recipient=request.user)
         ).select_related('sender', 'recipient').order_by('created_at')
 
+    if active_tab == 'company':
+        mark_chat_read(request.user, CHAT_COMPANY)
+    elif active_tab == 'admin' and is_tier1(request.user):
+        mark_chat_read(request.user, CHAT_ADMIN)
+    elif active_tab == 'direct' and selected_partner and can_use_direct_company_chat(request.user, selected_partner):
+        mark_chat_read(request.user, CHAT_DIRECT, partner=selected_partner)
+
+    company_muted = is_chat_muted(request.user, CHAT_COMPANY)
+    admin_muted = is_chat_muted(request.user, CHAT_ADMIN) if is_tier1(request.user) else False
+    direct_muted = is_chat_muted(request.user, CHAT_DIRECT, partner=selected_partner) if selected_partner else False
+
     return render(request, 'chats.html', {
         'is_tier1': is_tier1(request.user),
         'is_tier2': is_tier2(request.user),
@@ -1069,6 +1117,9 @@ def chats(request):
         'partner_users': partner_users,
         'selected_partner': selected_partner,
         'direct_chat_messages': direct_chat_messages,
+        'company_muted': company_muted,
+        'admin_muted': admin_muted,
+        'direct_muted': direct_muted,
     })
 
 

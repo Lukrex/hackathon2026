@@ -316,6 +316,64 @@ class DirectChatMessage(models.Model):
         return f"Direct chat {self.sender.username} -> {self.recipient.username}"
 
 
+class ChatReadState(models.Model):
+    """Tracks last-read timestamp per user and chat scope."""
+    CHAT_TYPE_CHOICES = [
+        ('company', 'Company Chat'),
+        ('admin', 'Admin Chat'),
+        ('direct', 'Direct Chat'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_read_states')
+    chat_type = models.CharField(max_length=20, choices=CHAT_TYPE_CHOICES)
+    partner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='chat_partner_read_states',
+        help_text='Required for direct chat read-state rows',
+    )
+    last_read_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'chat_type', 'partner')
+
+    def __str__(self):
+        if self.partner_id:
+            return f"Read {self.chat_type}: {self.user.username} with {self.partner.username}"
+        return f"Read {self.chat_type}: {self.user.username}"
+
+
+class ChatMuteSetting(models.Model):
+    """Per-user mute toggles for company/admin/direct chat scopes."""
+    CHAT_TYPE_CHOICES = [
+        ('company', 'Company Chat'),
+        ('admin', 'Admin Chat'),
+        ('direct', 'Direct Chat'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_mute_settings')
+    chat_type = models.CharField(max_length=20, choices=CHAT_TYPE_CHOICES)
+    partner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='chat_partner_mute_settings',
+        help_text='Required for direct chat mute rows',
+    )
+    is_muted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'chat_type', 'partner')
+
+    def __str__(self):
+        if self.partner_id:
+            return f"Mute {self.chat_type}: {self.user.username} with {self.partner.username} = {self.is_muted}"
+        return f"Mute {self.chat_type}: {self.user.username} = {self.is_muted}"
+
+
 class Notification(models.Model):
     """Email notifications tracking"""
     REQUEST_NOTIFICATION_TYPES = [
