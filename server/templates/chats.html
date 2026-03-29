@@ -43,7 +43,24 @@
                     {% for msg in company_chat_messages %}
                     <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
                         <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        {% if msg.message %}
                         <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if msg.attachment %}
+                        <div class="chat-attachment">
+                            {% if msg.attachment_type == 'image' %}
+                            <img src="{{ msg.attachment.url }}" alt="Attachment" class="chat-attachment-image">
+                            {% elif msg.attachment_type == 'video' %}
+                            <video controls class="chat-attachment-video">
+                                <source src="{{ msg.attachment.url }}">
+                            </video>
+                            {% elif msg.attachment_type == 'audio' %}
+                            <audio controls class="chat-attachment-audio" src="{{ msg.attachment.url }}"></audio>
+                            {% else %}
+                            <a class="chat-attachment-file" href="{{ msg.attachment.url }}" target="_blank" rel="noopener">Download file</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
                     </div>
                     {% empty %}
@@ -51,10 +68,32 @@
                     {% endfor %}
                 </div>
 
-                <form method="post" class="chat-form">
+                <form method="post" class="chat-form chat-composer" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="company">
-                    <textarea name="message" class="form-control" rows="3" placeholder="Write to company chat..."></textarea>
+                    <div class="composer-toolbar">
+                        <button type="button" class="tool-btn emoji-toggle" data-target="company-message" data-panel="company-emoji-panel" aria-label="Open emoji picker">🙂</button>
+                        <button type="button" class="tool-btn attach-trigger" data-input="company-attachment" aria-label="Attach file">📎</button>
+                        <span class="selected-file" id="company-file-name"><span class="file-name-text">No file selected</span><button type="button" class="remove-file-btn" id="company-remove-file" hidden aria-label="Remove file">✕</button></span>
+                    </div>
+                    <div id="company-emoji-panel" class="emoji-panel" hidden>
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="😊">😊</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🙏">🙏</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+                        <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                        <button type="button" class="emoji-btn" data-emoji="✅">✅</button>
+                        <button type="button" class="emoji-btn" data-emoji="🎯">🎯</button>
+                        <button type="button" class="emoji-btn" data-emoji="💡">💡</button>
+                    </div>
+                    <textarea id="company-message" name="message" class="form-control" rows="3" placeholder="Write to company chat..."></textarea>
+                    <input id="company-attachment" type="file" name="attachment" class="chat-file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+                    <div class="drop-zone" data-input="company-attachment">Drop files, photos, videos, or audio here or click to attach</div>
+                    <div class="file-preview" id="company-file-preview"></div>
                     <button type="submit" class="btn btn-primary">Send message</button>
                 </form>
                 {% endif %}
@@ -77,7 +116,24 @@
                     {% for msg in admin_chat_messages %}
                     <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
                         <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        {% if msg.message %}
                         <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if msg.attachment %}
+                        <div class="chat-attachment">
+                            {% if msg.attachment_type == 'image' %}
+                            <img src="{{ msg.attachment.url }}" alt="Attachment" class="chat-attachment-image">
+                            {% elif msg.attachment_type == 'video' %}
+                            <video controls class="chat-attachment-video">
+                                <source src="{{ msg.attachment.url }}">
+                            </video>
+                            {% elif msg.attachment_type == 'audio' %}
+                            <audio controls class="chat-attachment-audio" src="{{ msg.attachment.url }}"></audio>
+                            {% else %}
+                            <a class="chat-attachment-file" href="{{ msg.attachment.url }}" target="_blank" rel="noopener">Download file</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
                     </div>
                     {% empty %}
@@ -85,10 +141,32 @@
                     {% endfor %}
                 </div>
 
-                <form method="post" class="chat-form">
+                <form method="post" class="chat-form chat-composer" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="admin">
-                    <textarea name="message" class="form-control" rows="3" placeholder="Write to admin chat..."></textarea>
+                    <div class="composer-toolbar">
+                        <button type="button" class="tool-btn emoji-toggle" data-target="admin-message" data-panel="admin-emoji-panel" aria-label="Open emoji picker">🙂</button>
+                        <button type="button" class="tool-btn attach-trigger" data-input="admin-attachment" aria-label="Attach file">📎</button>
+                        <span class="selected-file" id="admin-file-name"><span class="file-name-text">No file selected</span><button type="button" class="remove-file-btn" id="admin-remove-file" hidden aria-label="Remove file">✕</button></span>
+                    </div>
+                    <div id="admin-emoji-panel" class="emoji-panel" hidden>
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="😊">😊</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🙏">🙏</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+                        <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                        <button type="button" class="emoji-btn" data-emoji="✅">✅</button>
+                        <button type="button" class="emoji-btn" data-emoji="🎯">🎯</button>
+                        <button type="button" class="emoji-btn" data-emoji="💡">💡</button>
+                    </div>
+                    <textarea id="admin-message" name="message" class="form-control" rows="3" placeholder="Write to admin chat..."></textarea>
+                    <input id="admin-attachment" type="file" name="attachment" class="chat-file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+                    <div class="drop-zone" data-input="admin-attachment">Drop files, photos, videos, or audio here or click to attach</div>
+                    <div class="file-preview" id="admin-file-preview"></div>
                     <button type="submit" class="btn btn-primary">Send message</button>
                 </form>
                 {% endif %}
@@ -130,7 +208,24 @@
                     {% for msg in direct_chat_messages %}
                     <div class="chat-message {% if msg.sender_id == user.id %}mine{% endif %}">
                         <div class="chat-author">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+                        {% if msg.message %}
                         <div class="chat-text">{{ msg.message|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if msg.attachment %}
+                        <div class="chat-attachment">
+                            {% if msg.attachment_type == 'image' %}
+                            <img src="{{ msg.attachment.url }}" alt="Attachment" class="chat-attachment-image">
+                            {% elif msg.attachment_type == 'video' %}
+                            <video controls class="chat-attachment-video">
+                                <source src="{{ msg.attachment.url }}">
+                            </video>
+                            {% elif msg.attachment_type == 'audio' %}
+                            <audio controls class="chat-attachment-audio" src="{{ msg.attachment.url }}"></audio>
+                            {% else %}
+                            <a class="chat-attachment-file" href="{{ msg.attachment.url }}" target="_blank" rel="noopener">Download file</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <div class="chat-time">{{ msg.created_at|date:"M j, Y g:i A" }}</div>
                     </div>
                     {% empty %}
@@ -138,11 +233,33 @@
                     {% endfor %}
                 </div>
 
-                <form method="post" class="chat-form">
+                <form method="post" class="chat-form chat-composer" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="direct">
                     <input type="hidden" name="partner_id" value="{{ selected_partner.id }}">
-                    <textarea name="message" class="form-control" rows="3" placeholder="Write a direct message..."></textarea>
+                    <div class="composer-toolbar">
+                        <button type="button" class="tool-btn emoji-toggle" data-target="direct-message" data-panel="direct-emoji-panel" aria-label="Open emoji picker">🙂</button>
+                        <button type="button" class="tool-btn attach-trigger" data-input="direct-attachment" aria-label="Attach file">📎</button>
+                        <span class="selected-file" id="direct-file-name"><span class="file-name-text">No file selected</span><button type="button" class="remove-file-btn" id="direct-remove-file" hidden aria-label="Remove file">✕</button></span>
+                    </div>
+                    <div id="direct-emoji-panel" class="emoji-panel" hidden>
+                        <button type="button" class="emoji-btn" data-emoji="😀">😀</button>
+                        <button type="button" class="emoji-btn" data-emoji="😁">😁</button>
+                        <button type="button" class="emoji-btn" data-emoji="😂">😂</button>
+                        <button type="button" class="emoji-btn" data-emoji="😊">😊</button>
+                        <button type="button" class="emoji-btn" data-emoji="😍">😍</button>
+                        <button type="button" class="emoji-btn" data-emoji="🙏">🙏</button>
+                        <button type="button" class="emoji-btn" data-emoji="👍">👍</button>
+                        <button type="button" class="emoji-btn" data-emoji="👏">👏</button>
+                        <button type="button" class="emoji-btn" data-emoji="🔥">🔥</button>
+                        <button type="button" class="emoji-btn" data-emoji="✅">✅</button>
+                        <button type="button" class="emoji-btn" data-emoji="🎯">🎯</button>
+                        <button type="button" class="emoji-btn" data-emoji="💡">💡</button>
+                    </div>
+                    <textarea id="direct-message" name="message" class="form-control" rows="3" placeholder="Write a direct message..."></textarea>
+                    <input id="direct-attachment" type="file" name="attachment" class="chat-file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+                    <div class="drop-zone" data-input="direct-attachment">Drop files, photos, videos, or audio here or click to attach</div>
+                    <div class="file-preview" id="direct-file-preview"></div>
                     <button type="submit" class="btn btn-primary">Send message</button>
                 </form>
                 {% else %}
@@ -200,11 +317,159 @@
     color: #6b7280;
 }
 
+.chat-attachment {
+    margin-top: 0.45rem;
+}
+
+.chat-attachment-image,
+.chat-attachment-video {
+    max-width: min(300px, 100%);
+    border-radius: 10px;
+    border: 1px solid #dbe1ea;
+    display: block;
+}
+
+.chat-attachment-audio {
+    max-width: 280px;
+}
+
+.chat-attachment-file {
+    display: inline-block;
+    font-size: 0.88rem;
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
 .chat-form {
     margin-top: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
+}
+
+.chat-composer {
+    border: 1px solid #dbe1ea;
+    border-radius: 12px;
+    padding: 0.75rem;
+    background: #fcfdff;
+}
+
+.composer-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.tool-btn {
+    border: 1px solid #d8deea;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0.2rem 0.45rem;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 1rem;
+}
+
+.tool-btn:hover {
+    background: #f1f5f9;
+}
+
+.selected-file {
+    font-size: 0.82rem;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.selected-file.file-size-error .file-name-text {
+    color: #ef4444;
+}
+.remove-file-btn {
+    border: none;
+    background: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    font-size: 0.78rem;
+    line-height: 1;
+    border-radius: 4px;
+}
+.remove-file-btn:hover {
+    background: #fee2e2;
+}
+.file-preview {
+    border-radius: 8px;
+    overflow: hidden;
+    line-height: 0;
+}
+.file-preview img,
+.file-preview video {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    display: block;
+    object-fit: contain;
+    background: #000;
+}
+
+.emoji-panel {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    border-radius: 10px;
+    border: 1px solid #dbe1ea;
+    background: #ffffff;
+}
+
+.emoji-panel[hidden] {
+    display: none;
+}
+
+.emoji-btn {
+    border: 1px solid #d8deea;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 0.2rem 0.45rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.emoji-btn:hover {
+    background: #f1f5f9;
+}
+
+.chat-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.drop-zone {
+    border: 1px dashed #b7c4d8;
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.86rem;
+    color: #64748b;
+    background: #ffffff;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.drop-zone:hover {
+    border-color: #7aa0d6;
+    background: #f8fbff;
+}
+
+.drop-zone.dragover {
+    border-color: var(--primary);
+    background: #ecfeff;
 }
 
 .partner-select-form {
@@ -224,10 +489,198 @@
         document.getElementById('chat-box-direct')
     ];
 
-    boxes.forEach(function (chatBox) {
-        if (chatBox) {
-            chatBox.scrollTop = chatBox.scrollHeight;
+    function scrollBoxToBottom(chatBox) {
+        if (!chatBox) return;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function scrollAllChatsToBottom() {
+        boxes.forEach(function (chatBox) {
+            scrollBoxToBottom(chatBox);
+        });
+    }
+
+    // Scroll immediately, then again after layout settles.
+    scrollAllChatsToBottom();
+    requestAnimationFrame(scrollAllChatsToBottom);
+    window.addEventListener('load', scrollAllChatsToBottom);
+
+    // Media can load after initial render and increase message height.
+    document.querySelectorAll('.chat-box img, .chat-box video, .chat-box audio').forEach(function (mediaEl) {
+        mediaEl.addEventListener('load', scrollAllChatsToBottom);
+        mediaEl.addEventListener('loadeddata', scrollAllChatsToBottom);
+    });
+
+    const emojiToggles = document.querySelectorAll('.emoji-toggle');
+
+    function closeAllEmojiPanels() {
+        document.querySelectorAll('.emoji-panel').forEach(function (panel) {
+            panel.hidden = true;
+        });
+        emojiToggles.forEach(function (btn) {
+            btn.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    emojiToggles.forEach(function (toggleBtn) {
+        const panelId = toggleBtn.getAttribute('data-panel');
+        const targetId = toggleBtn.getAttribute('data-target');
+        const panel = document.getElementById(panelId);
+        const textarea = document.getElementById(targetId);
+        if (!panel || !textarea) return;
+
+        toggleBtn.setAttribute('aria-expanded', 'false');
+
+        toggleBtn.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const shouldOpen = panel.hidden;
+            closeAllEmojiPanels();
+            panel.hidden = !shouldOpen;
+            toggleBtn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        });
+
+        panel.querySelectorAll('.emoji-btn').forEach(function (emojiBtn) {
+            emojiBtn.addEventListener('click', function () {
+                const emoji = emojiBtn.getAttribute('data-emoji') || '';
+                const start = textarea.selectionStart || 0;
+                const end = textarea.selectionEnd || 0;
+                const current = textarea.value || '';
+                textarea.value = current.slice(0, start) + emoji + current.slice(end);
+                const newPos = start + emoji.length;
+                textarea.focus();
+                textarea.setSelectionRange(newPos, newPos);
+            });
+        });
+    });
+
+    document.querySelectorAll('.attach-trigger').forEach(function (attachBtn) {
+        const inputId = attachBtn.getAttribute('data-input');
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        attachBtn.addEventListener('click', function () {
+            input.click();
+        });
+    });
+
+    var MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+    var _previewURLs = {};
+
+    function clearPreviewURL(prefix) {
+        if (_previewURLs[prefix]) {
+            URL.revokeObjectURL(_previewURLs[prefix]);
+            delete _previewURLs[prefix];
         }
+    }
+
+    function applyFileSelection(input, file) {
+        if (!input || !input.id) return;
+        var prefix = input.id.replace('-attachment', '');
+        var wrapEl = document.getElementById(prefix + '-file-name');
+        var textEl = wrapEl ? wrapEl.querySelector('.file-name-text') : null;
+        var removeBtn = document.getElementById(prefix + '-remove-file');
+        var previewEl = document.getElementById(prefix + '-file-preview');
+
+        // Clear existing preview URL
+        clearPreviewURL(prefix);
+        if (previewEl) previewEl.innerHTML = '';
+
+        if (!file) {
+            // Reset to empty
+            input.value = '';
+            if (wrapEl) wrapEl.classList.remove('file-size-error');
+            if (textEl) textEl.textContent = 'No file selected';
+            if (removeBtn) removeBtn.hidden = true;
+            return;
+        }
+
+        // Validate size
+        if (file.size > MAX_FILE_SIZE) {
+            input.value = '';
+            if (wrapEl) wrapEl.classList.add('file-size-error');
+            if (textEl) textEl.textContent = 'File too large \u2014 max 100\u00a0MB';
+            if (removeBtn) removeBtn.hidden = true;
+            return;
+        }
+
+        // Valid file
+        if (wrapEl) wrapEl.classList.remove('file-size-error');
+        if (textEl) textEl.textContent = file.name;
+        if (removeBtn) removeBtn.hidden = false;
+
+        // Live preview for images and videos
+        if (previewEl) {
+            var type = file.type || '';
+            var url = URL.createObjectURL(file);
+            _previewURLs[prefix] = url;
+            if (type.startsWith('image/')) {
+                var img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Preview';
+                img.addEventListener('load', function () {
+                    URL.revokeObjectURL(url);
+                    delete _previewURLs[prefix];
+                });
+                previewEl.appendChild(img);
+            } else if (type.startsWith('video/')) {
+                var vid = document.createElement('video');
+                vid.src = url;
+                vid.controls = true;
+                vid.muted = true;
+                previewEl.appendChild(vid);
+            } else {
+                // Non-previewable: revoke immediately
+                URL.revokeObjectURL(url);
+                delete _previewURLs[prefix];
+            }
+        }
+    }
+
+    document.querySelectorAll('.chat-file-input').forEach(function (input) {
+        input.addEventListener('change', function () {
+            var file = input.files && input.files.length > 0 ? input.files[0] : null;
+            applyFileSelection(input, file);
+        });
+    });
+
+    document.querySelectorAll('.remove-file-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var prefix = btn.id.replace('-remove-file', '');
+            var input = document.getElementById(prefix + '-attachment');
+            if (input) applyFileSelection(input, null);
+        });
+    });
+
+    document.querySelectorAll('.drop-zone').forEach(function (zone) {
+        const inputId = zone.getAttribute('data-input');
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        zone.addEventListener('click', function () {
+            input.click();
+        });
+
+        zone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            zone.classList.add('dragover');
+        });
+
+        zone.addEventListener('dragleave', function () {
+            zone.classList.remove('dragover');
+        });
+
+        zone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            zone.classList.remove('dragover');
+            const files = event.dataTransfer ? event.dataTransfer.files : null;
+            if (!files || files.length === 0) return;
+
+            const dt = new DataTransfer();
+            dt.items.add(files[0]);
+            input.files = dt.files;
+            applyFileSelection(input, files[0]);
+        });
     });
 })();
 </script>

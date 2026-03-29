@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Odhlásenie - Community Help System{% endblock %}
+{% block title %}Logged Out - Community Help System{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,11 +9,11 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h2>👋 Odhlásenie úspešné</h2>
-                        <p class="text-muted">Boli ste úspešne odhlásení.</p>
+                        <h2>👋 You are logged out</h2>
+                        <p class="text-muted">Your session has ended successfully.</p>
                         <div class="mt-4">
-                            <a href="{% url 'login' %}" class="btn btn-primary">Prihlásiť sa znovu</a>
-                            <a href="{% url 'index' %}" class="btn btn-outline">Späť na hlavnú stránku</a>
+                            <a href="{% url 'login' %}" class="btn btn-primary">Log in again</a>
+                            <a href="{% url 'index' %}" class="btn btn-outline">Back to home</a>
                         </div>
                     </div>
                 </div>

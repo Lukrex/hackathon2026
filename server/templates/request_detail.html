@@ -28,36 +28,36 @@
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-between align-center">
-                    <div>
-                        <h3 class="mb-1">{{ request.title }}</h3>
-                        <div class="request-meta">
-                            <span class="badge badge-primary">{{ request.get_category_display }}</span>
-                            <span class="status-badge status-{{ request.status }}">
-                                {{ request.get_status_display }}
-                            </span>
-                        </div>
-                    </div>
-                    {% if is_assigned_here %}
-                    <span class="badge badge-success">✓ Assigned to this request</span>
-                    {% elif can_offer_help and not has_offered_help %}
-                    <form method="post" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline" name="offer_help" value="1">Offer help</button>
-                    </form>
-                    {% elif has_offered_help %}
-                    <span class="badge badge-warning">Offer sent to admin</span>
-                    {% endif %}
-                </div>
-            </div>
-
             <div class="card-body">
                 <div class="detail-two-col">
                     <!-- LEFT: description + request meta -->
                     <div class="detail-left">
+                        <div class="request-header-top">
+                            <div>
+                                <h3 class="mb-1">{{ request.title }}</h3>
+                                <div class="request-meta">
+                                    <span class="badge badge-primary">{{ request.get_category_display }}</span>
+                                    <span class="status-badge status-{{ request.status }}">
+                                        {{ request.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="request-header-cta">
+                                    {% if is_assigned_here %}
+                                    <span class="badge badge-success">✓ Assigned to this request</span>
+                                    {% elif can_offer_help and not has_offered_help %}
+                                    <form method="post" class="inline offer-help-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline" name="offer_help" value="1">Offer help</button>
+                                    </form>
+                                    {% elif has_offered_help %}
+                                    <span class="badge badge-warning">Offer sent to admin</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
                         <h4>Description</h4>
-                        <p class="mb-4">{{ request.description }}</p>
+                        <p class="mb-4 request-description-text">{{ request.description }}</p>
 
                         {% if request.target_skills.all %}
                         <h4>Target Skills</h4>
@@ -190,7 +190,7 @@
                                         {% if rec.is_assigned_here %}
                                         <span class="assigned-label">✓ Assigned</span>
                                         {% elif rec.is_busy %}
-                                        <span class="busy-label">Busy on another task</span>
+                                        <span class="busy-label">Busy on another request</span>
                                         {% else %}
                                         <form method="post" action="{% url 'admin_assign_expert' request.id %}" style="margin:0;">
                                             {% csrf_token %}
@@ -218,6 +218,67 @@
     gap: 0.5rem;
     flex-wrap: wrap;
     margin-top: 0.5rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.status-open {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-in_review {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-waiting_expert {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-in_progress {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.status-resolved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.request-description-text {
+    color: var(--text);
+    line-height: 1.75;
+}
+
+.offer-help-form {
+    margin: 0;
+}
+
+.request-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.request-header-cta {
+    margin-top: 0.85rem;
+    margin-bottom: 0.55rem;
 }
 
 .skill-tags {
@@ -259,10 +320,6 @@
     gap: 2rem;
     align-items: start;
 }
-
-.detail-left {}
-
-.detail-right {}
 
 /* Admin assign panel */
 .admin-assign-panel {
@@ -318,8 +375,6 @@
 }
 
 /* Recommended experts list (vertical in right column) */
-.rec-experts-panel {}
-
 .rec-experts-list {
     display: flex;
     flex-direction: column;
@@ -419,6 +474,7 @@
     background: #fef3c7;
     padding: 0.2rem 0.65rem;
     border-radius: 999px;
+}
 
 .assigned-label {
     font-size: 0.75rem;
@@ -427,7 +483,6 @@
     background: #d1fae5;
     padding: 0.2rem 0.65rem;
     border-radius: 999px;
-}
 }
 
 .avail-badge {
@@ -453,6 +508,15 @@
     .detail-two-col {
         grid-template-columns: 1fr;
     }
+
+    .request-header-top {
+        display: block;
+    }
+
+    .offer-help-form {
+        margin-top: 0.35rem;
+    }
+
     .detail-right {
         order: -1;
     }

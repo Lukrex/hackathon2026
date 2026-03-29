@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='expert',
             name='is_busy',
-            field=models.BooleanField(default=False, help_text='Whether expert is currently assigned to an active task'),
+            field=models.BooleanField(default=False, help_text='Whether expert is currently assigned to an active request'),
         ),
     ]

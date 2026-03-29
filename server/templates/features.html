@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1 text-center>✨ Funkcie Community Help System</h1>
+        <h1 style="text-align: center;">Platform Features</h1>
         <p class="text-center text-muted" style="margin-bottom: 3rem; font-size: 1.1rem;">
-            Všetko, čo potrebuješ na efektívne riadenie komunálnej pomoci
+            A practical overview of the workflow currently available in the app.
         </p>
 
         <div class="grid grid-2" style="margin: 3rem 0;">
@@ -22,152 +22,143 @@
     </section>
 
     <section class="section">
-        <h2>Detailný popis funkcií</h2>
+        <h2>Workflow From Intake To Completion</h2>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">1️⃣ Žiadosť o pomoc</h3>
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
+            <h3 style="color: var(--primary);">1. Better request intake</h3>
             <p>
-                Komunita môže jednoducho zadávať svoje potreby prostredníctvom verejného formulára bez potreby prihlasovacieho účtu.
-                Systém automaticky posiela potvrdenie e-mailom a zaznamenáva všetky podrobnosti.
+                A request is treated as a full work item, not just free text. The form captures deadline, required technologies,
+                languages, and requester type so coordinators can decide quickly.
             </p>
             <ul class="feature-list">
-                <li>Názov a popis problému</li>
-                <li>Kategória problému (7 typov)</li>
-                <li>Kontaktné informácie (email, telefón)</li>
-                <li>Automatické potvrdenie</li>
+                <li>Title, description, and deadline.</li>
+                <li>Required skills and languages.</li>
+                <li>Requester type and contact information.</li>
+                <li>Automatic link to the signed-in user.</li>
             </ul>
         </div>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">2️⃣ Admin Dashboard</h3>
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
+            <h3 style="color: var(--primary);">2. Role-based execution</h3>
             <p>
-                Veľmocní admin panel s jasnými vizuálnymi indikátormi a filtrovacími možnosťami. Všetko v jednom mieste.
+                The dashboard is not one-size-fits-all. Super-admins, workers, and experts each have focused views that reduce noise and speed decisions.
             </p>
             <ul class="feature-list">
-                <li>Preverovanie žiadostí (manual review)</li>
-                <li>Nastavenie priority (kritická, vysoká, stredná, nízka)</li>
-                <li>Filtrovanie podľa statusu a kategórie</li>
-                <li>Hromadné akcie (bulk actions)</li>
-                <li>Priraďovanie expertov s jedným klikom</li>
+                <li>Super-admin sees all open and assigned requests.</li>
+                <li>Workers see only their assigned categories.</li>
+                <li>Regular users track their own requests and assigned tasks.</li>
+                <li>Experts focus on active tasks they own.</li>
             </ul>
         </div>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">3️⃣ Inteligentný Expert Matching</h3>
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
+            <h3 style="color: var(--primary);">3. Expert recommendation logic</h3>
             <p>
-                Systém využíva pokročilý algoritmus na nájdenie najvhodnejších expertov pre každú požiadavku.
+                Matching is not a black box. Scores are built from explicit signals that the team can review and override when needed.
             </p>
             <ul class="feature-list">
-                <li>Analýza prekryvu skúsenosti (0-40 bodov)</li>
-                <li>Kategóriová zhoda (0-30 bodov)</li>
-                <li>Dostupnosť (0-20 bodov)</li>
-                <li>Vyváženie pracovného zaťaženia (0-10 bodov)</li>
-                <li>Celkové skóre zhody 0-100%</li>
+                <li>Skill overlap between request and expert profile.</li>
+                <li>Language matching and profile text relevance.</li>
+                <li>Availability, rating, and previous help history.</li>
+                <li>Support for assigning one or multiple experts.</li>
             </ul>
         </div>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">4️⃣ Email Notifikácie</h3>
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
+            <h3 style="color: var(--primary);">4. Communication and progression</h3>
             <p>
-                Profesionálne HTML e-mailové správy pre všetky účastníkov. Potvrdzí, zhoduje, aktualizuje status.
+                The system includes request chats, internal company conversations, and read states, so coordination does not drift outside the platform.
             </p>
             <ul class="feature-list">
-                <li>Potvrdenie prijatia žiadosti</li>
-                <li>Notifikácia pre experta o zhodě</li>
-                <li>Aktualizácia statusu žiadosti</li>
-                <li>Profesionálne HTML formátovanie</li>
-                <li>Konfigurácia SMTP pre produkciu</li>
+                <li>Chat between requester and assigned expert.</li>
+                <li>Internal admin chat.</li>
+                <li>Mute and read-state controls to reduce noise.</li>
+                <li>Clear request status from open to resolved.</li>
             </ul>
         </div>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">5️⃣ Community Integration</h3>
+        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
+            <h3 style="color: var(--primary);">5. Completion and reputation</h3>
             <p>
-                Robustná podpora interných procesov pre dashboard, profily expertov a žiadosti. Zamerané na priamu spoluprácu bez externého API.
+                A key difference from basic ticketing is requester-confirmed completion, which separates delivered outcomes from work still in progress.
             </p>
             <ul class="feature-list">
-                <li>Riešenie žiadostí, priradenie expertov a sledovanie stavu</li>
-                <li>Správa a úprava profilu expertov</li>
-                <li>Firemné a community žiadosti v jednom systéme</li>
-                <li>Notifikácie o zmene stavu žiadostí</li>
-            </ul>
-        </div>
-
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-light); border-radius: 8px;">
-            <h3 style="color: var(--primary);">6️⃣ Notion Integrácia</h3>
-            <p>
-                Bezproblémový export a synchronizácia s tvojim Notion workspace. Drž svoj tím v tooku.
-            </p>
-            <ul class="feature-list">
-                <li>Export žiadostí do CSV/JSON</li>
-                <li>Notion databázový template</li>
-                <li>Bi-directional sync (API)</li>
-                <li>Automatizácia workflowu</li>
+                <li>The requester marks the request as done.</li>
+                <li>The selected expert receives a karma point and recorded help credit.</li>
+                <li>Expert busy/free status is updated based on active workload.</li>
             </ul>
         </div>
     </section>
 
     <section class="section">
-        <h2>Kategórie žiadostí</h2>
-        <p>Systém podporuje 7 typov žiadostí o pomoc:</p>
+        <h2>Request Categories</h2>
+        <p>The model supports these categories, which the internal team can further route to workers.</p>
         <div class="grid grid-2">
             <div class="card">
-                <h3>🔍 Hľadanie zamestnanca</h3>
-                <p>Pomoc pri hľadaní talentov do tímu. Programátori, marketerink, obchodní zástupcovia a ďalší.</p>
+                <h3>🔍 Hiring</h3>
+                <p>Recruiting, sourcing, candidate evaluation, and hiring process design.</p>
             </div>
             <div class="card">
-                <h3>💰 Hľadanie investora</h3>
-                <p>Podpora pri získavaní investičného kapitálu. Fundraising, investor relations, pitch coaching.</p>
+                <h3>💰 Investment</h3>
+                <p>Fundraising strategy, pitch support, and investor relations.</p>
             </div>
             <div class="card">
-                <h3>📊 Konzultácia</h3>
-                <p>Odborné rady na stratégiu, GTM, business model, škálovanie a ďalšie.</p>
+                <h3>📊 Consulting</h3>
+                <p>Product, technical, or business consulting with a specific expert.</p>
             </div>
             <div class="card">
-                <h3>📢 Marketing pomoc</h3>
-                <p>Copywriting, branding, content stratégia, social media, reklama a growth.</p>
+                <h3>📢 Marketing</h3>
+                <p>Brand, content, SEO, campaigns, and growth experiments.</p>
             </div>
             <div class="card">
-                <h3>🎤 Speaking príležitosť</h3>
-                <p>Pozvánky na podujatia, konferencie, webináre a rôzne prednášky.</p>
+                <h3>🎤 Speaking</h3>
+                <p>Talks, events, public speaking, and community representation.</p>
             </div>
             <div class="card">
                 <h3>🤝 Networking</h3>
-                <p>Spojenie s ľuďmi z komunity pre partnerstvá, spoluprácu alebo mentoring.</p>
+                <p>Mentorship, partnerships, and high-value introductions.</p>
+            </div>
+            <div class="card">
+                <h3>💼 Sales</h3>
+                <p>Sales enablement, go-to-market support, and revenue pipeline improvements.</p>
+            </div>
+            <div class="card">
+                <h3>➕ Other</h3>
+                <p>Requests outside predefined categories that still need proper tracking and resolution.</p>
             </div>
         </div>
     </section>
 
     <section class="section">
-        <h2>Bezpečnosť a Súkromie</h2>
-        <p>Systém je navrhnutý s bezpečnosťou na prvom mieste:</p>
+        <h2>Trust, Access, and Security</h2>
+        <p>The platform relies on standard Django protections and clear permission boundaries.</p>
         <div class="grid grid-2">
             <div class="card">
-                <h3>🔐 Ochrana údajov</h3>
+                <h3>🔐 Data protection</h3>
                 <ul class="feature-list">
-                    <li>CSRF protection</li>
-                    <li>SQL injection prevention</li>
-                    <li>XSS protection</li>
-                    <li>Password hashing</li>
+                    <li>Forms and ORM instead of manually constructed SQL queries.</li>
+                    <li>Session-based authentication through Django.</li>
+                    <li>Built-in CSRF protection and password hashing.</li>
+                    <li>Persistent history of request state and assignments.</li>
                 </ul>
             </div>
             <div class="card">
-                <h3>🛡️ Autentifikácia</h3>
+                <h3>🛡️ Access control</h3>
                 <ul class="feature-list">
-                    <li>Admin login vyžadovaný</li>
-                    <li>Email validácia</li>
-                    <li>Session management</li>
-                    <li>CORS configured</li>
+                    <li>Regular users see only their own requests.</li>
+                    <li>Experts work on assigned tasks only.</li>
+                    <li>Workers are scoped to selected categories.</li>
+                    <li>Super-admins control the full internal workflow.</li>
                 </ul>
             </div>
         </div>
     </section>
 
     <section class="section" style="text-align: center;">
-        <h2>Pripravený na start?</h2>
-        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Skús systém a posiela svoju prvú žiadosť</p>
-        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Poslať žiadosť</a>
-        <a href="{% url 'how_it_works' %}" class="btn btn-secondary btn-lg" style="margin-left: 1rem;">Ako to funguje</a>
+        <h2>Ready to submit your first request?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">If you need help, consulting, or internal expert assignment, start in the request form.</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Submit Request</a>
+        <a href="{% url 'how_it_works' %}" class="btn btn-secondary btn-lg" style="margin-left: 1rem;">How It Works</a>
     </section>
 </div>
 {% endblock %}

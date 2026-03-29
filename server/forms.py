@@ -330,10 +330,9 @@ class ChatMessageForm(forms.Form):
             'placeholder': 'Write your message...'
         }),
         max_length=4000,
+        required=False,
     )
 
     def clean_message(self):
         message = (self.cleaned_data.get('message') or '').strip()
-        if not message:
-            raise forms.ValidationError('Message cannot be empty.')
         return message

@@ -90,6 +90,21 @@ def can_use_direct_company_chat(user_a, user_b):
     return (is_tier1(user_a) and is_tier2(user_b)) or (is_tier2(user_a) and is_tier1(user_b))
 
 
+def detect_attachment_type(uploaded_file):
+    """Classify uploaded chat attachment for rendering."""
+    if not uploaded_file:
+        return ''
+
+    content_type = (getattr(uploaded_file, 'content_type', '') or '').lower()
+    if content_type.startswith('image/'):
+        return 'image'
+    if content_type.startswith('video/'):
+        return 'video'
+    if content_type.startswith('audio/'):
+        return 'audio'
+    return 'file'
+
+
 def is_request_chat_participant(user, req):
     """Requester and currently assigned experts can send request chat messages."""
     if req.submitted_by_id == user.id:
@@ -123,7 +138,7 @@ def compute_request_priority_score(req, today_date=None):
     else:
         time_factor = 0.0
 
-    # Age factor: V / (V + 10), where V is task age in days.
+    # Age factor: V / (V + 10), where V is request age in days.
     task_age_days = max((today_date - req.created_at.date()).days, 0)
     age_factor = task_age_days / (task_age_days + 10) if task_age_days > 0 else 0.0
 
@@ -253,33 +268,33 @@ def features(request):
     features_list = [
         {
             'icon': '📝',
-            'title': 'Jednoduché zadávanie žiadostí',
-            'description': 'Komunita jednoducho zadáva svoje potreby cez verejný formulár.',
+            'title': 'Structured request intake',
+            'description': 'Users submit requests with deadlines, required skills, languages, and clear context.',
         },
         {
             'icon': '🔍',
-            'title': 'Manuálne preverovanie',
-            'description': 'Admin tím skúma žiadosti a zaraďuje ich do kategórií.',
+            'title': 'Human review and prioritization',
+            'description': 'An admin or company worker reviews each request, sets priority, and decides next steps.',
         },
         {
             'icon': '🧠',
-            'title': 'Inteligentný matching',
-            'description': 'Systém navrhuje najvhodnejších expertov na základe skúsenosti.',
+            'title': 'Expert recommendations',
+            'description': 'The platform combines skills, languages, experience, rating, and availability into one score.',
         },
         {
-            'icon': '📧',
-            'title': 'Email notifikácie',
-            'description': 'Všetci účastníci dostávajú profesionálne email potvrdenia.',
+            'icon': '💬',
+            'title': 'Chat-based coordination',
+            'description': 'Each request can include conversations between the requester, expert, and internal team.',
         },
         {
             'icon': '📊',
-            'title': 'Tracking a štatistiky',
-            'description': 'Sledujte vplyv a merateľné výsledky pomoci.',
+            'title': 'Role-based dashboards',
+            'description': 'Requests, assignments, expert workload, and completed work are visible in one place.',
         },
         {
-            'icon': '🔗',
-            'title': 'Notion integrácia',
-            'description': 'Export údajov a synchronizácia s vašim Notion workspace.',
+            'icon': '🏅',
+            'title': 'Karma and expert reputation',
+            'description': 'After completion is confirmed, the expert receives credit and a karma point.',
         },
     ]
     return render(request, 'features.html', {'features': features_list})
@@ -290,38 +305,38 @@ def how_it_works(request):
     steps = [
         {
             'number': '1',
-            'title': 'Zadaj odkázal',
-            'description': 'Comunita zadá svoju potrebu cez jednoduchý formulár.',
+            'title': 'Submit a request',
+            'description': 'A signed-in user creates a new request with a deadline, required skills, and contact details.',
             'icon': '📝',
         },
         {
             'number': '2',
-            'title': 'Preverenie',
-            'description': 'Náš tím preskúma žiadosť a zaradí ju do správnej kategórie.',
+            'title': 'Internal triage',
+            'description': 'An admin or worker reviews the request, sets priority, and defines the next action.',
             'icon': '🔍',
         },
         {
             'number': '3',
-            'title': 'Matching',
-            'description': 'Systém nájde najlepšie vyhovujúcich expertov z komunity.',
+            'title': 'Select experts',
+            'description': 'The system prepares recommendations and the team assigns one or more suitable experts.',
             'icon': '🧠',
         },
         {
             'number': '4',
-            'title': 'Spojenie',
-            'description': 'Experti sa dozvedia o požiadavke a kontaktujú žiadateľa.',
+            'title': 'Coordinate work',
+            'description': 'After assignment, communication continues in dashboards and chats with full traceability.',
             'icon': '🤝',
         },
         {
             'number': '5',
-            'title': 'Pomoc',
-            'description': 'Experti poskytnú know-how a pomoc vyriešiť problém.',
+            'title': 'Deliver help',
+            'description': 'The expert works on the request, aligns on details, and moves the request toward completion.',
             'icon': '💡',
         },
         {
             'number': '6',
-            'title': 'Tracking',
-            'description': 'Merame vplyv a zaznamenávame úspešné riešenia.',
+            'title': 'Confirm completion',
+            'description': 'The requester marks the request as done, and the system records completion and expert credit.',
             'icon': '📊',
         },
     ]
@@ -571,21 +586,21 @@ def admin_assign_expert(request, request_id):
         messages.error(request, 'Expert does not exist.')
         return redirect('request_detail', request_id=request_id)
 
-    # Real check: already on this task?
+    # Real check: already on this request?
     if req.assigned_experts.filter(id=expert.id).exists():
-        messages.info(request, f'{expert} is already assigned to this task.')
+        messages.info(request, f'{expert} is already assigned to this request.')
         return redirect('request_detail', request_id=request_id)
 
-    # Real check: busy on a different active task?
+    # Real check: busy on a different active request?
     is_actually_busy = expert.assigned_requests.filter(
         status__in=ACTIVE_REQUEST_STATUSES
     ).exclude(id=req.id).exists()
     if is_actually_busy:
-        messages.error(request, f'{expert} is currently busy on another task.')
+        messages.error(request, f'{expert} is currently busy on another request.')
         return redirect('request_detail', request_id=request_id)
 
     with transaction.atomic():
-        req.assigned_experts.add(expert)  # add without clearing — supports multiple experts per task
+        req.assigned_experts.add(expert)  # add without clearing — supports multiple experts per request
         if req.status in ['open', 'in_review']:
             req.status = 'waiting_expert'
             req.save(update_fields=['status', 'updated_at'])
@@ -666,7 +681,7 @@ def leave_assigned_request(request, request_id):
         return HttpResponseRedirect('/dashboard/')
 
     if not req.assigned_experts.filter(id=expert.id).exists():
-        messages.error(request, 'You are not assigned to this task.')
+        messages.error(request, 'You are not assigned to this request.')
         return HttpResponseRedirect('/dashboard/')
 
     with transaction.atomic():
@@ -677,7 +692,7 @@ def leave_assigned_request(request, request_id):
 
         update_expert_busy_status(expert)
 
-    messages.info(request, f'You left task "{req.title}".')
+    messages.info(request, f'You left request "{req.title}".')
     return HttpResponseRedirect('/dashboard/')
 
 
@@ -1027,6 +1042,7 @@ def chats(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+        uploaded_attachment = request.FILES.get('attachment')
 
         if action in {'mute_company', 'mute_admin', 'mute_direct'}:
             mute_enabled = request.POST.get('mute') == '1'
@@ -1059,15 +1075,31 @@ def chats(request):
         message_form = ChatMessageForm(request.POST)
         if message_form.is_valid():
             text = message_form.cleaned_data['message']
+            attachment_type = detect_attachment_type(uploaded_attachment)
+
+            if not text and not uploaded_attachment:
+                messages.error(request, 'Write a message or attach a file.')
+                return HttpResponseRedirect(request.get_full_path())
+
             if action == 'company':
-                CompanyChatMessage.objects.create(sender=request.user, message=text)
+                CompanyChatMessage.objects.create(
+                    sender=request.user,
+                    message=text,
+                    attachment=uploaded_attachment,
+                    attachment_type=attachment_type,
+                )
                 return HttpResponseRedirect(f"{reverse('chats')}?tab=company")
 
             if action == 'admin':
                 if not is_tier1(request.user):
                     messages.error(request, 'Only Tier 1 accounts can post in Admin Chat.')
                 else:
-                    AdminChatMessage.objects.create(sender=request.user, message=text)
+                    AdminChatMessage.objects.create(
+                        sender=request.user,
+                        message=text,
+                        attachment=uploaded_attachment,
+                        attachment_type=attachment_type,
+                    )
                     return HttpResponseRedirect(f"{reverse('chats')}?tab=admin")
 
             if action == 'direct':
@@ -1082,10 +1114,12 @@ def chats(request):
                         sender=request.user,
                         recipient=partner,
                         message=text,
+                        attachment=uploaded_attachment,
+                        attachment_type=attachment_type,
                     )
                     return HttpResponseRedirect(f"{reverse('chats')}?tab=direct&partner={partner.id}")
         else:
-            messages.error(request, 'Message cannot be empty.')
+            messages.error(request, 'Invalid chat input.')
 
     company_chat_messages = CompanyChatMessage.objects.select_related('sender').order_by('created_at')
     admin_chat_messages = AdminChatMessage.objects.select_related('sender').order_by('created_at') if is_tier1(request.user) else []
