@@ -1,28 +1,156 @@
 {% extends "base.html" %}
 
-{% block title %}How It Works - Community Help System{% endblock %}
+{% block title %}How It Works - zero one hundred{% endblock %}
+
+{% block extra_css %}
+<style>
+    .workflow-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .workflow-panel {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(23, 22, 66, 0.08);
+        border-radius: 28px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .status-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-top: 2rem;
+    }
+
+    .status-pill {
+        border-radius: 999px;
+        padding: 0.8rem 1rem;
+        text-align: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(15, 239, 170, 0.12);
+        color: var(--dark);
+    }
+
+    .workflow-step-card {
+        display: grid;
+        grid-template-columns: 74px minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 2rem;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(23, 22, 66, 0.08);
+        box-shadow: var(--shadow-soft);
+        margin-bottom: 1.5rem;
+    }
+
+    .step-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin: 0.75rem 0 1rem;
+    }
+
+    .step-meta span {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(23, 22, 66, 0.06);
+        color: var(--dark);
+        font-size: 0.76rem;
+        font-weight: 700;
+    }
+
+    .step-detail-list {
+        list-style: none;
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .step-detail-list li {
+        color: var(--text-light);
+        padding-left: 1.15rem;
+        position: relative;
+    }
+
+    .step-detail-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.6rem;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--gradient) 100%);
+    }
+
+    @media (max-width: 900px) {
+        .workflow-hero {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .workflow-step-card {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1 style="text-align: center;">How The Workflow Works</h1>
-        <p class="text-center text-muted" style="font-size: 1.1rem; margin-bottom: 3rem;">
-            Six steps from request creation to verified completion.
-        </p>
+        <div class="workflow-hero">
+            <div>
+                <h1>How the workflow works</h1>
+                <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 2rem; max-width: 760px;">This is the actual request lifecycle in the app today. It maps to the statuses, role permissions, and handoffs already implemented in the dashboard and request detail screens.</p>
+            </div>
+            <div class="workflow-panel">
+                <h3>Core rule</h3>
+                <p>The platform does not consider a request complete until the original requester confirms it. That keeps metrics tied to delivered outcomes instead of assumptions.</p>
+            </div>
+        </div>
     </section>
 
     <section class="section">
-        <div style="max-width: 900px; margin: 0 auto;">
+        <h2>Status path</h2>
+        <p class="text-muted" style="max-width: 760px;">These are the main request states users will see as work moves through the system.</p>
+        <div class="status-strip">
+            {% for status in status_path %}
+            <div class="status-pill">{{ status }}</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section">
+        <div style="max-width: 980px; margin: 0 auto;">
             {% for step in steps %}
-            <div style="display: flex; gap: 2rem; margin: 2rem 0; {% if forloop.counter|add:1 <= steps|length %}padding-bottom: 2rem; border-bottom: 1px solid var(--gray);{% endif %}">
+            <div class="workflow-step-card">
                 <div>
                     <div class="step-number">{{ step.number }}</div>
                 </div>
-                <div style="flex: 1;">
+                <div>
                     <h3>{{ step.title }}</h3>
-                    <p style="color: var(--text-light); line-height: 1.8;">
-                        {{ step.description }}
-                    </p>
+                    <div class="step-meta">
+                        <span>Owner: {{ step.owner }}</span>
+                        <span>Where: {{ step.location }}</span>
+                        <span>State: {{ step.status }}</span>
+                    </div>
+                    <p style="color: var(--text-light); line-height: 1.8;">{{ step.description }}</p>
+                    <ul class="step-detail-list">
+                        {% for detail in step.details %}
+                        <li>{{ detail }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
             {% endfor %}
@@ -30,207 +158,21 @@
     </section>
 
     <section class="section">
-        <h2>Detailed Flow</h2>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 1: User creates a request 📝</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        A signed-in user opens the form and provides all details required for fast team triage.
-                    </p>
-                    <ul class="feature-list">
-                        <li>Title and detailed problem description.</li>
-                        <li>Deadline, requester type, and contact details.</li>
-                        <li>Required skills and languages.</li>
-                        <li>Automatic link to the user's account.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Example:</p>
-                    <p style="margin-top: 0.5rem;">
-                        <strong>Title:</strong> We need mentoring for our hiring process<br>
-                        <strong>Category:</strong> Hiring<br>
-                        <strong>Skills:</strong> recruiting, hiring, operations<br>
-                        <strong>Deadline:</strong> within 10 days
-                    </p>
-                </div>
+        <h2>Common questions</h2>
+        <div class="grid grid-2">
+            {% for faq in faqs %}
+            <div class="card">
+                <h3>{{ faq.question }}</h3>
+                <p>{{ faq.answer }}</p>
             </div>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 2: Internal team triages the request 🔍</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        A super-admin or worker opens the request in the dashboard and decides the next action.
-                    </p>
-                    <ul class="feature-list">
-                        <li>Validates completeness of the request.</li>
-                        <li>Sets priority and category.</li>
-                        <li>Adds review notes and chooses next step.</li>
-                        <li>Workers are limited to their assigned categories.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Admin sets:</p>
-                    <ul style="margin-top: 0.5rem;">
-                        <li>Priority: <span class="badge badge-danger">High</span></li>
-                        <li>Category: <span class="badge badge-primary">Hiring</span></li>
-                        <li>Impact: <strong>9/10</strong></li>
-                        <li>Status: <span class="badge badge-primary">In Review</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 3: The system proposes expert matches 🧠</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        Matching creates a shortlist, but final assignment stays under team control.
-                    </p>
-                    <ul class="feature-list">
-                        <li><strong>Skills:</strong> overlap between request and expert profile.</li>
-                        <li><strong>Languages:</strong> alignment with required languages.</li>
-                        <li><strong>Experience text:</strong> relevance from bio and work history.</li>
-                        <li><strong>Rating and availability:</strong> reputation and real capacity.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Example shortlist:</p>
-                    <div style="margin-top: 1rem;">
-                        <p style="margin-bottom: 0.5rem;"><strong>Anna Nováková</strong></p>
-                        <div style="background: white; height: 6px; border-radius: 3px; margin-top: 0.25rem;">
-                            <div style="background: var(--primary); height: 100%; width: 84%; border-radius: 3px;"></div>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">84% match based on skills, experience, and availability</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 4: Team assigns experts and starts coordination 💬</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        Once an expert is assigned, the request enters active work and all key communication remains in-system.
-                    </p>
-                    <ul class="feature-list">
-                        <li>Admin assigns one or more experts.</li>
-                        <li>Experts are marked busy when they have active tasks.</li>
-                        <li>Request chat captures request-specific coordination.</li>
-                        <li>Internal details can be handled in company/admin chats.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">After assignment:</p>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                        The request moves into active resolution,<br>
-                        the expert appears in assigned tasks,<br>
-                        and both requester and internal team can track progress in one place.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 5: Expert delivers the work 🤝</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        During execution, experts can clarify context, consult with stakeholders, and coordinate next steps.
-                    </p>
-                    <ul class="feature-list">
-                        <li>Works with request details and deadlines.</li>
-                        <li>Uses chat for clarification and alignment.</li>
-                        <li>Can leave a request if unable to continue.</li>
-                        <li>Help is tied to a concrete outcome, not only conversation.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Possible outcomes:</p>
-                    <ul style="margin-top: 0.5rem;">
-                        <li>Mentoring or expert consultation.</li>
-                        <li>Operational support on assigned work.</li>
-                        <li>Closed hiring, sales, or networking request.</li>
-                        <li>Clear ownership of delivery.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Step 6: Requester confirms completion 📊</h3>
-            <div class="grid grid-2">
-                <div>
-                    <p>
-                        The final step is performed by the request creator. This distinguishes delivered help from requests still in progress.
-                    </p>
-                    <ul class="feature-list">
-                        <li>The request is marked as done/resolved.</li>
-                        <li>The system stores the completion timestamp.</li>
-                        <li>The expert receives +1 karma and help credit.</li>
-                        <li>Busy status is recalculated based on active tasks.</li>
-                    </ul>
-                </div>
-                <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Recorded in the system:</p>
-                    <div style="margin-top: 1rem;">
-                        <p><strong>Status:</strong> <span class="badge" style="background: #d1fae5; color: #059669;">Done</span></p>
-                        <p><strong>Resolution:</strong> Request closed by requester</p>
-                        <p><strong>Credit:</strong> Expert receives karma and help count update</p>
-                        <p><strong>Expert:</strong> Anna Nováková</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section" style="background: var(--primary-light); border-radius: 8px; padding: 3rem 2rem;">
-        <h2 style="text-align: center; color: var(--primary);">Process Summary</h2>
-        <p style="text-align: center; margin-bottom: 2rem;">
-            The workflow combines automated recommendations with human decisions and closes only when the requester confirms the result.
-        </p>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">📝</div>
-                <p><strong>Submit</strong></p>
-            </div>
-            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">🔍</div>
-                <p><strong>Triage</strong></p>
-            </div>
-            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">🧠</div>
-                <p><strong>Select</strong></p>
-            </div>
-            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">💬</div>
-                <p><strong>Coordinate</strong></p>
-            </div>
-            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">🤝</div>
-                <p><strong>Deliver</strong></p>
-            </div>
-            <div style="width: 30px; height: 2px; background: var(--primary);"></div>
-            <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">📊</div>
-                <p><strong>Confirm</strong></p>
-            </div>
+            {% endfor %}
         </div>
     </section>
 
     <section class="section" style="text-align: center;">
-        <h2>Ready to get started?</h2>
-        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Start with one request and let the system take it through to verified completion.</p>
+        <h2>Need the broader context too?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">The workflow page explains movement. The features page explains capabilities and access boundaries around that movement.</p>
+        <a href="{% url 'features' %}" class="btn btn-outline btn-lg" style="margin-right: 1rem;">See Features</a>
         <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Submit Request Now</a>
     </section>
 </div>

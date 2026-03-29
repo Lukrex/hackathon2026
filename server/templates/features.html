@@ -1,14 +1,82 @@
 {% extends "base.html" %}
 
-{% block title %}Features - Community Help System{% endblock %}
+{% block title %}Features - zero one hundred{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .feature-sidebar {
+        background: rgba(255, 255, 255, 0.82);
+        border-radius: 28px;
+        padding: 1.5rem;
+        border: 1px solid rgba(23, 22, 66, 0.08);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .feature-sidebar h3 {
+        margin-top: 0;
+    }
+
+    .compact-list {
+        list-style: none;
+        display: grid;
+        gap: 0.85rem;
+        margin: 1rem 0 0;
+    }
+
+    .compact-list li {
+        padding-left: 1.15rem;
+        position: relative;
+        color: var(--text-light);
+    }
+
+    .compact-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.6rem;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--gradient) 100%);
+    }
+
+    .matrix-card {
+        height: 100%;
+    }
+
+    @media (max-width: 900px) {
+        .feature-hero {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1 style="text-align: center;">Platform Features</h1>
-        <p class="text-center text-muted" style="margin-bottom: 3rem; font-size: 1.1rem;">
-            A practical overview of the workflow currently available in the app.
-        </p>
+        <div class="feature-hero">
+            <div>
+                <h1>Platform features</h1>
+                <p class="text-muted" style="margin-bottom: 2rem; font-size: 1.1rem; max-width: 760px;">This page reflects the current Django product, not a roadmap. It focuses on what users and internal operators can do right now.</p>
+            </div>
+            <div class="feature-sidebar">
+                <h3>Useful mental model</h3>
+                <ul class="compact-list">
+                    <li>Requests are structured work items, not loose messages.</li>
+                    <li>Roles decide access, visibility, and responsibility.</li>
+                    <li>Matching supports assignment, but people make the final call.</li>
+                    <li>Completion is validated by the requester, not assumed.</li>
+                </ul>
+            </div>
+        </div>
 
         <div class="grid grid-2" style="margin: 3rem 0;">
             {% for feature in features %}
@@ -22,141 +90,86 @@
     </section>
 
     <section class="section">
-        <h2>Workflow From Intake To Completion</h2>
+        <h2>Capability areas</h2>
+        <p class="text-muted" style="max-width: 760px;">These are the main product areas that matter in practice when the team is handling real requests.</p>
 
+        {% for group in feature_groups %}
         <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
-            <h3 style="color: var(--primary);">1. Better request intake</h3>
-            <p>
-                A request is treated as a full work item, not just free text. The form captures deadline, required technologies,
-                languages, and requester type so coordinators can decide quickly.
-            </p>
+            <h3 style="color: var(--primary);">{{ group.title }}</h3>
+            <p>{{ group.description }}</p>
             <ul class="feature-list">
-                <li>Title, description, and deadline.</li>
-                <li>Required skills and languages.</li>
-                <li>Requester type and contact information.</li>
-                <li>Automatic link to the signed-in user.</li>
+                {% for item in group.items %}
+                <li>{{ item }}</li>
+                {% endfor %}
             </ul>
         </div>
+        {% endfor %}
+    </section>
 
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
-            <h3 style="color: var(--primary);">2. Role-based execution</h3>
-            <p>
-                The dashboard is not one-size-fits-all. Super-admins, workers, and experts each have focused views that reduce noise and speed decisions.
-            </p>
-            <ul class="feature-list">
-                <li>Super-admin sees all open and assigned requests.</li>
-                <li>Workers see only their assigned categories.</li>
-                <li>Regular users track their own requests and assigned tasks.</li>
-                <li>Experts focus on active tasks they own.</li>
-            </ul>
-        </div>
-
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
-            <h3 style="color: var(--primary);">3. Expert recommendation logic</h3>
-            <p>
-                Matching is not a black box. Scores are built from explicit signals that the team can review and override when needed.
-            </p>
-            <ul class="feature-list">
-                <li>Skill overlap between request and expert profile.</li>
-                <li>Language matching and profile text relevance.</li>
-                <li>Availability, rating, and previous help history.</li>
-                <li>Support for assigning one or multiple experts.</li>
-            </ul>
-        </div>
-
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
-            <h3 style="color: var(--primary);">4. Communication and progression</h3>
-            <p>
-                The system includes request chats, internal company conversations, and read states, so coordination does not drift outside the platform.
-            </p>
-            <ul class="feature-list">
-                <li>Chat between requester and assigned expert.</li>
-                <li>Internal admin chat.</li>
-                <li>Mute and read-state controls to reduce noise.</li>
-                <li>Clear request status from open to resolved.</li>
-            </ul>
-        </div>
-
-        <div style="margin: 2rem 0; padding: 2rem; background: var(--primary-soft); border-radius: 24px;">
-            <h3 style="color: var(--primary);">5. Completion and reputation</h3>
-            <p>
-                A key difference from basic ticketing is requester-confirmed completion, which separates delivered outcomes from work still in progress.
-            </p>
-            <ul class="feature-list">
-                <li>The requester marks the request as done.</li>
-                <li>The selected expert receives a karma point and recorded help credit.</li>
-                <li>Expert busy/free status is updated based on active workload.</li>
-            </ul>
+    <section class="section">
+        <h2>Role access matrix</h2>
+        <p class="text-muted" style="max-width: 760px;">The product becomes easier to use once people understand that every role is intentionally constrained.</p>
+        <div class="grid grid-2">
+            {% for role in role_matrix %}
+            <div class="card matrix-card">
+                <h3>{{ role.role }}</h3>
+                <p><strong>Can see:</strong> {{ role.visibility }}</p>
+                <p><strong>Can do:</strong> {{ role.actions }}</p>
+            </div>
+            {% endfor %}
         </div>
     </section>
 
     <section class="section">
-        <h2>Request Categories</h2>
-        <p>The model supports these categories, which the internal team can further route to workers.</p>
-        <div class="grid grid-2">
+        <h2>Internal communication channels</h2>
+        <div class="grid grid-3">
+            {% for channel in chat_channels %}
             <div class="card">
-                <h3>🔍 Hiring</h3>
-                <p>Recruiting, sourcing, candidate evaluation, and hiring process design.</p>
+                <h3>{{ channel.title }}</h3>
+                <p>{{ channel.description }}</p>
             </div>
-            <div class="card">
-                <h3>💰 Investment</h3>
-                <p>Fundraising strategy, pitch support, and investor relations.</p>
-            </div>
-            <div class="card">
-                <h3>📊 Consulting</h3>
-                <p>Product, technical, or business consulting with a specific expert.</p>
-            </div>
-            <div class="card">
-                <h3>📢 Marketing</h3>
-                <p>Brand, content, SEO, campaigns, and growth experiments.</p>
-            </div>
-            <div class="card">
-                <h3>🎤 Speaking</h3>
-                <p>Talks, events, public speaking, and community representation.</p>
-            </div>
-            <div class="card">
-                <h3>🤝 Networking</h3>
-                <p>Mentorship, partnerships, and high-value introductions.</p>
-            </div>
-            <div class="card">
-                <h3>💼 Sales</h3>
-                <p>Sales enablement, go-to-market support, and revenue pipeline improvements.</p>
-            </div>
-            <div class="card">
-                <h3>➕ Other</h3>
-                <p>Requests outside predefined categories that still need proper tracking and resolution.</p>
-            </div>
+            {% endfor %}
         </div>
     </section>
 
     <section class="section">
-        <h2>Trust, Access, and Security</h2>
-        <p>The platform relies on standard Django protections and clear permission boundaries.</p>
+        <h2>Supported request categories</h2>
+        <p class="text-muted" style="max-width: 760px;">These are the categories currently represented in the data model and used for routing work to workers.</p>
+        <div class="grid grid-2">
+            {% for category in category_cards %}
+            <div class="card">
+                <h3>{{ category.icon }} {{ category.title }}</h3>
+                <p>{{ category.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Trust, access, and data handling</h2>
         <div class="grid grid-2">
             <div class="card">
-                <h3>🔐 Data protection</h3>
+                <h3>Application-level protections</h3>
                 <ul class="feature-list">
-                    <li>Forms and ORM instead of manually constructed SQL queries.</li>
-                    <li>Session-based authentication through Django.</li>
-                    <li>Built-in CSRF protection and password hashing.</li>
-                    <li>Persistent history of request state and assignments.</li>
+                    <li>Django authentication, session handling, CSRF protection, and password hashing.</li>
+                    <li>Forms and ORM-backed writes instead of raw SQL construction in public workflows.</li>
+                    <li>Stored request, assignment, and completion history for traceability.</li>
                 </ul>
             </div>
             <div class="card">
-                <h3>🛡️ Access control</h3>
+                <h3>Intentional visibility limits</h3>
                 <ul class="feature-list">
-                    <li>Regular users see only their own requests.</li>
-                    <li>Experts work on assigned tasks only.</li>
-                    <li>Workers are scoped to selected categories.</li>
-                    <li>Super-admins control the full internal workflow.</li>
+                    <li>Requesters track their own requests.</li>
+                    <li>Experts act on assigned work rather than browsing every request.</li>
+                    <li>Workers are restricted by category and Tier 1 manages the broader system.</li>
                 </ul>
             </div>
         </div>
     </section>
 
     <section class="section" style="text-align: center;">
-        <h2>Ready to submit your first request?</h2>
-        <p style="font-size: 1.1rem; margin-bottom: 2rem;">If you need help, consulting, or internal expert assignment, start in the request form.</p>
+        <h2>Use this page as the feature baseline</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">If someone asks what the current product can do, this is the page to hand them before they start using the dashboard.</p>
         <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Submit Request</a>
         <a href="{% url 'how_it_works' %}" class="btn btn-secondary btn-lg" style="margin-left: 1rem;">How It Works</a>
     </section>

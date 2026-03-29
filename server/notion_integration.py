@@ -60,7 +60,6 @@ class NotionIntegrator:
                 'Email': expert.user.email,
                 'Bio': expert.bio,
                 'Expertise': expert.expertise,
-                'Availability': expert.get_availability_display(),
                 'Help Provided': expert.help_provided,
                 'Joined': expert.created_at.isoformat(),
             })

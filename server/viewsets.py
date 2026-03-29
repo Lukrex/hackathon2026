@@ -24,7 +24,7 @@ class ExpertViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['user__first_name', 'user__last_name', 'expertise']
     ordering_fields = ['help_provided', 'created_at']
     ordering = ['-help_provided']
-    filterset_fields = ['availability']
+    filterset_fields = []
 
 
 class RequestViewSet(viewsets.ModelViewSet):

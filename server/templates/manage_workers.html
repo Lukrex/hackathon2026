@@ -13,7 +13,23 @@
             <a href="{% url 'dashboard' %}" class="btn btn-outline">Back to Dashboard</a>
         </div>
 
+        <div class="worker-filters mb-4">
+            <a
+                href="{% url 'admin_manage_workers' %}?filter=tier2{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                class="btn btn-sm {% if worker_filter == 'tier2' %}btn-primary{% else %}btn-outline{% endif %}"
+            >
+                Active Tier 2 Workers ({{ tier2_total }})
+            </a>
+            <a
+                href="{% url 'admin_manage_workers' %}?filter=non_tier2{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                class="btn btn-sm {% if worker_filter == 'non_tier2' %}btn-primary{% else %}btn-outline{% endif %}"
+            >
+                Eligible Users Not Assigned ({{ non_tier2_total }})
+            </a>
+        </div>
+
         <form method="get" class="worker-search mb-4">
+            <input type="hidden" name="filter" value="{{ worker_filter }}">
             <input
                 type="text"
                 name="q"
@@ -23,7 +39,7 @@
             >
             <button type="submit" class="btn btn-sm btn-primary">Search</button>
             {% if search_query %}
-            <a href="{% url 'admin_manage_workers' %}" class="btn btn-sm btn-outline">Clear</a>
+            <a href="{% url 'admin_manage_workers' %}?filter={{ worker_filter }}" class="btn btn-sm btn-outline">Clear</a>
             {% endif %}
         </form>
 
@@ -103,6 +119,23 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+.workers-list .card {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.workers-list .card:hover {
+    transform: none;
+    box-shadow: var(--shadow-soft);
+}
+
+.worker-filters {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
 }
 
 .worker-search {

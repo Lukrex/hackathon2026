@@ -10,11 +10,13 @@ from django.db.models import Q, Count
 from django.db import transaction
 from django.utils import timezone
 from django.http import HttpResponseRedirect, FileResponse, Http404
+from collections import defaultdict
 from .models import (
     Request,
     Expert,
     Category,
     RequestChatMessage,
+    RequestChatReadState,
     AdminChatMessage,
     CompanyChatMessage,
     DirectChatMessage,
@@ -42,6 +44,33 @@ from .chat_utils import (
 
 
 ACTIVE_REQUEST_STATUSES = ['open', 'in_review', 'waiting_expert', 'in_progress']
+
+
+def get_request_chat_unread_counts(user, request_ids):
+    """Return unread message counts per request for requester-expert chat."""
+    request_ids = [rid for rid in request_ids if rid]
+    if not user or not user.is_authenticated or not request_ids:
+        return {}
+
+    last_read_by_request = {
+        row.request_id: row.last_read_at
+        for row in RequestChatReadState.objects.filter(
+            user=user,
+            request_id__in=request_ids,
+        ).only('request_id', 'last_read_at')
+    }
+
+    unread_counts = defaultdict(int)
+    message_rows = RequestChatMessage.objects.filter(
+        request_id__in=request_ids,
+    ).exclude(sender=user).values_list('request_id', 'created_at')
+
+    for req_id, created_at in message_rows:
+        last_read_at = last_read_by_request.get(req_id)
+        if last_read_at is None or created_at > last_read_at:
+            unread_counts[req_id] += 1
+
+    return dict(unread_counts)
 
 
 def favicon(request):
@@ -176,8 +205,6 @@ def compute_expert_recommendations(req, limit=6):
     request_lang_ids = set(req.required_languages.values_list('id', flat=True))
     req_words = set((req.title + ' ' + req.description).lower().split())
 
-    availability_weight = {'high': 1.0, 'medium': 0.7, 'low': 0.3}
-
     experts = Expert.objects.select_related('user').prefetch_related('skills', 'languages').all()
     scored = []
     for expert in experts:
@@ -207,9 +234,6 @@ def compute_expert_recommendations(req, limit=6):
         if expert.rating_count > 0:
             score += (expert.rating / 5.0) * 10
 
-        # Availability (10 pts)
-        score += availability_weight.get(expert.availability, 0.5) * 10
-
         if score > 0:
             skill_names = [s.name for s in expert.skills.all()]
             lang_names = [l.name for l in expert.languages.all()]
@@ -233,6 +257,24 @@ def compute_expert_recommendations(req, limit=6):
     return scored[:limit]
 
 
+def compute_request_relevance_for_expert(req, expert_skill_ids, expert_language_ids):
+    """Score how relevant a request is for a specific expert."""
+    request_skill_ids = {skill.id for skill in req.target_skills.all()}
+    request_language_ids = {language.id for language in req.required_languages.all()}
+
+    skill_overlap = request_skill_ids & expert_skill_ids
+    language_overlap = request_language_ids & expert_language_ids
+
+    # Personalized feed requires at least one matching skill and one shared required language.
+    if not skill_overlap or not language_overlap:
+        return None
+
+    score = 0.0
+    score += (len(skill_overlap) / max(len(request_skill_ids), 1)) * 70.0
+    score += (len(language_overlap) / max(len(request_language_ids), 1)) * 30.0
+    return round(min(score, 100.0), 1)
+
+
 def index(request):
     """Landing page / home page"""
     if request.user.is_authenticated:
@@ -248,8 +290,8 @@ def index(request):
     # Get recent requests
     recent_requests = Request.objects.all().order_by('-created_at')[:3]
 
-    # Get featured experts (most helpful)
-    featured_experts = Expert.objects.all().order_by('-help_provided')[:3]
+    # Get featured experts dynamically from existing user profiles.
+    featured_experts = Expert.objects.select_related('user').prefetch_related('skills').order_by('?')[:3]
 
     return render(request, 'index.html', {
         'stats': stats,
@@ -260,7 +302,64 @@ def index(request):
 
 def about(request):
     """About page"""
-    return render(request, 'about.html')
+    role_guides = [
+        {
+            'title': 'Request creators',
+            'summary': 'Signed-in users who open requests, monitor progress, and confirm when work is genuinely complete.',
+            'points': [
+                'Create requests with category, due date, skills, and languages.',
+                'Track their own requests in the dashboard.',
+                'Use request chat when they are the requester.',
+            ],
+        },
+        {
+            'title': 'Experts',
+            'summary': 'Community helpers with profiles, skills, languages, reputation, and active assignment tracking.',
+            'points': [
+                'Receive assignments from the internal team.',
+                'See active work in their dashboard view.',
+                'Earn karma and help history after confirmed completion.',
+            ],
+        },
+        {
+            'title': 'Tier 2 workers',
+            'summary': 'Company workers scoped to selected categories so routing can be distributed without giving full access.',
+            'points': [
+                'Review only requests in allowed categories.',
+                'Participate in company chat and direct Tier 1 or Tier 2 coordination.',
+                'Support triage and assignment without global admin rights.',
+            ],
+        },
+        {
+            'title': 'Tier 1 super-admins',
+            'summary': 'Global operators who can review every request, manage workers, and use the full internal coordination layer.',
+            'points': [
+                'See all requests across categories.',
+                'Assign experts, manage workers, and delete requests when needed.',
+                'Access the Tier 1 admin chat stream in addition to company chat.',
+            ],
+        },
+    ]
+
+    operating_principles = [
+        'The platform is a coordination system, not an autopilot. Matching helps, but people still own decisions.',
+        'Every request is treated as a tracked work item with status, ownership, and audit history.',
+        'Completion is requester-confirmed, which prevents dashboards from reporting unfinished work as done.',
+        'Access is deliberately role-scoped so workers and experts only see what they should act on.',
+    ]
+
+    system_boundaries = [
+        'The active product is the Django application driven by models, views, forms, and templates.',
+        'Legacy Node and Express files remain in the repository, but they are not the main web workflow.',
+        'The current app already supports request intake, dashboards, chats, assignments, and completion tracking.',
+        'Attachment support exists in internal chat channels, including files, images, video, and audio.',
+    ]
+
+    return render(request, 'about.html', {
+        'role_guides': role_guides,
+        'operating_principles': operating_principles,
+        'system_boundaries': system_boundaries,
+    })
 
 
 def features(request):
@@ -279,12 +378,12 @@ def features(request):
         {
             'icon': '🧠',
             'title': 'Expert recommendations',
-            'description': 'The platform combines skills, languages, experience, rating, and availability into one score.',
+            'description': 'The platform combines skills, languages, experience, and rating into one score.',
         },
         {
             'icon': '💬',
             'title': 'Chat-based coordination',
-            'description': 'Each request can include conversations between the requester, expert, and internal team.',
+            'description': 'The app supports request chat plus internal company and admin coordination channels.',
         },
         {
             'icon': '📊',
@@ -293,11 +392,118 @@ def features(request):
         },
         {
             'icon': '🏅',
-            'title': 'Karma and expert reputation',
-            'description': 'After completion is confirmed, the expert receives credit and a karma point.',
+            'title': 'Score and expert reputation',
+            'description': 'After completion is confirmed, the expert receives credit and a score point.',
         },
     ]
-    return render(request, 'features.html', {'features': features_list})
+
+    feature_groups = [
+        {
+            'title': 'Request intake and structure',
+            'description': 'The form captures the data the team actually uses when deciding priority and fit.',
+            'items': [
+                'Requester type, contact details, and deadline.',
+                'Category selection linked to worker routing.',
+                'Target skills and required languages.',
+                'Automatic link to the signed-in submitter account.',
+            ],
+        },
+        {
+            'title': 'Review, routing, and assignment',
+            'description': 'Requests are reviewed by company roles instead of dropping directly into an unfiltered queue.',
+            'items': [
+                'Priority and value scoring support triage.',
+                'Tier 2 workers are restricted to assigned categories.',
+                'Tier 1 can manage workers and all requests globally.',
+                'One or more experts can be assigned to the same request.',
+            ],
+        },
+        {
+            'title': 'Matching and expert fit',
+            'description': 'The recommendation layer uses explicit signals that are understandable by operators.',
+            'items': [
+                'Precomputed match support when available.',
+                'Fallback live scoring from skills, languages, keywords, and ratings.',
+                'Expert busy or free state based on active assignments.',
+                'Offer-help flow for experts who want to raise their hand proactively.',
+            ],
+        },
+        {
+            'title': 'Communication and accountability',
+            'description': 'The app keeps important coordination attached to the work instead of forcing external side channels.',
+            'items': [
+                'Request chat for request creators and assigned experts.',
+                'Company chat for internal team coordination.',
+                'Tier 1 admin chat and Tier 1 or Tier 2 direct chat.',
+                'Unread state, mute controls, and attachment uploads in internal chat.',
+            ],
+        },
+    ]
+
+    role_matrix = [
+        {
+            'role': 'Requester',
+            'visibility': 'Own requests and related request chats.',
+            'actions': 'Submit, review progress, and confirm done.',
+        },
+        {
+            'role': 'Expert',
+            'visibility': 'Assigned requests plus matching profile context.',
+            'actions': 'Work requests, chat on assigned threads, leave if needed.',
+        },
+        {
+            'role': 'Tier 2 worker',
+            'visibility': 'Requests in selected categories only.',
+            'actions': 'Triage, coordinate internally, and support assignment.',
+        },
+        {
+            'role': 'Tier 1 super-admin',
+            'visibility': 'All requests, workers, and internal chat channels.',
+            'actions': 'Global review, worker management, assignment, and cleanup.',
+        },
+    ]
+
+    category_details = {
+        'hiring': ('🔍', 'Recruiting support, sourcing, evaluations, and hiring process work.'),
+        'investment': ('💰', 'Fundraising strategy, investor preparation, and capital-related support.'),
+        'consulting': ('📊', 'Business, product, technical, or operational consulting requests.'),
+        'marketing': ('📢', 'Campaigns, content, SEO, brand, and growth execution.'),
+        'speaking': ('🎤', 'Talks, events, panels, and public speaking opportunities.'),
+        'networking': ('🤝', 'Introductions, partnerships, and community connections.'),
+        'sales': ('💼', 'Go-to-market, enablement, revenue support, and pipeline execution.'),
+        'other': ('➕', 'Anything outside the main buckets that still needs structured handling.'),
+    }
+    category_cards = [
+        {
+            'icon': category_details[slug][0],
+            'title': label,
+            'description': category_details[slug][1],
+        }
+        for slug, label in Category.CATEGORY_CHOICES
+    ]
+
+    chat_channels = [
+        {
+            'title': 'Request chat',
+            'description': 'Used by the requester and currently assigned experts on a specific request.',
+        },
+        {
+            'title': 'Company chat',
+            'description': 'Shared internal channel for company-side coordination across workers and Tier 1.',
+        },
+        {
+            'title': 'Admin and direct chat',
+            'description': 'Tier 1 gets an admin stream, and Tier 1 or Tier 2 pairs can message directly.',
+        },
+    ]
+
+    return render(request, 'features.html', {
+        'features': features_list,
+        'feature_groups': feature_groups,
+        'role_matrix': role_matrix,
+        'category_cards': category_cards,
+        'chat_channels': chat_channels,
+    })
 
 
 def how_it_works(request):
@@ -306,41 +512,113 @@ def how_it_works(request):
         {
             'number': '1',
             'title': 'Submit a request',
-            'description': 'A signed-in user creates a new request with a deadline, required skills, and contact details.',
+            'description': 'A signed-in user creates a request with deadline, category, context, target skills, and required languages.',
             'icon': '📝',
+            'owner': 'Requester',
+            'location': 'Submit Request form',
+            'status': 'Open',
+            'details': [
+                'The request is tied to the submitting account.',
+                'Contact details stay attached to the work item.',
+                'The goal is enough context for fast triage, not a vague ticket title.',
+            ],
         },
         {
             'number': '2',
             'title': 'Internal triage',
             'description': 'An admin or worker reviews the request, sets priority, and defines the next action.',
             'icon': '🔍',
+            'owner': 'Tier 1 or Tier 2',
+            'location': 'Dashboard and request detail',
+            'status': 'In Review',
+            'details': [
+                'Tier 2 workers only see requests in their assigned categories.',
+                'Priority, value, and review notes can be updated.',
+                'The team decides whether to assign, clarify, or defer.',
+            ],
         },
         {
             'number': '3',
             'title': 'Select experts',
             'description': 'The system prepares recommendations and the team assigns one or more suitable experts.',
             'icon': '🧠',
+            'owner': 'Internal team',
+            'location': 'Request detail recommendations',
+            'status': 'Waiting for Expert',
+            'details': [
+                'Recommendations are based on skills, languages, profile text, and rating.',
+                'The team can override or ignore suggestions.',
+                'Experts may also offer help before formal assignment.',
+            ],
         },
         {
             'number': '4',
             'title': 'Coordinate work',
             'description': 'After assignment, communication continues in dashboards and chats with full traceability.',
             'icon': '🤝',
+            'owner': 'Requester, experts, and internal team',
+            'location': 'Request chat and internal chats',
+            'status': 'In Progress',
+            'details': [
+                'Request chat is for the requester and assigned experts.',
+                'Internal company and admin channels support operational coordination.',
+                'Experts are marked busy while active work is assigned.',
+            ],
         },
         {
             'number': '5',
             'title': 'Deliver help',
             'description': 'The expert works on the request, aligns on details, and moves the request toward completion.',
             'icon': '💡',
+            'owner': 'Assigned expert',
+            'location': 'Dashboard, request detail, and chats',
+            'status': 'In Progress',
+            'details': [
+                'The system keeps the work tied to the request record.',
+                'Experts can clarify scope through the chat thread.',
+                'If an expert needs to step away, they can leave the request.',
+            ],
         },
         {
             'number': '6',
             'title': 'Confirm completion',
             'description': 'The requester marks the request as done, and the system records completion and expert credit.',
             'icon': '📊',
+            'owner': 'Requester',
+            'location': 'Request detail completion flow',
+            'status': 'Resolved',
+            'details': [
+                'The completion timestamp is stored.',
+                'The completing expert receives score and help credit.',
+                'Busy or free state is recalculated from active assignments.',
+            ],
         },
     ]
-    return render(request, 'how_it_works.html', {'steps': steps})
+
+    status_path = ['Open', 'In Review', 'Waiting for Expert', 'In Progress', 'Resolved']
+    faqs = [
+        {
+            'question': 'Does the system auto-assign experts?',
+            'answer': 'No. It suggests candidates, but the internal team controls final assignment.',
+        },
+        {
+            'question': 'Can workers see every request?',
+            'answer': 'No. Tier 2 workers are limited to categories assigned to them by Tier 1.',
+        },
+        {
+            'question': 'Who can chat on a request?',
+            'answer': 'The request creator and currently assigned experts can post in request chat. Admins can view the thread.',
+        },
+        {
+            'question': 'When is work considered finished?',
+            'answer': 'Only when the requester confirms completion through the request detail flow.',
+        },
+    ]
+    return render(request, 'how_it_works.html', {
+        'steps': steps,
+        'status_path': status_path,
+        'faqs': faqs,
+    })
 
 
 def _group_skills_by_theme(queryset):
@@ -445,6 +723,8 @@ def dashboard(request):
             assigned_experts__isnull=True,
         ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
 
+        unassigned_requests = list(unassigned_requests_qs)
+
         assigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=False,
@@ -453,6 +733,26 @@ def dashboard(request):
         free_experts = Expert.objects.select_related('user').exclude(
             assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
         ).order_by('-karma_points', '-help_provided').distinct()
+        free_experts_list = list(free_experts)
+        free_expert_ids = {expert.id for expert in free_experts_list}
+
+        for req in unassigned_requests:
+            ranked = []
+            seen_ids = set()
+            recommendations = compute_expert_recommendations(req, limit=max(len(free_experts_list), 20))
+            for rec in recommendations:
+                expert = rec.get('expert')
+                if not expert or expert.id not in free_expert_ids or expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': rec.get('score', 0)})
+                seen_ids.add(expert.id)
+
+            for expert in free_experts_list:
+                if expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': 0})
+
+            req.assignable_experts = ranked
 
         stats = {
             'unassigned_requests_count': unassigned_requests_qs.count(),
@@ -463,7 +763,7 @@ def dashboard(request):
 
         return render(request, 'admin_dashboard.html', {
             'stats': stats,
-            'unassigned_requests': unassigned_requests_qs,
+            'unassigned_requests': unassigned_requests,
             'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
             'is_tier1': True,
@@ -484,6 +784,8 @@ def dashboard(request):
             category_id__in=allowed_category_ids,
         ).select_related('category', 'submitted_by').prefetch_related('offered_experts__user').distinct().order_by('-created_at')
 
+        unassigned_requests = list(unassigned_requests_qs)
+
         assigned_requests_qs = Request.objects.filter(
             status__in=ACTIVE_REQUEST_STATUSES,
             assigned_experts__isnull=False,
@@ -493,6 +795,26 @@ def dashboard(request):
         free_experts = Expert.objects.select_related('user').exclude(
             assigned_requests__status__in=ACTIVE_REQUEST_STATUSES
         ).order_by('-karma_points', '-help_provided').distinct()
+        free_experts_list = list(free_experts)
+        free_expert_ids = {expert.id for expert in free_experts_list}
+
+        for req in unassigned_requests:
+            ranked = []
+            seen_ids = set()
+            recommendations = compute_expert_recommendations(req, limit=max(len(free_experts_list), 20))
+            for rec in recommendations:
+                expert = rec.get('expert')
+                if not expert or expert.id not in free_expert_ids or expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': rec.get('score', 0)})
+                seen_ids.add(expert.id)
+
+            for expert in free_experts_list:
+                if expert.id in seen_ids:
+                    continue
+                ranked.append({'expert': expert, 'score': 0})
+
+            req.assignable_experts = ranked
 
         stats = {
             'unassigned_requests_count': unassigned_requests_qs.count(),
@@ -503,24 +825,12 @@ def dashboard(request):
 
         return render(request, 'admin_dashboard.html', {
             'stats': stats,
-            'unassigned_requests': unassigned_requests_qs,
+            'unassigned_requests': unassigned_requests,
             'assigned_requests': assigned_requests_qs,
             'free_experts': free_experts,
             'is_tier1': False,
             'my_category_names': my_category_names,
         })
-
-    all_requests = list(Request.objects.select_related('submitted_by').all())
-
-    today_date = timezone.now().date()
-    for req in all_requests:
-        req.algorithm_priority_score = compute_request_priority_score(req, today_date=today_date)
-
-    requests = sorted(
-        all_requests,
-        key=lambda req: (req.algorithm_priority_score, req.created_at.timestamp()),
-        reverse=True,
-    )
 
     my_requests_qs = Request.objects.filter(submitted_by=request.user).prefetch_related('assigned_experts').order_by('-created_at')
     my_requests = list(my_requests_qs)
@@ -538,6 +848,41 @@ def dashboard(request):
     except Expert.DoesNotExist:
         expert_profile = None
 
+    requests_for_you = []
+    if expert_profile:
+        expert_skill_ids = {skill.id for skill in expert_profile.skills.all()}
+        expert_language_ids = {language.id for language in expert_profile.languages.all()}
+        candidate_requests = list(
+            Request.objects.filter(status__in=ACTIVE_REQUEST_STATUSES)
+            .exclude(submitted_by=request.user)
+            .exclude(assigned_experts=expert_profile)
+            .select_related('category', 'submitted_by')
+            .prefetch_related('target_skills', 'required_languages', 'assigned_experts', 'offered_experts')
+            .distinct()
+        )
+
+        for req in candidate_requests:
+            relevance_score = compute_request_relevance_for_expert(req, expert_skill_ids, expert_language_ids)
+            if relevance_score is None:
+                continue
+            req.relevance_score = relevance_score
+            requests_for_you.append(req)
+
+        requests_for_you.sort(
+            key=lambda req: (req.relevance_score, req.created_at.timestamp()),
+            reverse=True,
+        )
+
+    request_ids_for_unread = {req.id for req in my_requests}
+    request_ids_for_unread.update(req.id for req in expert_assigned_tasks)
+    unread_counts = get_request_chat_unread_counts(request.user, list(request_ids_for_unread))
+
+    for req in my_requests:
+        req.request_chat_unread_count = unread_counts.get(req.id, 0)
+
+    for req in expert_assigned_tasks:
+        req.request_chat_unread_count = unread_counts.get(req.id, 0)
+
     stats = {
         'total_requests': Request.objects.count(),
         'open_requests': Request.objects.filter(status__in=['open', 'in_review', 'waiting_expert']).count(),
@@ -551,7 +896,7 @@ def dashboard(request):
     }
 
     return render(request, 'dashboard.html', {
-        'requests': requests,
+        'requests_for_you': requests_for_you,
         'my_requests': my_requests,
         'expert_assigned_tasks': expert_assigned_tasks,
         'expert_profile': expert_profile,
@@ -742,7 +1087,7 @@ def mark_request_done(request, request_id):
 
     messages.success(
         request,
-        f'Request "{req.title}" has been marked as done. {selected_expert} received +1 karma point.'
+        f'Request "{req.title}" has been marked as done. {selected_expert} received +1 score point.'
     )
     return HttpResponseRedirect('/dashboard/#my-requests')
 
@@ -785,10 +1130,6 @@ def expert_directory(request):
     """Browse expert profiles"""
     experts = Expert.objects.all().order_by('-help_provided')
 
-    availability_filter = request.GET.get('availability')
-    if availability_filter:
-        experts = experts.filter(availability=availability_filter)
-
     search_term = request.GET.get('search')
     if search_term:
         experts = experts.filter(
@@ -802,7 +1143,6 @@ def expert_directory(request):
     return render(request, 'expert_directory.html', {
         'experts': experts,
         'search_term': search_term or '',
-        'availability_filter': availability_filter or '',
     })
 
 
@@ -873,7 +1213,7 @@ def request_detail(request, request_id):
         return redirect('request_detail', request_id=request_id)
 
     # Compute expert recommendations (AI matches or live scoring)
-    recommended_experts = compute_expert_recommendations(req, limit=6)
+    recommended_experts = compute_expert_recommendations(req, limit=20)
 
     # Fresh real-time busy/assigned state for each recommended expert
     already_assigned_ids = set(req.assigned_experts.values_list('id', flat=True))
@@ -888,6 +1228,11 @@ def request_detail(request, request_id):
         rec['is_assigned_here'] = rec['expert'].id in already_assigned_ids
         rec['is_busy'] = rec['expert'].id in busy_elsewhere_ids
 
+    can_access_request_chat = admin_view or is_request_chat_participant(request.user, req)
+    request_chat_unread_count = 0
+    if can_access_request_chat:
+        request_chat_unread_count = get_request_chat_unread_counts(request.user, [req.id]).get(req.id, 0)
+
     return render(request, 'request_detail.html', {
         'request': req,
         'recommended_experts': recommended_experts,
@@ -896,7 +1241,8 @@ def request_detail(request, request_id):
         'is_assigned_here': is_assigned_here,
         'is_admin': admin_view,
         'is_tier1': is_tier1(request.user),
-        'can_access_request_chat': admin_view or is_request_chat_participant(request.user, req),
+        'can_access_request_chat': can_access_request_chat,
+        'request_chat_unread_count': request_chat_unread_count,
     })
 
 
@@ -920,17 +1266,24 @@ def request_chat(request, request_id):
             messages.error(request, 'Only requester and assigned experts can send messages in this chat.')
             return redirect('request_chat', request_id=req.id)
 
-        form = RequestChatMessageForm(request.POST)
+        form = RequestChatMessageForm(request.POST, request.FILES)
         if form.is_valid():
             chat_message = form.save(commit=False)
             chat_message.request = req
             chat_message.sender = request.user
+            chat_message.attachment_type = detect_attachment_type(chat_message.attachment)
             chat_message.save()
             return redirect('request_chat', request_id=req.id)
     else:
         form = RequestChatMessageForm()
 
     chat_messages = req.chat_messages.select_related('sender').order_by('created_at')
+
+    RequestChatReadState.objects.update_or_create(
+        user=request.user,
+        request=req,
+        defaults={'last_read_at': timezone.now()},
+    )
 
     return render(request, 'request_chat.html', {
         'request_obj': req,
@@ -947,8 +1300,19 @@ def admin_manage_workers(request):
     """Tier 1: manage Tier 2 role and category assignments."""
     from django.contrib.auth.models import User as DjangoUser
     search_query = (request.GET.get('q') or '').strip()
+    worker_filter = (request.GET.get('filter') or 'tier2').strip().lower()
+    if worker_filter not in {'tier2', 'non_tier2'}:
+        worker_filter = 'tier2'
 
     users_qs = DjangoUser.objects.filter(is_superuser=False)
+    tier2_total = users_qs.filter(is_staff=True).count()
+    non_tier2_total = users_qs.filter(is_staff=False).count()
+
+    if worker_filter == 'tier2':
+        users_qs = users_qs.filter(is_staff=True)
+    else:
+        users_qs = users_qs.filter(is_staff=False)
+
     if search_query:
         users_qs = users_qs.filter(
             Q(username__icontains=search_query)
@@ -974,6 +1338,9 @@ def admin_manage_workers(request):
         'workers': workers,
         'all_categories': all_categories,
         'search_query': search_query,
+        'worker_filter': worker_filter,
+        'tier2_total': tier2_total,
+        'non_tier2_total': non_tier2_total,
     })
 
 

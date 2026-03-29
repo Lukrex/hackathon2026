@@ -7,7 +7,7 @@
     <section class="section">
         <div class="text-center mb-4">
             <h1>👤 Edit Your Profile</h1>
-            <p class="text-muted">Update your skills, experience, and availability to help others find you.</p>
+            <p class="text-muted">Update your skills and experience to help others find you.</p>
         </div>
 
         <div class="card submit-card">
@@ -84,18 +84,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="availability-panel">
-                        <div class="form-group">
-                            <label for="{{ form.availability.id_for_label }}">Availability</label>
-                            {{ form.availability }}
-                            {% if form.availability.errors %}
-                                <div class="text-danger mt-1">
-                                    {% for error in form.availability.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -241,14 +229,6 @@
     line-height: 1.35;
 }
 
-.availability-panel {
-    border: 1px solid rgba(23, 22, 66, 0.12);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.85);
-    padding: 1rem;
-}
-
-.availability-panel select,
 .submit-card textarea,
 .submit-card input {
     width: 100%;

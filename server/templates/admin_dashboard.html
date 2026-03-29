@@ -78,9 +78,9 @@
                                 {% csrf_token %}
                                 <select name="expert_id" class="assign-select" required>
                                     <option value="">Assign free expert...</option>
-                                    {% for expert in free_experts %}
-                                    <option value="{{ expert.id }}">
-                                        {{ expert.user.get_full_name|default:expert.user.username }} (Karma {{ expert.karma_points }})
+                                    {% for item in req.assignable_experts %}
+                                    <option value="{{ item.expert.id }}">
+                                        {{ item.expert.user.get_full_name|default:item.expert.user.username }} ({{ item.score }}% match)
                                     </option>
                                     {% endfor %}
                                 </select>

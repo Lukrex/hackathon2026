@@ -35,14 +35,14 @@ class LanguageAdmin(admin.ModelAdmin):
 
 @admin.register(Expert)
 class ExpertAdmin(admin.ModelAdmin):
-    list_display = ['name', 'skills_display', 'availability', 'is_busy', 'rating', 'karma_points', 'help_provided', 'created_at']
-    list_filter = ['availability', 'is_busy', 'created_at']
+    list_display = ['name', 'skills_display', 'is_busy', 'rating', 'karma_points', 'help_provided', 'created_at']
+    list_filter = ['is_busy', 'created_at']
     search_fields = ['user__first_name', 'user__last_name', 'user__email', 'skills__name', 'languages__name']
     readonly_fields = ['created_at', 'help_provided', 'karma_points']
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'languages', 'availability', 'is_busy')
+            'fields': ('user', 'profile_image', 'bio', 'work_experience', 'skills', 'languages', 'is_busy')
         }),
         ('Ratings', {
             'fields': ('rating', 'rating_count', 'karma_points', 'help_provided', 'created_at'),
