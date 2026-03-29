@@ -253,33 +253,33 @@ def features(request):
     features_list = [
         {
             'icon': '📝',
-            'title': 'Jednoduché zadávanie žiadostí',
-            'description': 'Komunita jednoducho zadáva svoje potreby cez verejný formulár.',
+            'title': 'Structured request intake',
+            'description': 'Users submit requests with deadlines, required skills, languages, and clear context.',
         },
         {
             'icon': '🔍',
-            'title': 'Manuálne preverovanie',
-            'description': 'Admin tím skúma žiadosti a zaraďuje ich do kategórií.',
+            'title': 'Human review and prioritization',
+            'description': 'An admin or company worker reviews each request, sets priority, and decides next steps.',
         },
         {
             'icon': '🧠',
-            'title': 'Inteligentný matching',
-            'description': 'Systém navrhuje najvhodnejších expertov na základe skúsenosti.',
+            'title': 'Expert recommendations',
+            'description': 'The platform combines skills, languages, experience, rating, and availability into one score.',
         },
         {
-            'icon': '📧',
-            'title': 'Email notifikácie',
-            'description': 'Všetci účastníci dostávajú profesionálne email potvrdenia.',
+            'icon': '💬',
+            'title': 'Chat-based coordination',
+            'description': 'Each request can include conversations between the requester, expert, and internal team.',
         },
         {
             'icon': '📊',
-            'title': 'Tracking a štatistiky',
-            'description': 'Sledujte vplyv a merateľné výsledky pomoci.',
+            'title': 'Role-based dashboards',
+            'description': 'Requests, assignments, expert workload, and completed work are visible in one place.',
         },
         {
-            'icon': '🔗',
-            'title': 'Notion integrácia',
-            'description': 'Export údajov a synchronizácia s vašim Notion workspace.',
+            'icon': '🏅',
+            'title': 'Karma and expert reputation',
+            'description': 'After completion is confirmed, the expert receives credit and a karma point.',
         },
     ]
     return render(request, 'features.html', {'features': features_list})
@@ -290,38 +290,38 @@ def how_it_works(request):
     steps = [
         {
             'number': '1',
-            'title': 'Zadaj odkázal',
-            'description': 'Comunita zadá svoju potrebu cez jednoduchý formulár.',
+            'title': 'Submit a request',
+            'description': 'A signed-in user creates a new request with a deadline, required skills, and contact details.',
             'icon': '📝',
         },
         {
             'number': '2',
-            'title': 'Preverenie',
-            'description': 'Náš tím preskúma žiadosť a zaradí ju do správnej kategórie.',
+            'title': 'Internal triage',
+            'description': 'An admin or worker reviews the request, sets priority, and defines the next action.',
             'icon': '🔍',
         },
         {
             'number': '3',
-            'title': 'Matching',
-            'description': 'Systém nájde najlepšie vyhovujúcich expertov z komunity.',
+            'title': 'Select experts',
+            'description': 'The system prepares recommendations and the team assigns one or more suitable experts.',
             'icon': '🧠',
         },
         {
             'number': '4',
-            'title': 'Spojenie',
-            'description': 'Experti sa dozvedia o požiadavke a kontaktujú žiadateľa.',
+            'title': 'Coordinate work',
+            'description': 'After assignment, communication continues in dashboards and chats with full traceability.',
             'icon': '🤝',
         },
         {
             'number': '5',
-            'title': 'Pomoc',
-            'description': 'Experti poskytnú know-how a pomoc vyriešiť problém.',
+            'title': 'Deliver help',
+            'description': 'The expert works on the task, aligns on details, and moves the request toward completion.',
             'icon': '💡',
         },
         {
             'number': '6',
-            'title': 'Tracking',
-            'description': 'Merame vplyv a zaznamenávame úspešné riešenia.',
+            'title': 'Confirm completion',
+            'description': 'The requester marks the request as done, and the system records completion and expert credit.',
             'icon': '📊',
         },
     ]

@@ -5,98 +5,91 @@
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1>O Community Help System</h1>
-        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 2rem;">Systém navrhnutý pre HalovaMake Hackathon 2026</p>
+        <h1>About The Platform</h1>
+        <p class="text-muted" style="font-size: 1.1rem; margin-bottom: 2rem;">A collaborative workspace for community requests, experts, and internal coordinators.</p>
 
         <div style="margin: 3rem 0;">
-            <h2>Čo je to?</h2>
+            <h2>Why This App Exists</h2>
             <p>
-                Community Help System je digitálny systém na organizáciu a správu žiadostí o pomoc v rámci komunít
-                (startupov, univerzít, VC ekosystémov). Rieši problém, že pomoc si často vyžaduje <strong>manuálne hľadanie</strong>
-                a koordináciu, čím sa stávajú procesy chaosom v e-mailoch a správach.
+                When needs are handled through scattered emails, chats, and ad-hoc sheets, teams lose priority, ownership, and history.
+                This app gives requests one shared place where they can be submitted, triaged, assigned, and safely closed.
             </p>
         </div>
 
-        <div style="background: var(--primary-light); padding: 2rem; border-radius: 8px; margin: 2rem 0;">
-            <h3 style="color: var(--primary);">Problém, ktorý riešime</h3>
+        <div style="background: var(--primary-soft); padding: 2rem; border-radius: 24px; margin: 2rem 0;">
+            <h3 style="color: var(--primary);">Where It Helps Most</h3>
             <ul class="feature-list">
-                <li>Komunita nevie, kto potrebuje čo a kto môže pomôcť</li>
-                <li>Pomoc sa deje náhodne alebo iba manuálne</li>
-                <li>Nie je jasné, ktorá požiadavka má najvyššiu prioritu</li>
-                <li>Chýba prehľadnosť a koordinácia medzi členom tímu</li>
-                <li>Nemožné merať vplyv a výsledky pomoci</li>
+                <li>Separating urgent requests from lower-priority work.</li>
+                <li>Splitting workload between super-admins and category-assigned workers.</li>
+                <li>Selecting experts based on skills, languages, availability, and reputation.</li>
+                <li>Tracking ownership, communication, and completion status in one place.</li>
             </ul>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h2>Naše riešenie</h2>
+            <h2>What The System Includes</h2>
             <p>
-                Vytvárame elegantný, webový systém, ktorý umožňuje:
+                Instead of a full "AI autopilot", this is a practical workflow where technology accelerates decisions while final ownership stays with the team.
             </p>
             <ul class="feature-list">
-                <li><strong>Egynoduché podávanie:</strong> Komunita zadáva žiadosti verejným formulárom</li>
-                <li><strong>Manuálne preverovanie:</strong> Admin tím skúma a kategorizuje požiadavky</li>
-                <li><strong>Inteligentný matching:</strong> Systém automaticky navrhuje najvhodnejších expertov</li>
-                <li><strong>Email notifikácie:</strong> Všetci sú informovaní prostredníctvom e-mailu</li>
-                <li><strong>Tracking dopadom:</strong> Meríme výsledky a lepšujeme proces</li>
-                <li><strong>Notion integrácia:</strong> Spojenie s existujúcimi nástrojmi tímu</li>
+                <li><strong>Request form:</strong> requests with deadline, skills, languages, and requester type.</li>
+                <li><strong>Role-based dashboard:</strong> different views for users, experts, workers, and super-admins.</li>
+                <li><strong>Expert recommendations:</strong> scoring based on profile data and request content.</li>
+                <li><strong>Request chats:</strong> communication tied directly to each request.</li>
+                <li><strong>Karma and help history:</strong> completed outcomes build expert reputation.</li>
             </ul>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h2>Technologické pozadie</h2>
+            <h2>How Roles Are Structured</h2>
             <div class="grid grid-2">
                 <div>
-                    <h3>Backend</h3>
+                    <h3>Request creators</h3>
                     <ul class="feature-list">
-                        <li><strong>Django</strong> - Web framework</li>
-                        <li><strong>SQLite/PostgreSQL</strong> - Database</li>
-                        <li><strong>Celery</strong> - Task queue (optional)</li>
+                        <li>Create requests and track status.</li>
+                        <li>Communicate in request chat threads.</li>
+                        <li>Mark work as completed once delivered.</li>
                     </ul>
                 </div>
                 <div>
-                    <h3>Frontend</h3>
+                    <h3>Internal team and experts</h3>
                     <ul class="feature-list">
-                        <li><strong>Django Templates</strong> - HTML rendering</li>
-                        <li><strong>React</strong> - Optional components</li>
-                        <li><strong>Pure CSS</strong> - Styling</li>
-                        <li><strong>Responsive Design</strong> - Mobile ready</li>
+                        <li>Super-admin sees all requests and manages workers.</li>
+                        <li>Workers process only their assigned categories.</li>
+                        <li>Experts handle assigned tasks and build reputation through completed help.</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <div style="background: var(--gray-light); padding: 2rem; border-radius: 8px; margin: 2rem 0;">
-            <h3>Štatistika projektu</h3>
+        <div style="background: var(--gray-light); padding: 2rem; border-radius: 24px; margin: 2rem 0;">
+            <h3>Technology Foundation</h3>
             <div class="grid grid-3">
                 <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">2500+</div>
-                    <div class="text-muted">Lines of Code</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Django</div>
+                    <div class="text-muted">Web app framework, templates, and authentication</div>
                 </div>
                 <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">2000+</div>
-                    <div class="text-muted">Lines of Documentation</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">SQLite</div>
+                    <div class="text-muted">Local storage for development</div>
                 </div>
                 <div>
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">20+</div>
-                    <div class="text-muted">API Endpoints</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">Celery-ready</div>
+                    <div class="text-muted">Optional async jobs and matching automation</div>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h2>Tím a Viac Info</h2>
+            <h2>Product Principle</h2>
             <p>
-                Projekt vytvorený pre <strong>HalovaMake Hackathon 2026</strong>.
-                Zameraný na zlepšovanie komunít prostredníctvom efektívnejšej koordinácie a zdieľania know-how.
-            </p>
-            <p style="margin-top: 1rem;">
-                <strong>Made with ❤️ using Claude AI</strong>
+                The platform is built for fast internal execution. It prioritizes operations over marketing storytelling:
+                who submitted what, who owns it, current status, and whether delivery was confirmed.
             </p>
         </div>
 
         <div style="text-align: center; margin: 3rem 0;">
-            <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Začni s vlastnou žiadosťou</a>
+            <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Create A New Request</a>
         </div>
     </section>
 </div>

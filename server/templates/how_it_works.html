@@ -5,9 +5,9 @@
 {% block content %}
 <div class="container">
     <section class="section">
-        <h1 style="text-align: center;">Ako funguje Community Help System</h1>
+        <h1 style="text-align: center;">How The Workflow Works</h1>
         <p class="text-center text-muted" style="font-size: 1.1rem; margin-bottom: 3rem;">
-            6-krokový proces od žiadosti po vyriešenie
+            Six steps from request creation to verified completion.
         </p>
     </section>
 
@@ -30,161 +30,158 @@
     </section>
 
     <section class="section">
-        <h2>Detailný popis každého kroku</h2>
+        <h2>Detailed Flow</h2>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 1: Zadaj svoju žiadosť 📝</h3>
+            <h3 style="color: var(--primary);">Step 1: User creates a request 📝</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Člen komunity (startup, študent, investor) pojde na verejný formulár a zadá svoju požiadavku:
+                        A signed-in user opens the form and provides all details required for fast team triage.
                     </p>
                     <ul class="feature-list">
-                        <li>Názov toho, čo potrebuješ</li>
-                        <li>Detailný popis problému</li>
-                        <li>Kategória (7 typov)</li>
-                        <li>Email a telefón</li>
+                        <li>Title and detailed problem description.</li>
+                        <li>Deadline, requester type, and contact details.</li>
+                        <li>Required skills and languages.</li>
+                        <li>Automatic link to the user's account.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Príklad:</p>
+                    <p style="font-weight: 600; color: var(--primary);">Example:</p>
                     <p style="margin-top: 0.5rem;">
-                        <strong>Názov:</strong> Potrebujem React vývojára<br>
-                        <strong>Kategória:</strong> Hľadanie zamestnanca<br>
-                        <strong>Popis:</strong> Hľadám senior React vývojára s 5+ rokmi skúseností pre náš startupových tým. Full-time, remote.
+                        <strong>Title:</strong> We need mentoring for our hiring process<br>
+                        <strong>Category:</strong> Hiring<br>
+                        <strong>Skills:</strong> recruiting, hiring, operations<br>
+                        <strong>Deadline:</strong> within 10 days
                     </p>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 2: Preverenie od správcu 🔍</h3>
+            <h3 style="color: var(--primary);">Step 2: Internal team triages the request 🔍</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Admin tím dostane žiadosť a môže ju preskúmať v admin paneli:
+                        A super-admin or worker opens the request in the dashboard and decides the next action.
                     </p>
                     <ul class="feature-list">
-                        <li>Čita úplné detaily žiadosti</li>
-                        <li>Kontroluje korektnosť údajov</li>
-                        <li>Nastavuje prioritu (kritická/vysoká/stredná/nízka)</li>
-                        <li>Hodnota vplyvu (1-10)</li>
-                        <li>Pridáva review poznámky</li>
+                        <li>Validates completeness of the request.</li>
+                        <li>Sets priority and category.</li>
+                        <li>Adds review notes and chooses next step.</li>
+                        <li>Workers are limited to their assigned categories.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Admin nastaví:</p>
+                    <p style="font-weight: 600; color: var(--primary);">Admin sets:</p>
                     <ul style="margin-top: 0.5rem;">
-                        <li>Priorita: <span class="badge badge-danger">Vysoká</span></li>
-                        <li>Kategória: <span class="badge badge-primary">Hiring</span></li>
-                        <li>Vplyv: <strong>9/10</strong></li>
-                        <li>Status: <span class="badge badge-primary">V preverovaní</span></li>
+                        <li>Priority: <span class="badge badge-danger">High</span></li>
+                        <li>Category: <span class="badge badge-primary">Hiring</span></li>
+                        <li>Impact: <strong>9/10</strong></li>
+                        <li>Status: <span class="badge badge-primary">In Review</span></li>
                     </ul>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 3: Algoritmus nájde expertov 🧠</h3>
+            <h3 style="color: var(--primary);">Step 3: The system proposes expert matches 🧠</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Keď admin označí žiadosť za "V preverovaní", systém automaticky vypočítava expertné zhodnosti:
+                        Matching creates a shortlist, but final assignment stays under team control.
                     </p>
                     <ul class="feature-list">
-                        <li><strong>Expertise Match:</strong> Skúsenosť (0-40 bodov)</li>
-                        <li><strong>Category Fit:</strong> Kategória (0-30 bodov)</li>
-                        <li><strong>Availability:</strong> Dostupnosť (0-20 bodov)</li>
-                        <li><strong>Workload:</strong> Pracovné zaťaženie (0-10 bodov)</li>
+                        <li><strong>Skills:</strong> overlap between request and expert profile.</li>
+                        <li><strong>Languages:</strong> alignment with required languages.</li>
+                        <li><strong>Experience text:</strong> relevance from bio and work history.</li>
+                        <li><strong>Rating and availability:</strong> reputation and real capacity.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Zhodnosti pre "React vývojár":</p>
+                    <p style="font-weight: 600; color: var(--primary);">Example shortlist:</p>
                     <div style="margin-top: 1rem;">
                         <p style="margin-bottom: 0.5rem;"><strong>Anna Nováková</strong></p>
                         <div style="background: white; height: 6px; border-radius: 3px; margin-top: 0.25rem;">
-                            <div style="background: var(--primary); height: 100%; width: 87%; border-radius: 3px;"></div>
+                            <div style="background: var(--primary); height: 100%; width: 84%; border-radius: 3px;"></div>
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">87% match</p>
+                        <p style="font-size: 0.85rem; color: var(--text-light);">84% match based on skills, experience, and availability</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 4: Admin priraďuje experta 📧</h3>
+            <h3 style="color: var(--primary);">Step 4: Team assigns experts and starts coordination 💬</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Admin vidí návrhy zhodností a vyberá, koho chce priradiť:
+                        Once an expert is assigned, the request enters active work and all key communication remains in-system.
                     </p>
                     <ul class="feature-list">
-                        <li>Vidí top expertov s koeficientom zhody</li>
-                        <li>Čita info o expertovi (bio, skúsenosti)</li>
-                        <li>Klikne na "Priradiť experta"</li>
-                        <li>Expert dostane notifikáciu e-mailom</li>
+                        <li>Admin assigns one or more experts.</li>
+                        <li>Experts are marked busy when they have active tasks.</li>
+                        <li>Request chat captures task-specific coordination.</li>
+                        <li>Internal details can be handled in company/admin chats.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Expert dostane e-mail:</p>
+                    <p style="font-weight: 600; color: var(--primary);">After assignment:</p>
                     <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                        Ahoj Anna,<br><br>
-                        Máme pre teba novú príležitosť! Startup hľadá senior React vývojára.<br><br>
-                        Zaujímavé? Kontaktuj žiadateľa…
+                        The request moves into active resolution,<br>
+                        the expert appears in assigned tasks,<br>
+                        and both requester and internal team can track progress in one place.
                     </p>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 5: Expert pomaha 🤝</h3>
+            <h3 style="color: var(--primary);">Step 5: Expert delivers the work 🤝</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Expert a žiadateľ sa spájajú mimo systému. Expert:
+                        During execution, experts can clarify context, consult with stakeholders, and coordinate next steps.
                     </p>
                     <ul class="feature-list">
-                        <li>Kontaktuje žiadateľa (e-mail)</li>
-                        <li>Diskutuje o podrobnostiach</li>
-                        <li>Poskytuje know-how a pomoc</li>
-                        <li>Pomáha riešiť problém</li>
+                        <li>Works with request details and deadlines.</li>
+                        <li>Uses chat for clarification and alignment.</li>
+                        <li>Can leave a task if unable to continue.</li>
+                        <li>Help is tied to a concrete outcome, not only conversation.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Výsledok:</p>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                        Expert pomôže so:
-                        <ul style="margin-top: 0.5rem;">
-                            <li>Výberom správneho kandidáta</li>
-                            <li>Vyjednaním podmienok</li>
-                            <li>Onboardingom</li>
-                            <li>Technical poradenstvo</li>
-                        </ul>
-                    </p>
+                    <p style="font-weight: 600; color: var(--primary);">Possible outcomes:</p>
+                    <ul style="margin-top: 0.5rem;">
+                        <li>Mentoring or expert consultation.</li>
+                        <li>Operational support on assigned work.</li>
+                        <li>Closed hiring, sales, or networking task.</li>
+                        <li>Clear ownership of delivery.</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
         <div style="margin: 3rem 0;">
-            <h3 style="color: var(--primary);">Krok 6: Tracking a výsledky 📊</h3>
+            <h3 style="color: var(--primary);">Step 6: Requester confirms completion 📊</h3>
             <div class="grid grid-2">
                 <div>
                     <p>
-                        Keď je problém vyriešený, admin označí žiadosť ako "Vyriešená":
+                        The final step is performed by the request creator. This distinguishes delivered help from requests still in progress.
                     </p>
                     <ul class="feature-list">
-                        <li>Zaznamená výsledok</li>
-                        <li>Pridáva potrebné poznámky</li>
-                        <li>Nameraní sa uchová v systéme</li>
-                        <li>Expert dostane kredit za pomoc</li>
+                        <li>The request is marked as done/resolved.</li>
+                        <li>The system stores the completion timestamp.</li>
+                        <li>The expert receives +1 karma and help credit.</li>
+                        <li>Busy status is recalculated based on active tasks.</li>
                     </ul>
                 </div>
                 <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px;">
-                    <p style="font-weight: 600; color: var(--primary);">Výsledok v systéme:</p>
+                    <p style="font-weight: 600; color: var(--primary);">Recorded in the system:</p>
                     <div style="margin-top: 1rem;">
-                        <p><strong>Status:</strong> <span class="badge" style="background: #d1fae5; color: #059669;">Vyriešená</span></p>
-                        <p><strong>Riešenie:</strong> Najatý senior React vývojár</p>
-                        <p><strong>Vplyv:</strong> ⭐⭐⭐⭐⭐ (5/5)</p>
+                        <p><strong>Status:</strong> <span class="badge" style="background: #d1fae5; color: #059669;">Done</span></p>
+                        <p><strong>Resolution:</strong> Request closed by requester</p>
+                        <p><strong>Credit:</strong> Expert receives karma and help count update</p>
                         <p><strong>Expert:</strong> Anna Nováková</p>
                     </div>
                 </div>
@@ -193,48 +190,48 @@
     </section>
 
     <section class="section" style="background: var(--primary-light); border-radius: 8px; padding: 3rem 2rem;">
-        <h2 style="text-align: center; color: var(--primary);">Súhrn procesu</h2>
+        <h2 style="text-align: center; color: var(--primary);">Process Summary</h2>
         <p style="text-align: center; margin-bottom: 2rem;">
-            Celý proces trvá od niekoľkých hodín do dní, v závislosti od komplexnosti požiadavky.
+            The workflow combines automated recommendations with human decisions and closes only when the requester confirms the result.
         </p>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <div style="text-align: center; margin: 1rem;">
                 <div style="font-size: 2rem;">📝</div>
-                <p><strong>Zadaj</strong></p>
+                <p><strong>Submit</strong></p>
             </div>
             <div style="width: 30px; height: 2px; background: var(--primary);"></div>
             <div style="text-align: center; margin: 1rem;">
                 <div style="font-size: 2rem;">🔍</div>
-                <p><strong>Prever</strong></p>
+                <p><strong>Triage</strong></p>
             </div>
             <div style="width: 30px; height: 2px; background: var(--primary);"></div>
             <div style="text-align: center; margin: 1rem;">
                 <div style="font-size: 2rem;">🧠</div>
-                <p><strong>Match</strong></p>
+                <p><strong>Select</strong></p>
             </div>
             <div style="width: 30px; height: 2px; background: var(--primary);"></div>
             <div style="text-align: center; margin: 1rem;">
-                <div style="font-size: 2rem;">📧</div>
-                <p><strong>Priraď</strong></p>
+                <div style="font-size: 2rem;">💬</div>
+                <p><strong>Coordinate</strong></p>
             </div>
             <div style="width: 30px; height: 2px; background: var(--primary);"></div>
             <div style="text-align: center; margin: 1rem;">
                 <div style="font-size: 2rem;">🤝</div>
-                <p><strong>Pomáhaj</strong></p>
+                <p><strong>Deliver</strong></p>
             </div>
             <div style="width: 30px; height: 2px; background: var(--primary);"></div>
             <div style="text-align: center; margin: 1rem;">
                 <div style="font-size: 2rem;">📊</div>
-                <p><strong>Track</strong></p>
+                <p><strong>Confirm</strong></p>
             </div>
         </div>
     </section>
 
     <section class="section" style="text-align: center;">
-        <h2>Pripravený začať?</h2>
-        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Skús to! Pošli svoju prvú žiadosť.</p>
-        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Poslať žiadosť teraz</a>
+        <h2>Ready to get started?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Start with one request and let the system take it through to verified completion.</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-primary btn-lg">Submit Request Now</a>
     </section>
 </div>
 {% endblock %}
